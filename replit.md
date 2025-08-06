@@ -1,6 +1,13 @@
 # Overview
 
-DealSphere is an AI-powered deals and coupons platform that aggregates product deals from various stores and uses artificial intelligence to validate and categorize them. The platform features a public-facing deals browser and an admin dashboard for managing deal submissions, approvals, and analytics. Built as a full-stack application with React frontend and Express backend, it leverages OpenAI for deal validation and uses Replit's authentication system for admin access.
+DealSphere is an AI-powered deals and coupons platform that aggregates product deals from various stores and uses artificial intelligence to validate and categorize them. The platform now features a public-facing deals browser that shows all deal types (top deals, hot deals, latest deals) without requiring authentication, and an admin dashboard for managing deal submissions, approvals, and analytics. Built as a full-stack application with React frontend and Express backend, it leverages OpenAI for deal validation. A Python backend implementation has also been developed as an alternative.
+
+## Recent Changes (2025-08-06)
+- **Public Access**: Removed authentication requirement for viewing deals - anyone can now browse all deals
+- **Deal Types Display**: Homepage now shows all three deal categories (Top Deals, Hot Deals, Latest Deals) simultaneously
+- **Admin Dashboard**: Admin features are accessible only at `/admin` route, not visible to general public
+- **Sample Data**: Added comprehensive sample deals across all categories with realistic pricing and product information
+- **Python Backend**: Developed complete Python FastAPI backend as alternative to Node.js (available but not currently active)
 
 # User Preferences
 

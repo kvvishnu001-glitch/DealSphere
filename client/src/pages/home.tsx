@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DealCard } from "@/components/ui/deal-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/useAuth";
+
 import { 
   Percent, 
   Search, 
@@ -24,19 +24,16 @@ import {
 import type { Deal, User } from "@shared/schema";
 
 export default function Home() {
-  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [selectedDiscount, setSelectedDiscount] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState<string>("top");
 
-  // Fetch deals based on active tab
+  // Fetch all deals
   const { data: deals, isLoading } = useQuery({
-    queryKey: ['/api/deals', { dealType: activeTab, limit: 50 }],
+    queryKey: ['/api/deals', { limit: 100 }],
     queryFn: ({ queryKey }) => {
-      const [path, params] = queryKey as [string, { dealType: string; limit: number }];
+      const [path, params] = queryKey as [string, { limit: number }];
       const url = new URL(path, window.location.origin);
-      url.searchParams.set('dealType', params.dealType);
       url.searchParams.set('limit', params.limit.toString());
       return fetch(url.toString()).then(res => res.json());
     },
@@ -122,25 +119,7 @@ export default function Home() {
             </div>
             
             <div className="flex items-center space-x-4">
-              {user && (
-                <div className="flex items-center space-x-2">
-                  <img 
-                    src={(user as User).profileImageUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&w=32&h=32&fit=crop&crop=face"} 
-                    alt="Profile"
-                    className="w-8 h-8 rounded-full"
-                  />
-                  <span className="text-sm text-gray-700">{(user as User).firstName} {(user as User).lastName}</span>
-                </div>
-              )}
-              <Button 
-                onClick={() => window.location.href = '/api/logout'}
-                variant="outline"
-                size="sm"
-                className="text-gray-600 hover:text-gray-800"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
+              {/* Admin Dashboard button will be shown only on /admin route */}
             </div>
           </div>
         </div>
@@ -172,46 +151,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Deal Categories Navigation */}
-      <section className="bg-white shadow-sm sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('top')}
-              className={`py-4 px-2 border-b-2 font-medium whitespace-nowrap flex items-center ${
-                activeTab === 'top'
-                  ? 'border-red-600 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Flame className="w-4 h-4 mr-2" />
-              Top Deals
-            </button>
-            <button
-              onClick={() => setActiveTab('hot')}
-              className={`py-4 px-2 border-b-2 font-medium whitespace-nowrap flex items-center ${
-                activeTab === 'hot'
-                  ? 'border-red-600 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Flame className="w-4 h-4 mr-2" />
-              Hot Deals
-            </button>
-            <button
-              onClick={() => setActiveTab('latest')}
-              className={`py-4 px-2 border-b-2 font-medium whitespace-nowrap flex items-center ${
-                activeTab === 'latest'
-                  ? 'border-red-600 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Clock className="w-4 h-4 mr-2" />
-              Latest Deals
-            </button>
-          </nav>
-        </div>
-      </section>
+
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -279,65 +219,59 @@ export default function Home() {
         </Card>
 
         {/* Top Deals Section */}
-        {activeTab === 'top' && (
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                <Flame className="text-red-600 mr-2" />
-                Top Deals
-              </h2>
-              <span className="text-sm text-gray-500">AI-curated best deals</span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {topDeals.map((deal: Deal) => (
-                <DealCard key={deal.id} deal={deal} variant="full" />
-              ))}
-            </div>
-          </section>
-        )}
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+              <Flame className="text-red-600 mr-2" />
+              Top Deals
+            </h2>
+            <span className="text-sm text-gray-500">AI-curated best deals</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topDeals.map((deal: Deal) => (
+              <DealCard key={deal.id} deal={deal} variant="full" />
+            ))}
+          </div>
+        </section>
 
         {/* Hot Deals Section */}
-        {activeTab === 'hot' && (
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                <Flame className="text-amber-500 mr-2" />
-                Hot Deals
-              </h2>
-              <span className="text-sm text-gray-500">Trending now</span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {hotDeals.map((deal: Deal) => (
-                <DealCard key={deal.id} deal={deal} variant="compact" />
-              ))}
-            </div>
-          </section>
-        )}
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+              <Flame className="text-amber-500 mr-2" />
+              Hot Deals
+            </h2>
+            <span className="text-sm text-gray-500">Trending now</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {hotDeals.map((deal: Deal) => (
+              <DealCard key={deal.id} deal={deal} variant="compact" />
+            ))}
+          </div>
+        </section>
 
         {/* Latest Deals Section */}
-        {activeTab === 'latest' && (
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                <Clock className="text-blue-500 mr-2" />
-                Latest Deals
-              </h2>
-              <span className="text-sm text-gray-500">Just added</span>
-            </div>
-            
-            <Card>
-              <CardContent className="p-0">
-                <div className="divide-y divide-gray-100">
-                  {latestDeals.map((deal: Deal) => (
-                    <DealCard key={deal.id} deal={deal} variant="list" />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-        )}
+        <section className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+              <Clock className="text-blue-500 mr-2" />
+              Latest Deals
+            </h2>
+            <span className="text-sm text-gray-500">Just added</span>
+          </div>
+          
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y divide-gray-100">
+                {latestDeals.map((deal: Deal) => (
+                  <DealCard key={deal.id} deal={deal} variant="list" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
 
         {filteredDeals.length === 0 && (
           <Card className="text-center py-12">

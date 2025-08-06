@@ -10,28 +10,11 @@ import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
   return (
     <Switch>
-      {isLoading ? (
-        <Route path="*">
-          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading...</p>
-            </div>
-          </div>
-        </Route>
-      ) : !isAuthenticated ? (
-        <Route path="*" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/admin" component={Admin} />
-          <Route component={NotFound} />
-        </>
-      )}
+      <Route path="/" component={Home} />
+      <Route path="/admin" component={Admin} />
+      <Route component={NotFound} />
     </Switch>
   );
 }
