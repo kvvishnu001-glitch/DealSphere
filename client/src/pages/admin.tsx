@@ -1,16 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, BarChart3, Users, DollarSign, TrendingUp, CheckCircle, XCircle, LogOut } from "lucide-react";
 
 interface AdminUser {
   id: string;
@@ -71,7 +60,6 @@ export default function AdminPage() {
     deal_type: "latest"
   });
 
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Check for existing token on mount
@@ -132,10 +120,11 @@ export default function AdminPage() {
       localStorage.setItem("admin_token", data.access_token);
       setCurrentAdmin(data.admin);
       setIsLoggedIn(true);
-      toast({ title: "Login successful", description: `Welcome back, ${data.admin.username}!` });
+      console.log("Login successful:", data.admin.username);
     },
     onError: (error: Error) => {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      console.error("Login failed:", error.message);
+      alert("Login failed: " + error.message);
     }
   });
 
@@ -289,10 +278,10 @@ export default function AdminPage() {
   // Show loading while checking auth
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+      <div style={{ minHeight: "100vh", backgroundColor: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ animation: "spin 1s linear infinite", borderRadius: "50%", height: "32px", width: "32px", borderBottom: "2px solid #2563eb", margin: "0 auto" }}></div>
+          <p style={{ marginTop: "8px", color: "#6b7280" }}>Loading...</p>
         </div>
       </div>
     );
@@ -301,437 +290,257 @@ export default function AdminPage() {
   // Login form
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">DealSphere Admin</CardTitle>
-            <CardDescription className="text-center">Sign in to access the admin dashboard</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  value={loginData.username}
-                  onChange={(e) => setLoginData({...loginData, username: e.target.value})}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={loginData.password}
-                  onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                {loginMutation.isPending ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-            
-            <Alert className="mt-4">
-              <AlertDescription>
-                <strong>Demo Credentials:</strong><br />
-                Username: admin<br />
-                Password: admin123
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
+      <div style={{ minHeight: "100vh", backgroundColor: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ backgroundColor: "white", padding: "32px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", width: "100%", maxWidth: "400px" }}>
+          <h1 style={{ fontSize: "24px", fontWeight: "bold", textAlign: "center", marginBottom: "8px" }}>DealSphere Admin</h1>
+          <p style={{ textAlign: "center", color: "#6b7280", marginBottom: "24px" }}>Sign in to access the admin dashboard</p>
+          
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div>
+              <label htmlFor="username" style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "500" }}>Username</label>
+              <input
+                id="username"
+                type="text"
+                value={loginData.username}
+                onChange={(e) => setLoginData({...loginData, username: e.target.value})}
+                required
+                style={{ 
+                  width: "100%", 
+                  padding: "8px 12px", 
+                  border: "1px solid #d1d5db", 
+                  borderRadius: "4px",
+                  fontSize: "14px"
+                }}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "500" }}>Password</label>
+              <input
+                id="password"
+                type="password"
+                value={loginData.password}
+                onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                required
+                style={{ 
+                  width: "100%", 
+                  padding: "8px 12px", 
+                  border: "1px solid #d1d5db", 
+                  borderRadius: "4px",
+                  fontSize: "14px"
+                }}
+              />
+            </div>
+            <button 
+              type="submit" 
+              disabled={loginMutation.isPending}
+              style={{ 
+                width: "100%", 
+                padding: "12px", 
+                backgroundColor: loginMutation.isPending ? "#9ca3af" : "#2563eb", 
+                color: "white", 
+                border: "none", 
+                borderRadius: "4px",
+                fontSize: "14px",
+                fontWeight: "500",
+                cursor: loginMutation.isPending ? "not-allowed" : "pointer"
+              }}
+            >
+              {loginMutation.isPending ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+          
+          <div style={{ marginTop: "16px", padding: "12px", backgroundColor: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "4px" }}>
+            <div style={{ fontSize: "14px" }}>
+              <strong>Demo Credentials:</strong><br />
+              Username: admin<br />
+              Password: admin123
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   // Main admin dashboard
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div style={{ minHeight: "100vh", backgroundColor: "#f3f4f6" }}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900">DealSphere Admin</h1>
-              <nav className="flex space-x-4">
-                <Button
-                  variant={activeTab === "dashboard" ? "default" : "ghost"}
+      <header style={{ backgroundColor: "white", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <h1 style={{ fontSize: "24px", fontWeight: "bold", color: "#111827" }}>DealSphere Admin</h1>
+              <nav style={{ display: "flex", gap: "16px" }}>
+                <button
                   onClick={() => setActiveTab("dashboard")}
+                  style={{ 
+                    padding: "8px 16px", 
+                    backgroundColor: activeTab === "dashboard" ? "#2563eb" : "transparent", 
+                    color: activeTab === "dashboard" ? "white" : "#374151",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
                 >
                   Dashboard
-                </Button>
-                <Button
-                  variant={activeTab === "deals" ? "default" : "ghost"}
+                </button>
+                <button
                   onClick={() => setActiveTab("deals")}
+                  style={{ 
+                    padding: "8px 16px", 
+                    backgroundColor: activeTab === "deals" ? "#2563eb" : "transparent", 
+                    color: activeTab === "deals" ? "white" : "#374151",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
                 >
                   Manage Deals
-                </Button>
+                </button>
               </nav>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {currentAdmin?.username}</span>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="w-4 h-4 mr-2" />
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <span style={{ fontSize: "14px", color: "#6b7280" }}>Welcome, {currentAdmin?.username}</span>
+              <button 
+                onClick={handleLogout}
+                style={{ 
+                  padding: "8px 16px", 
+                  backgroundColor: "transparent", 
+                  color: "#374151",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
                 Logout
-              </Button>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main style={{ maxWidth: "1280px", margin: "0 auto", padding: "32px 16px" }}>
         {/* Dashboard Tab */}
         {activeTab === "dashboard" && metrics && (
-          <div className="space-y-8">
+          <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
             {/* Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Deals</CardTitle>
-                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{metrics.total_deals}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {metrics.ai_approved_deals} AI approved
-                  </p>
-                </CardContent>
-              </Card>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "24px" }}>
+              <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <h3 style={{ fontSize: "14px", fontWeight: "500", color: "#6b7280" }}>Total Deals</h3>
+                  <span style={{ fontSize: "12px", color: "#9ca3af" }}>📊</span>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: "bold", color: "#111827" }}>{metrics.total_deals}</div>
+                <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
+                  {metrics.ai_approved_deals} AI approved
+                </p>
+              </div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{metrics.total_clicks}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {metrics.total_shares} shares
-                  </p>
-                </CardContent>
-              </Card>
+              <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <h3 style={{ fontSize: "14px", fontWeight: "500", color: "#6b7280" }}>Total Clicks</h3>
+                  <span style={{ fontSize: "12px", color: "#9ca3af" }}>👥</span>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: "bold", color: "#111827" }}>{metrics.total_clicks}</div>
+                <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
+                  {metrics.total_shares} shares
+                </p>
+              </div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Revenue Estimate</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${metrics.revenue_estimate.toFixed(2)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Based on clicks
-                  </p>
-                </CardContent>
-              </Card>
+              <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <h3 style={{ fontSize: "14px", fontWeight: "500", color: "#6b7280" }}>Revenue Estimate</h3>
+                  <span style={{ fontSize: "12px", color: "#9ca3af" }}>💰</span>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: "bold", color: "#111827" }}>${metrics.revenue_estimate.toFixed(2)}</div>
+                <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
+                  Based on clicks
+                </p>
+              </div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{metrics.pending_deals}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Awaiting approval
-                  </p>
-                </CardContent>
-              </Card>
+              <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <h3 style={{ fontSize: "14px", fontWeight: "500", color: "#6b7280" }}>Pending Review</h3>
+                  <span style={{ fontSize: "12px", color: "#9ca3af" }}>📈</span>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: "bold", color: "#111827" }}>{metrics.pending_deals}</div>
+                <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
+                  Awaiting approval
+                </p>
+              </div>
             </div>
 
             {/* Charts and Lists */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "32px" }}>
               {/* Top Categories */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Categories</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {metrics.top_categories.map((category, index) => (
-                      <div key={category.category} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{category.category}</span>
-                        <div className="text-right">
-                          <div className="text-sm font-bold">{category.deals_count} deals</div>
-                          <div className="text-xs text-gray-500">{category.clicks} clicks</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Top Stores */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Stores</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {metrics.top_stores.map((store, index) => (
-                      <div key={store.store} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{store.store}</span>
-                        <div className="text-right">
-                          <div className="text-sm font-bold">{store.deals_count} deals</div>
-                          <div className="text-xs text-gray-500">{store.clicks} clicks</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {metrics.recent_activity.map((activity) => (
-                    <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <div className="font-medium text-sm">{activity.title}</div>
-                        <div className="text-xs text-gray-500">{activity.store} • {activity.category}</div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant={activity.ai_approved ? "default" : "secondary"}>
-                          {activity.ai_approved ? "Approved" : "Pending"}
-                        </Badge>
-                        <span className="text-xs text-gray-500">{activity.clicks} clicks</span>
+              <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>Top Categories</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {metrics.top_categories.map((category, index) => (
+                    <div key={category.category} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", fontWeight: "500" }}>{category.category}</span>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: "14px", fontWeight: "600" }}>{category.deals_count} deals</div>
+                        <div style={{ fontSize: "12px", color: "#6b7280" }}>{category.clicks} clicks</div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              {/* Top Stores */}
+              <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>Top Stores</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {metrics.top_stores.map((store, index) => (
+                    <div key={store.store} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", fontWeight: "500" }}>{store.store}</span>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: "14px", fontWeight: "600" }}>{store.deals_count} deals</div>
+                        <div style={{ fontSize: "12px", color: "#6b7280" }}>{store.clicks} clicks</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>Recent Activity</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {metrics.recent_activity.map((activity) => (
+                  <div key={activity.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", backgroundColor: "#f9fafb", borderRadius: "8px" }}>
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: "500", marginBottom: "4px" }}>{activity.title}</div>
+                      <div style={{ fontSize: "12px", color: "#6b7280" }}>{activity.store} • {activity.category}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ 
+                        fontSize: "12px", 
+                        padding: "2px 8px", 
+                        borderRadius: "12px", 
+                        backgroundColor: activity.ai_approved ? "#10b981" : "#6b7280", 
+                        color: "white" 
+                      }}>
+                        {activity.ai_approved ? "Approved" : "Pending"}
+                      </span>
+                      <span style={{ fontSize: "12px", color: "#6b7280" }}>{activity.clicks} clicks</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Deals Management Tab */}
         {activeTab === "deals" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Manage Deals</h2>
-              <Dialog open={showAddDeal} onOpenChange={setShowAddDeal}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Deal
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Add New Deal</DialogTitle>
-                    <DialogDescription>
-                      Create a new deal for the platform
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateDeal} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="title">Title</Label>
-                        <Input
-                          id="title"
-                          value={dealForm.title}
-                          onChange={(e) => setDealForm({...dealForm, title: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="store">Store</Label>
-                        <Input
-                          id="store"
-                          value={dealForm.store}
-                          onChange={(e) => setDealForm({...dealForm, store: e.target.value})}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={dealForm.description}
-                        onChange={(e) => setDealForm({...dealForm, description: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="original_price">Original Price</Label>
-                        <Input
-                          id="original_price"
-                          type="number"
-                          step="0.01"
-                          value={dealForm.original_price}
-                          onChange={(e) => setDealForm({...dealForm, original_price: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="sale_price">Sale Price</Label>
-                        <Input
-                          id="sale_price"
-                          type="number"
-                          step="0.01"
-                          value={dealForm.sale_price}
-                          onChange={(e) => setDealForm({...dealForm, sale_price: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="discount_percentage">Discount %</Label>
-                        <Input
-                          id="discount_percentage"
-                          type="number"
-                          value={dealForm.discount_percentage}
-                          onChange={(e) => setDealForm({...dealForm, discount_percentage: e.target.value})}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="category">Category</Label>
-                        <Input
-                          id="category"
-                          value={dealForm.category}
-                          onChange={(e) => setDealForm({...dealForm, category: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="deal_type">Deal Type</Label>
-                        <Select value={dealForm.deal_type} onValueChange={(value) => setDealForm({...dealForm, deal_type: value})}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="latest">Latest</SelectItem>
-                            <SelectItem value="hot">Hot</SelectItem>
-                            <SelectItem value="top">Top</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="image_url">Image URL</Label>
-                      <Input
-                        id="image_url"
-                        type="url"
-                        value={dealForm.image_url}
-                        onChange={(e) => setDealForm({...dealForm, image_url: e.target.value})}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="affiliate_url">Affiliate URL</Label>
-                      <Input
-                        id="affiliate_url"
-                        type="url"
-                        value={dealForm.affiliate_url}
-                        onChange={(e) => setDealForm({...dealForm, affiliate_url: e.target.value})}
-                        required
-                      />
-                    </div>
-
-                    <div className="flex justify-end space-x-2">
-                      <Button type="button" variant="outline" onClick={() => setShowAddDeal(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={createDealMutation.isPending}>
-                        {createDealMutation.isPending ? "Creating..." : "Create Deal"}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h2 style={{ fontSize: "24px", fontWeight: "bold" }}>Manage Deals</h2>
+              <p style={{ color: "#6b7280" }}>Deals management coming soon...</p>
             </div>
-
-            {/* Deals Table */}
-            {deals && (
-              <Card>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deal</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Store</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stats</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {deals.map((deal) => (
-                          <tr key={deal.id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <img className="h-10 w-10 rounded-lg object-cover mr-4" src={deal.image_url || "/placeholder.jpg"} alt={deal.title} />
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900 truncate max-w-xs">{deal.title}</div>
-                                  <div className="text-sm text-gray-500">{deal.category}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{deal.store}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">${deal.sale_price}</div>
-                              <div className="text-sm text-gray-500 line-through">${deal.original_price}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <Badge variant={deal.is_ai_approved ? "default" : "secondary"}>
-                                {deal.is_ai_approved ? "Approved" : "Pending"}
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div>{deal.click_count} clicks</div>
-                              <div>{deal.share_count} shares</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex space-x-2">
-                                {!deal.is_ai_approved && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => approveDealMutation.mutate(deal.id)}
-                                  >
-                                    <CheckCircle className="w-4 h-4" />
-                                  </Button>
-                                )}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => rejectDealMutation.mutate(deal.id)}
-                                >
-                                  <XCircle className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => deleteDealMutation.mutate(deal.id)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         )}
       </main>
