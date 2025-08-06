@@ -105,11 +105,11 @@ export default function Home() {
             </div>
             
             {/* Search Bar */}
-            <div className="flex-1 max-w-lg mx-8">
+            <div className="flex-1 max-w-lg mx-4 sm:mx-8">
               <div className="relative">
                 <Input
                   type="search"
-                  placeholder="Search deals, stores, or products..."
+                  placeholder="Search deals, stores..."
                   className="w-full pl-10 pr-4 bg-gray-100 border-gray-300 focus:border-red-600 focus:ring-red-600"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
@@ -157,12 +157,12 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
         <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">Category:</label>
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 block">Category</label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -175,10 +175,10 @@ export default function Home() {
                 </Select>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">Store:</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 block">Store</label>
                 <Select value={selectedStore} onValueChange={setSelectedStore}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -191,10 +191,10 @@ export default function Home() {
                 </Select>
               </div>
               
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">Discount:</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 block">Discount</label>
                 <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -206,14 +206,17 @@ export default function Home() {
                 </Select>
               </div>
               
-              <Button 
-                variant="outline" 
-                onClick={clearFilters}
-                className="text-gray-600 hover:text-gray-800"
-              >
-                <X className="w-4 h-4 mr-1" />
-                Clear Filters
-              </Button>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 block sm:invisible">Actions</label>
+                <Button 
+                  variant="outline" 
+                  onClick={clearFilters}
+                  className="w-full text-gray-600 hover:text-gray-800"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Clear Filters
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
