@@ -57,6 +57,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showAddDeal, setShowAddDeal] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [dealForm, setDealForm] = useState({
     title: "",
     description: "",
@@ -77,14 +78,18 @@ export default function AdminPage() {
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
     if (token) {
-      setIsLoggedIn(true);
       fetchCurrentAdmin();
+    } else {
+      setIsCheckingAuth(false);
     }
   }, []);
 
   const fetchCurrentAdmin = async () => {
     const token = localStorage.getItem("admin_token");
-    if (!token) return;
+    if (!token) {
+      setIsCheckingAuth(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/admin/me", {
@@ -93,12 +98,17 @@ export default function AdminPage() {
       if (response.ok) {
         const admin = await response.json();
         setCurrentAdmin(admin);
+        setIsLoggedIn(true);
       } else {
         localStorage.removeItem("admin_token");
         setIsLoggedIn(false);
       }
     } catch (error) {
       console.error("Error fetching admin:", error);
+      localStorage.removeItem("admin_token");
+      setIsLoggedIn(false);
+    } finally {
+      setIsCheckingAuth(false);
     }
   };
 
@@ -275,6 +285,18 @@ export default function AdminPage() {
     e.preventDefault();
     createDealMutation.mutate(dealForm);
   };
+
+  // Show loading while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Login form
   if (!isLoggedIn) {

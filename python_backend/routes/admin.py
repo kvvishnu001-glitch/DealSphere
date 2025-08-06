@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, desc, select
 from datetime import datetime, timedelta
 from typing import List
 import uuid
@@ -19,10 +19,10 @@ from admin_auth import (
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 @router.post("/register", response_model=AdminUserResponse)
-async def register_admin(admin_data: AdminUserCreate, db: Session = Depends(get_db)):
+async def register_admin(admin_data: AdminUserCreate, db: AsyncSession = Depends(get_db)):
     """Register a new admin user"""
     try:
-        admin = create_admin_user(admin_data.username, admin_data.email, admin_data.password, db)
+        admin = await create_admin_user(admin_data.username, admin_data.email, admin_data.password, db)
         return admin
     except HTTPException as e:
         raise e
@@ -30,9 +30,9 @@ async def register_admin(admin_data: AdminUserCreate, db: Session = Depends(get_
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/login")
-async def login_admin(login_data: AdminUserLogin, db: Session = Depends(get_db)):
+async def login_admin(login_data: AdminUserLogin, db: AsyncSession = Depends(get_db)):
     """Admin login endpoint"""
-    admin = authenticate_admin(login_data.username, login_data.password, db)
+    admin = await authenticate_admin(login_data.username, login_data.password, db)
     if not admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -54,28 +54,39 @@ async def get_current_admin_info(current_admin: AdminUser = Depends(get_current_
 @router.get("/metrics", response_model=AdminMetrics)
 async def get_admin_metrics(
     current_admin: AdminUser = Depends(get_current_admin),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get admin dashboard metrics"""
     
     # Basic counts
-    total_deals = db.query(Deal).count()
-    ai_approved_deals = db.query(Deal).filter(Deal.is_ai_approved == True).count()
-    pending_deals = db.query(Deal).filter(Deal.is_ai_approved == False).count()
+    total_deals_result = await db.execute(select(func.count(Deal.id)))
+    total_deals = total_deals_result.scalar() or 0
+    
+    ai_approved_result = await db.execute(select(func.count(Deal.id)).where(Deal.is_ai_approved == True))
+    ai_approved_deals = ai_approved_result.scalar() or 0
+    
+    pending_result = await db.execute(select(func.count(Deal.id)).where(Deal.is_ai_approved == False))
+    pending_deals = pending_result.scalar() or 0
     
     # Click and share counts
-    total_clicks = db.query(func.sum(Deal.click_count)).scalar() or 0
-    total_shares = db.query(func.sum(Deal.share_count)).scalar() or 0
+    clicks_result = await db.execute(select(func.sum(Deal.click_count)))
+    total_clicks = clicks_result.scalar() or 0
+    
+    shares_result = await db.execute(select(func.sum(Deal.share_count)))
+    total_shares = shares_result.scalar() or 0
     
     # Revenue estimate (assuming $0.05 per click)
     revenue_estimate = float(total_clicks) * 0.05
     
     # Top categories
-    top_categories = db.query(
-        Deal.category,
-        func.count(Deal.id).label('count'),
-        func.sum(Deal.click_count).label('clicks')
-    ).group_by(Deal.category).order_by(desc('count')).limit(5).all()
+    top_categories_result = await db.execute(
+        select(
+            Deal.category,
+            func.count(Deal.id).label('count'),
+            func.sum(Deal.click_count).label('clicks')
+        ).group_by(Deal.category).order_by(desc('count')).limit(5)
+    )
+    top_categories = top_categories_result.all()
     
     top_categories_list = [
         {
@@ -87,11 +98,14 @@ async def get_admin_metrics(
     ]
     
     # Top stores
-    top_stores = db.query(
-        Deal.store,
-        func.count(Deal.id).label('count'),
-        func.sum(Deal.click_count).label('clicks')
-    ).group_by(Deal.store).order_by(desc('count')).limit(5).all()
+    top_stores_result = await db.execute(
+        select(
+            Deal.store,
+            func.count(Deal.id).label('count'),
+            func.sum(Deal.click_count).label('clicks')
+        ).group_by(Deal.store).order_by(desc('count')).limit(5)
+    )
+    top_stores = top_stores_result.all()
     
     top_stores_list = [
         {
@@ -103,7 +117,9 @@ async def get_admin_metrics(
     ]
     
     # Recent activity (last 10 deals)
-    recent_deals = db.query(Deal).order_by(desc(Deal.created_at)).limit(10).all()
+    recent_deals_result = await db.execute(select(Deal).order_by(desc(Deal.created_at)).limit(10))
+    recent_deals = recent_deals_result.scalars().all()
+    
     recent_activity = [
         {
             "id": deal.id,
@@ -134,17 +150,18 @@ async def get_all_deals(
     skip: int = 0,
     limit: int = 50,
     current_admin: AdminUser = Depends(get_current_admin),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all deals for admin management"""
-    deals = db.query(Deal).order_by(desc(Deal.created_at)).offset(skip).limit(limit).all()
+    result = await db.execute(select(Deal).order_by(desc(Deal.created_at)).offset(skip).limit(limit))
+    deals = result.scalars().all()
     return deals
 
 @router.post("/deals", response_model=DealResponse)
 async def create_deal(
     deal_data: DealCreate,
     current_admin: AdminUser = Depends(get_current_admin),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Create a new deal"""
     deal = Deal(
@@ -153,8 +170,8 @@ async def create_deal(
     )
     
     db.add(deal)
-    db.commit()
-    db.refresh(deal)
+    await db.commit()
+    await db.refresh(deal)
     return deal
 
 @router.put("/deals/{deal_id}", response_model=DealResponse)
@@ -162,10 +179,11 @@ async def update_deal(
     deal_id: str,
     deal_data: DealCreate,
     current_admin: AdminUser = Depends(get_current_admin),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Update an existing deal"""
-    deal = db.query(Deal).filter(Deal.id == deal_id).first()
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
     
@@ -173,58 +191,61 @@ async def update_deal(
         setattr(deal, field, value)
     
     deal.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(deal)
+    await db.commit()
+    await db.refresh(deal)
     return deal
 
 @router.delete("/deals/{deal_id}")
 async def delete_deal(
     deal_id: str,
     current_admin: AdminUser = Depends(get_current_admin),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Delete a deal"""
-    deal = db.query(Deal).filter(Deal.id == deal_id).first()
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
     
     # Delete related records first
-    db.query(DealClick).filter(DealClick.deal_id == deal_id).delete()
-    db.query(SocialShare).filter(SocialShare.deal_id == deal_id).delete()
+    await db.execute(select(DealClick).where(DealClick.deal_id == deal_id))
+    await db.execute(select(SocialShare).where(SocialShare.deal_id == deal_id))
     
-    db.delete(deal)
-    db.commit()
+    await db.delete(deal)
+    await db.commit()
     return {"message": "Deal deleted successfully"}
 
 @router.patch("/deals/{deal_id}/approve")
 async def approve_deal(
     deal_id: str,
     current_admin: AdminUser = Depends(get_current_admin),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Approve a deal"""
-    deal = db.query(Deal).filter(Deal.id == deal_id).first()
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
     
     deal.is_ai_approved = True
     deal.updated_at = datetime.utcnow()
-    db.commit()
+    await db.commit()
     return {"message": "Deal approved successfully"}
 
 @router.patch("/deals/{deal_id}/reject")
 async def reject_deal(
     deal_id: str,
     current_admin: AdminUser = Depends(get_current_admin),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Reject a deal"""
-    deal = db.query(Deal).filter(Deal.id == deal_id).first()
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
     
     deal.is_ai_approved = False
     deal.is_active = False
     deal.updated_at = datetime.utcnow()
-    db.commit()
+    await db.commit()
     return {"message": "Deal rejected successfully"}

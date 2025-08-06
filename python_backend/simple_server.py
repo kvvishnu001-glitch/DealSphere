@@ -14,6 +14,7 @@ from pathlib import Path
 # Simple imports without relative paths
 from database import get_db, init_database
 from models import Deal as DealModel
+from routes.admin import router as admin_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,6 +37,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include admin router
+app.include_router(admin_router, prefix="/api")
 
 @app.get("/api/health")
 async def health_check():

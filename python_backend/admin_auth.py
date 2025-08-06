@@ -5,7 +5,8 @@ from typing import Optional
 from jose import JWTError, jwt
 from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from models import AdminUser
 from database import get_db
 
@@ -57,12 +58,13 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     except JWTError:
         raise credentials_exception
 
-def get_current_admin(
+async def get_current_admin(
     admin_id: str = Depends(verify_token),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ) -> AdminUser:
     """Get current authenticated admin user"""
-    admin = db.query(AdminUser).filter(AdminUser.id == admin_id).first()
+    result = await db.execute(select(AdminUser).where(AdminUser.id == admin_id))
+    admin = result.scalar_one_or_none()
     if admin is None or not admin.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -70,19 +72,23 @@ def get_current_admin(
         )
     return admin
 
-def authenticate_admin(username: str, password: str, db: Session) -> Optional[AdminUser]:
+async def authenticate_admin(username: str, password: str, db: AsyncSession) -> Optional[AdminUser]:
     """Authenticate admin user"""
-    admin = db.query(AdminUser).filter(AdminUser.username == username).first()
+    result = await db.execute(select(AdminUser).where(AdminUser.username == username))
+    admin = result.scalar_one_or_none()
     if not admin or not verify_password(password, admin.password_hash):
         return None
     return admin
 
-def create_admin_user(username: str, email: str, password: str, db: Session) -> AdminUser:
+async def create_admin_user(username: str, email: str, password: str, db: AsyncSession) -> AdminUser:
     """Create a new admin user"""
     # Check if username or email already exists
-    existing = db.query(AdminUser).filter(
-        (AdminUser.username == username) | (AdminUser.email == email)
-    ).first()
+    result = await db.execute(
+        select(AdminUser).where(
+            (AdminUser.username == username) | (AdminUser.email == email)
+        )
+    )
+    existing = result.scalar_one_or_none()
     
     if existing:
         raise HTTPException(
@@ -98,6 +104,6 @@ def create_admin_user(username: str, email: str, password: str, db: Session) -> 
     )
     
     db.add(admin)
-    db.commit()
-    db.refresh(admin)
+    await db.commit()
+    await db.refresh(admin)
     return admin
