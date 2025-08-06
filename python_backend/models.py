@@ -26,6 +26,7 @@ class Deal(Base):
     expires_at = Column(DateTime)
     is_active = Column(Boolean, default=True)
     is_ai_approved = Column(Boolean, default=False)
+    status = Column(String, default='pending')  # pending, approved, rejected, deleted
     ai_score = Column(Numeric(3, 1))
     ai_reasons = Column(JSON)
     popularity = Column(Integer, default=0)
@@ -33,6 +34,8 @@ class Deal(Base):
     share_count = Column(Integer, default=0)
     deal_type = Column(String, nullable=False, default='latest')
     source_api = Column(String)
+    rejected_at = Column(DateTime, nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     

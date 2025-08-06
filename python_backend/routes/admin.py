@@ -207,13 +207,14 @@ async def delete_deal(
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
     
-    # Delete related records first
-    await db.execute(select(DealClick).where(DealClick.deal_id == deal_id))
-    await db.execute(select(SocialShare).where(SocialShare.deal_id == deal_id))
+    # Soft delete - remove from public immediately
+    deal.status = 'deleted'
+    deal.is_active = False
+    deal.deleted_at = datetime.utcnow()
+    deal.updated_at = datetime.utcnow()
     
-    await db.delete(deal)
     await db.commit()
-    return {"message": "Deal deleted successfully"}
+    return {"message": "Deal deleted and removed from website"}
 
 @router.patch("/deals/{deal_id}/approve")
 async def approve_deal(
@@ -221,16 +222,20 @@ async def approve_deal(
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Approve a deal"""
+    """Approve a deal - makes it live on public website"""
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
     
+    # Approve deal - make it live
     deal.is_ai_approved = True
+    deal.status = 'approved'
+    deal.is_active = True
     deal.updated_at = datetime.utcnow()
+    
     await db.commit()
-    return {"message": "Deal approved successfully"}
+    return {"message": "Deal approved and is now live on website"}
 
 @router.patch("/deals/{deal_id}/reject")
 async def reject_deal(
@@ -238,14 +243,95 @@ async def reject_deal(
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Reject a deal"""
+    """Reject a deal - removes from public immediately, schedules deletion"""
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
     
+    # Reject deal - remove from public immediately
     deal.is_ai_approved = False
-    deal.is_active = False
+    deal.status = 'rejected'
+    deal.is_active = False  # Remove from public website immediately
+    deal.rejected_at = datetime.utcnow()
     deal.updated_at = datetime.utcnow()
+    
     await db.commit()
-    return {"message": "Deal rejected successfully"}
+    return {"message": "Deal rejected and removed from website"}
+
+@router.get("/deals/search")
+async def search_deals(
+    q: str = "",
+    category: str = "",
+    store: str = "",
+    status: str = "",
+    skip: int = 0,
+    limit: int = 50,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Search and filter deals with advanced options"""
+    query = select(Deal)
+    
+    # Apply filters
+    if q:
+        query = query.where(Deal.title.ilike(f"%{q}%"))
+    if category:
+        query = query.where(Deal.category == category)
+    if store:
+        query = query.where(Deal.store == store)
+    if status:
+        query = query.where(Deal.status == status)
+    
+    # Order by created date and apply pagination
+    query = query.order_by(desc(Deal.created_at)).offset(skip).limit(limit)
+    
+    result = await db.execute(query)
+    deals = result.scalars().all()
+    
+    return deals
+
+@router.get("/deals/categories")
+async def get_categories(
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all unique categories"""
+    result = await db.execute(select(Deal.category).distinct())
+    categories = [row[0] for row in result.all()]
+    return {"categories": categories}
+
+@router.get("/deals/stores")
+async def get_stores(
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all unique stores"""
+    result = await db.execute(select(Deal.store).distinct())
+    stores = [row[0] for row in result.all()]
+    return {"stores": stores}
+
+@router.post("/cleanup/rejected-deals")
+async def cleanup_rejected_deals(
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete rejected deals older than 1 day"""
+    cutoff_date = datetime.utcnow() - timedelta(days=1)
+    
+    # Find rejected deals older than 1 day
+    result = await db.execute(
+        select(Deal).where(
+            Deal.status == 'rejected',
+            Deal.rejected_at < cutoff_date
+        )
+    )
+    old_rejected_deals = result.scalars().all()
+    
+    # Delete them permanently
+    for deal in old_rejected_deals:
+        await db.delete(deal)
+    
+    await db.commit()
+    
+    return {"message": f"Cleaned up {len(old_rejected_deals)} old rejected deals"}

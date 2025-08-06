@@ -48,7 +48,14 @@ async def health_check():
 @app.get("/api/deals")
 async def get_deals(db: AsyncSession = Depends(get_db)):
     try:
-        result = await db.execute(select(DealModel))
+        # Only return active, approved deals for public website
+        result = await db.execute(
+            select(DealModel).where(
+                DealModel.is_active == True,
+                DealModel.is_ai_approved == True,
+                DealModel.status == 'approved'
+            ).order_by(DealModel.created_at.desc())
+        )
         deals = result.scalars().all()
         
         # Convert to dict format for JSON response
