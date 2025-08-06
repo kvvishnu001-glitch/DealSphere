@@ -68,20 +68,20 @@ async def get_deals(db: AsyncSession = Depends(get_db)):
                 "store": deal.store,
                 "storeLogoUrl": deal.store_logo_url,
                 "category": deal.category,
-                "rating": str(deal.rating) if deal.rating else None,
+                "rating": str(deal.rating) if deal.rating is not None else None,
                 "reviewCount": deal.review_count,
-                "expiresAt": deal.expires_at.isoformat() if deal.expires_at else None,
+                "expiresAt": deal.expires_at.isoformat() if deal.expires_at is not None else None,
                 "isActive": deal.is_active,
                 "isAiApproved": deal.is_ai_approved,
-                "aiScore": str(deal.ai_score) if deal.ai_score else None,
+                "aiScore": str(deal.ai_score) if deal.ai_score is not None else None,
                 "aiReasons": deal.ai_reasons,
                 "popularity": deal.popularity,
                 "clickCount": deal.click_count,
                 "shareCount": deal.share_count,
                 "dealType": deal.deal_type,
                 "sourceApi": deal.source_api,
-                "createdAt": deal.created_at.isoformat() if deal.created_at else None,
-                "updatedAt": deal.updated_at.isoformat() if deal.updated_at else None
+                "createdAt": deal.created_at.isoformat() if deal.created_at is not None else None,
+                "updatedAt": deal.updated_at.isoformat() if deal.updated_at is not None else None
             }
             deals_list.append(deal_dict)
         
@@ -101,7 +101,8 @@ async def track_deal_click(deal_id: str, db: AsyncSession = Depends(get_db)):
             raise HTTPException(status_code=404, detail="Deal not found")
         
         # Increment click count
-        deal.click_count = (deal.click_count or 0) + 1
+        current_count = deal.click_count if deal.click_count is not None else 0
+        deal.click_count = current_count + 1
         await db.commit()
         
         return {"affiliateUrl": deal.affiliate_url}
@@ -122,7 +123,8 @@ async def track_deal_share(deal_id: str, db: AsyncSession = Depends(get_db)):
             raise HTTPException(status_code=404, detail="Deal not found")
         
         # Increment share count
-        deal.share_count = (deal.share_count or 0) + 1
+        current_count = deal.share_count if deal.share_count is not None else 0
+        deal.share_count = current_count + 1
         await db.commit()
         
         return {"success": True}

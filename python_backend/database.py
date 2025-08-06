@@ -38,8 +38,15 @@ elif "sslmode=require" in DATABASE_URL:
 else:
     connect_args = {}
 
-# Create async engine
-engine = create_async_engine(DATABASE_URL, connect_args=connect_args)
+# Create async engine with connection pooling
+engine = create_async_engine(
+    DATABASE_URL, 
+    connect_args=connect_args,
+    pool_size=20,
+    max_overflow=0,
+    pool_pre_ping=True,
+    pool_recycle=300
+)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 Base = declarative_base()
