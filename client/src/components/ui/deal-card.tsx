@@ -77,11 +77,12 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
           <Button
             onClick={handleDealClick}
             disabled={isLoading}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white mb-3"
             size="sm"
           >
             {isLoading ? "Loading..." : "Get Deal"}
           </Button>
+          <SocialShare deal={deal} />
         </CardContent>
       </Card>
     );
@@ -110,13 +111,16 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             </Badge>
           </div>
         </div>
-        <Button
-          onClick={handleDealClick}
-          disabled={isLoading}
-          className="bg-red-600 hover:bg-red-700 text-white"
-        >
-          {isLoading ? "Loading..." : "Get Deal"}
-        </Button>
+        <div className="flex flex-col space-y-2">
+          <Button
+            onClick={handleDealClick}
+            disabled={isLoading}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            {isLoading ? "Loading..." : "Get Deal"}
+          </Button>
+          <SocialShare deal={deal} />
+        </div>
       </div>
     );
   }

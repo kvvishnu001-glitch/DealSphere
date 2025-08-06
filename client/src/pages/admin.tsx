@@ -6,9 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Shield, 
@@ -35,9 +33,6 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [minAiScore, setMinAiScore] = useState([6.5]);
   const [autoApproveScore, setAutoApproveScore] = useState([8.5]);
-
-  // For now, we'll show a simple message that admin features require authentication
-  // In production, this would integrate with proper authentication
 
   // Fetch analytics
   const { data: analytics, isLoading: analyticsLoading } = useQuery<Analytics>({
