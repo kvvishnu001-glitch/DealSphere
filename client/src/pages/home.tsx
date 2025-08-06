@@ -61,6 +61,17 @@ export default function Home() {
     },
   });
 
+  // Get unique filter options from actual deals data
+  const availableCategories = [...new Set(deals?.map((deal: Deal) => deal.category) || [])];
+  const availableStores = [...new Set(deals?.map((deal: Deal) => deal.store) || [])];
+  const availableDiscounts = [...new Set(deals?.map((deal: Deal) => {
+    const discount = deal.discountPercentage;
+    if (discount >= 50) return "50+";
+    if (discount >= 30) return "30+";
+    if (discount >= 10) return "10+";
+    return null;
+  }).filter(Boolean) || [])];
+
   // Filter deals based on selected filters and search query
   const filteredDeals = deals?.filter((deal: Deal) => {
     // Search filter
@@ -204,10 +215,11 @@ export default function Home() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="electronics">Electronics</SelectItem>
-                    <SelectItem value="fashion">Fashion</SelectItem>
-                    <SelectItem value="home">Home & Garden</SelectItem>
-                    <SelectItem value="travel">Travel</SelectItem>
+                    {availableCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -220,10 +232,11 @@ export default function Home() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Stores</SelectItem>
-                    <SelectItem value="Amazon">Amazon</SelectItem>
-                    <SelectItem value="Target">Target</SelectItem>
-                    <SelectItem value="Best Buy">Best Buy</SelectItem>
-                    <SelectItem value="Walmart">Walmart</SelectItem>
+                    {availableStores.map((store) => (
+                      <SelectItem key={store} value={store}>
+                        {store}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -236,9 +249,15 @@ export default function Home() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Any Discount</SelectItem>
-                    <SelectItem value="50+">50%+ Off</SelectItem>
-                    <SelectItem value="30+">30%+ Off</SelectItem>
-                    <SelectItem value="10+">10%+ Off</SelectItem>
+                    {availableDiscounts.includes("50+") && (
+                      <SelectItem value="50+">50%+ Off</SelectItem>
+                    )}
+                    {availableDiscounts.includes("30+") && (
+                      <SelectItem value="30+">30%+ Off</SelectItem>
+                    )}
+                    {availableDiscounts.includes("10+") && (
+                      <SelectItem value="10+">10%+ Off</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
