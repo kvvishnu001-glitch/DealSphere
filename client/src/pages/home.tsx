@@ -21,12 +21,34 @@ import {
   X,
   LogOut
 } from "lucide-react";
-import type { Deal, User } from "@shared/schema";
+// Define types locally since @shared/schema doesn't exist
+interface Deal {
+  id: number;
+  title: string;
+  description: string;
+  originalPrice: string;
+  salePrice: string;
+  discountPercentage: number;
+  imageUrl: string;
+  affiliateUrl: string;
+  store: string;
+  storeLogoUrl?: string;
+  category: string;
+  rating?: string;
+  reviewCount?: number;
+  expiresAt?: string;
+  isActive: boolean;
+  isAiApproved?: boolean;
+  aiScore?: string;
+  clickCount?: number;
+  dealType?: string;
+}
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [selectedDiscount, setSelectedDiscount] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Fetch all deals
   const { data: deals, isLoading } = useQuery({
@@ -39,10 +61,22 @@ export default function Home() {
     },
   });
 
-  // Filter deals based on selected filters
+  // Filter deals based on selected filters and search query
   const filteredDeals = deals?.filter((deal: Deal) => {
+    // Search filter
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase();
+      const searchable = `${deal.title} ${deal.description} ${deal.store} ${deal.category}`.toLowerCase();
+      if (!searchable.includes(query)) return false;
+    }
+    
+    // Category filter
     if (selectedCategory !== "all" && deal.category !== selectedCategory) return false;
+    
+    // Store filter  
     if (selectedStore !== "all" && deal.store !== selectedStore) return false;
+    
+    // Discount filter
     if (selectedDiscount !== "all") {
       const discount = deal.discountPercentage;
       switch (selectedDiscount) {
@@ -68,6 +102,7 @@ export default function Home() {
     setSelectedCategory("all");
     setSelectedStore("all");
     setSelectedDiscount("all");
+    setSearchQuery("");
   };
 
   if (isLoading) {
@@ -110,6 +145,8 @@ export default function Home() {
                 <Input
                   type="search"
                   placeholder="Search deals, stores..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 bg-gray-100 border-gray-300 focus:border-red-600 focus:ring-red-600"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
@@ -163,7 +200,7 @@ export default function Home() {
                 <label className="text-sm font-medium text-gray-700 block">Category</label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
@@ -179,7 +216,7 @@ export default function Home() {
                 <label className="text-sm font-medium text-gray-700 block">Store</label>
                 <Select value={selectedStore} onValueChange={setSelectedStore}>
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue placeholder="All Stores" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Stores</SelectItem>
@@ -195,7 +232,7 @@ export default function Home() {
                 <label className="text-sm font-medium text-gray-700 block">Discount</label>
                 <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue placeholder="Any Discount" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Any Discount</SelectItem>
