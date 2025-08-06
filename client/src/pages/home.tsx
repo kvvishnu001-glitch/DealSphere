@@ -204,70 +204,71 @@ export default function Home() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
-        <Card className="mb-8">
-          <CardContent className="p-4 sm:p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block">Category</label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {availableCategories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <Card className="mb-8 shadow-sm">
+          <CardContent className="p-4 sm:p-6 lg:p-8">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 lg:gap-6">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 block">Category</label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {availableCategories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 block">Store</label>
+                  <Select value={selectedStore} onValueChange={setSelectedStore}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All Stores" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Stores</SelectItem>
+                      {availableStores.map((store) => (
+                        <SelectItem key={store} value={store}>
+                          {store}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 block">Discount</label>
+                  <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Any Discount" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Any Discount</SelectItem>
+                      {availableDiscounts.includes("50+") && (
+                        <SelectItem value="50+">50%+ Off</SelectItem>
+                      )}
+                      {availableDiscounts.includes("30+") && (
+                        <SelectItem value="30+">30%+ Off</SelectItem>
+                      )}
+                      {availableDiscounts.includes("10+") && (
+                        <SelectItem value="10+">10%+ Off</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block">Store</label>
-                <Select value={selectedStore} onValueChange={setSelectedStore}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All Stores" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Stores</SelectItem>
-                    {availableStores.map((store) => (
-                      <SelectItem key={store} value={store}>
-                        {store}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block">Discount</label>
-                <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Any Discount" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Any Discount</SelectItem>
-                    {availableDiscounts.includes("50+") && (
-                      <SelectItem value="50+">50%+ Off</SelectItem>
-                    )}
-                    {availableDiscounts.includes("30+") && (
-                      <SelectItem value="30+">30%+ Off</SelectItem>
-                    )}
-                    {availableDiscounts.includes("10+") && (
-                      <SelectItem value="10+">10%+ Off</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block sm:invisible">Actions</label>
+              <div className="flex justify-center lg:justify-end">
                 <Button 
                   variant="outline" 
                   onClick={clearFilters}
-                  className="w-full text-gray-600 hover:text-gray-800"
+                  className="w-full sm:w-auto lg:w-auto text-gray-600 hover:text-gray-800 lg:px-8 lg:py-2.5"
                 >
                   <X className="w-4 h-4 mr-1" />
                   Clear Filters
