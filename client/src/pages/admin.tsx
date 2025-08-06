@@ -275,6 +275,9 @@ export default function AdminPage() {
     createDealMutation.mutate(dealForm);
   };
 
+  // Debug: show current state
+  console.log("Admin Page State:", { isCheckingAuth, isLoggedIn, currentAdmin });
+
   // Show loading while checking auth
   if (isCheckingAuth) {
     return (
