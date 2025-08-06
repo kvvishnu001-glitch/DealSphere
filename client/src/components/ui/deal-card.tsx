@@ -51,7 +51,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
 
   if (variant === "compact") {
     return (
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
         <div className="relative">
           <img
             src={deal.imageUrl || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=400&h=200&fit=crop"}
@@ -62,11 +62,11 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             {deal.discountPercentage}% OFF
           </Badge>
         </div>
-        <CardContent className="p-4">
-          <h4 className="font-semibold text-sm text-gray-900 mb-2 line-clamp-2">
+        <CardContent className="p-4 flex flex-col flex-grow">
+          <h4 className="font-semibold text-sm text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem]">
             {deal.title}
           </h4>
-          <div className="flex items-center space-x-1 mb-2">
+          <div className="flex items-center space-x-1 mb-4">
             <span className="text-lg font-bold text-red-600">
               {formatPrice(deal.salePrice)}
             </span>
@@ -74,15 +74,17 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
               {formatPrice(deal.originalPrice)}
             </span>
           </div>
-          <Button
-            onClick={handleDealClick}
-            disabled={isLoading}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-white mb-3"
-            size="sm"
-          >
-            {isLoading ? "Loading..." : "Get Deal"}
-          </Button>
-          <SocialShare deal={deal} />
+          <div className="mt-auto space-y-3">
+            <Button
+              onClick={handleDealClick}
+              disabled={isLoading}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+              size="sm"
+            >
+              {isLoading ? "Loading..." : "Get Deal"}
+            </Button>
+            <SocialShare deal={deal} />
+          </div>
         </CardContent>
       </Card>
     );
@@ -90,14 +92,14 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
 
   if (variant === "list") {
     return (
-      <div className="flex items-center p-4 hover:bg-gray-50 transition-colors">
+      <div className="flex items-center p-4 hover:bg-gray-50 transition-colors min-h-[120px]">
         <img
           src={deal.imageUrl || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=100&h=100&fit=crop"}
           alt={deal.title}
-          className="w-16 h-16 rounded-lg object-cover mr-4"
+          className="w-16 h-16 rounded-lg object-cover mr-4 flex-shrink-0"
         />
-        <div className="flex-1">
-          <h4 className="font-semibold text-gray-900">{deal.title}</h4>
+        <div className="flex-1 min-w-0 pr-4">
+          <h4 className="font-semibold text-gray-900 truncate">{deal.title}</h4>
           <p className="text-sm text-gray-600">{deal.store} • Just added</p>
           <div className="flex items-center space-x-2 mt-1">
             <span className="text-lg font-bold text-red-600">
@@ -111,11 +113,12 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             </Badge>
           </div>
         </div>
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col space-y-2 items-end flex-shrink-0">
           <Button
             onClick={handleDealClick}
             disabled={isLoading}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 hover:bg-red-700 text-white px-6"
+            size="sm"
           >
             {isLoading ? "Loading..." : "Get Deal"}
           </Button>
@@ -126,7 +129,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
+    <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
       <div className="relative">
         <img
           src={deal.imageUrl || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=800&h=600&fit=crop"}
@@ -144,7 +147,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
         )}
       </div>
 
-      <CardContent className="p-6">
+      <CardContent className="p-6 flex flex-col flex-grow">
         <div className="flex items-center mb-2">
           <img
             src={deal.storeLogoUrl || "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?ixlib=rb-4.0.3&w=100&h=100&fit=crop"}
@@ -154,7 +157,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
           <span className="text-sm text-gray-600">{deal.store}</span>
         </div>
 
-        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
+        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem]">
           {deal.title}
         </h3>
 
@@ -201,15 +204,17 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
           </span>
         </div>
 
-        <Button
-          onClick={handleDealClick}
-          disabled={isLoading}
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 mb-3"
-        >
-          {isLoading ? "Loading..." : "Get Deal Now"}
-        </Button>
+        <div className="mt-auto space-y-3">
+          <Button
+            onClick={handleDealClick}
+            disabled={isLoading}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3"
+          >
+            {isLoading ? "Loading..." : "Get Deal Now"}
+          </Button>
 
-        <SocialShare deal={deal} />
+          <SocialShare deal={deal} />
+        </div>
       </CardContent>
     </Card>
   );
