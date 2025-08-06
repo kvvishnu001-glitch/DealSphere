@@ -20,8 +20,26 @@ if DATABASE_URL.startswith("postgres://"):
 if not DATABASE_URL.startswith("postgresql+asyncpg://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+# Handle SSL mode for asyncpg - convert sslmode parameter to connect_args
+if "?sslmode=require" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("?sslmode=require", "")
+    connect_args = {"ssl": "require"}
+elif "sslmode=require" in DATABASE_URL:
+    # Remove sslmode from URL and handle it in connect_args
+    parts = DATABASE_URL.split("?")
+    if len(parts) > 1:
+        params = parts[1].split("&")
+        filtered_params = [p for p in params if not p.startswith("sslmode=")]
+        if filtered_params:
+            DATABASE_URL = parts[0] + "?" + "&".join(filtered_params)
+        else:
+            DATABASE_URL = parts[0]
+    connect_args = {"ssl": "require"}
+else:
+    connect_args = {}
+
 # Create async engine
-engine = create_async_engine(DATABASE_URL)
+engine = create_async_engine(DATABASE_URL, connect_args=connect_args)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 Base = declarative_base()
