@@ -74,23 +74,68 @@
   }
 }
 
-/* Select dropdown fix for visibility */
-[data-radix-select-content] {
+/* Select dropdown fix for visibility - targeting all possible selectors */
+[data-radix-select-content],
+[data-radix-popper-content-wrapper],
+.radix-select-content {
   background-color: white !important;
-  color: rgb(17 24 39) !important;
-  border: 1px solid rgb(209 213 219) !important;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
-  z-index: 1000 !important;
+  color: #111827 !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  z-index: 9999 !important;
 }
 
-[data-radix-select-item] {
-  color: rgb(17 24 39) !important;
+[data-radix-select-item],
+.radix-select-item {
+  color: #111827 !important;
+  background-color: white !important;
   padding: 12px 8px 12px 32px !important;
   font-weight: 500 !important;
+  cursor: pointer !important;
 }
 
 [data-radix-select-item]:hover,
-[data-radix-select-item][data-highlighted] {
-  background-color: rgb(243 244 246) !important;
-  color: rgb(17 24 39) !important;
+[data-radix-select-item][data-highlighted],
+[data-radix-select-item]:focus,
+.radix-select-item:hover,
+.radix-select-item:focus {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+/* More specific targeting for Radix UI components */
+[role="option"] {
+  color: #111827 !important;
+  background-color: white !important;
+}
+
+[role="option"]:hover,
+[role="option"][aria-selected="true"] {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+/* Universal override for all possible select dropdown elements */
+* {
+  --radix-select-content-background: white !important;
+  --radix-select-content-color: #111827 !important;
+}
+
+/* Target the portal content specifically */
+div[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+div[data-radix-popper-content-wrapper] * {
+  color: #111827 !important;
+  background-color: white !important;
+}
+
+/* Additional fallbacks for shadcn-ui specific classes */
+.bg-popover {
+  background-color: white !important;
+}
+
+.text-popover-foreground {
+  color: #111827 !important;
 }
