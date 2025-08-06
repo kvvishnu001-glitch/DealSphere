@@ -371,33 +371,107 @@ export default function Home() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Popular Categories</h4>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors">Electronics</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Fashion</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Home & Garden</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Travel</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Sports & Outdoors</a></li>
+                {availableCategories.slice(0, 6).map((category) => (
+                  <li key={category}>
+                    <button 
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        window.scrollTo({ top: 200, behavior: 'smooth' });
+                      }}
+                      className="hover:text-white transition-colors text-left"
+                    >
+                      {category}
+                    </button>
+                  </li>
+                ))}
+                {availableCategories.length === 0 && (
+                  <>
+                    <li><span className="text-gray-400">Electronics</span></li>
+                    <li><span className="text-gray-400">Fashion</span></li>
+                    <li><span className="text-gray-400">Home & Garden</span></li>
+                    <li><span className="text-gray-400">Sports</span></li>
+                    <li><span className="text-gray-400">Beauty</span></li>
+                    <li><span className="text-gray-400">Books</span></li>
+                  </>
+                )}
               </ul>
             </div>
             
             <div>
               <h4 className="text-lg font-semibold mb-4">Top Stores</h4>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors">Amazon</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Target</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Best Buy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Walmart</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Macy's</a></li>
+                {availableStores.slice(0, 6).map((store) => (
+                  <li key={store}>
+                    <button 
+                      onClick={() => {
+                        setSelectedStore(store);
+                        window.scrollTo({ top: 200, behavior: 'smooth' });
+                      }}
+                      className="hover:text-white transition-colors text-left"
+                    >
+                      {store}
+                    </button>
+                  </li>
+                ))}
+                {availableStores.length === 0 && (
+                  <>
+                    <li><span className="text-gray-400">Amazon</span></li>
+                    <li><span className="text-gray-400">Target</span></li>
+                    <li><span className="text-gray-400">Best Buy</span></li>
+                    <li><span className="text-gray-400">Walmart</span></li>
+                    <li><span className="text-gray-400">eBay</span></li>
+                    <li><span className="text-gray-400">Macy's</span></li>
+                  </>
+                )}
               </ul>
             </div>
             
             <div>
               <h4 className="text-lg font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Affiliate Disclosure</a></li>
+                <li>
+                  <button 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    About DealSphere
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {
+                      const email = 'support@dealsphere.com';
+                      window.location.href = `mailto:${email}?subject=DealSphere Inquiry`;
+                    }}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    Contact Support
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => alert('Privacy Policy: DealSphere protects your data. We use cookies for analytics and personalization. No personal data is sold to third parties.')}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    Privacy Policy
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => alert('Terms of Service: By using DealSphere, you agree to our fair use policy. Deals are verified by AI but prices may change. We earn affiliate commissions on purchases.')}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    Terms of Service
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => window.scrollTo({ bottom: 0, behavior: 'smooth' })}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    Affiliate Disclosure
+                  </button>
+                </li>
               </ul>
             </div>
           </div>
