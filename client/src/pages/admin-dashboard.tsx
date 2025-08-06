@@ -460,9 +460,12 @@ export default function AdminDashboard() {
                           <td style={{ padding: "12px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                               <img 
-                                src={deal.image_url || "/placeholder.jpg"} 
+                                src={deal.image_url || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop"} 
                                 alt={deal.title}
                                 style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "4px" }}
+                                onError={(e) => {
+                                  e.currentTarget.src = "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop";
+                                }}
                               />
                               <div>
                                 <div style={{ fontWeight: "bold", fontSize: "14px", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
