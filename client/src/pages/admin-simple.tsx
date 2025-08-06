@@ -48,12 +48,15 @@ export default function AdminSimple() {
 
   // Check for existing token on mount
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (token) {
-      setIsLoggedIn(true);
-      fetchMetrics();
-      fetchDeals();
-    }
+    // For now, always start with login form - clear any existing session
+    localStorage.removeItem("admin_token");
+    setIsLoggedIn(false);
+    
+    // Future: Add token verification here when backend supports it
+    // const token = localStorage.getItem("admin_token");
+    // if (token) {
+    //   verifyTokenWithBackend(token);
+    // }
   }, []);
 
   const fetchMetrics = async () => {
