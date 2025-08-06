@@ -1,10 +1,10 @@
-modules = ["nodejs-20", "web", "postgresql-16", "python-3.11"]
+modules = ["nodejs-20", "web", "postgresql-16", "python-3.11", "python3"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["libxcrypt", "postgresql", "docker"]
+packages = ["cargo", "docker", "libiconv", "libxcrypt", "postgresql", "rustc"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -42,3 +42,6 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[agent]
+integrations = ["javascript_database==1.0.0", "javascript_auth_all_persistance==1.0.0"]

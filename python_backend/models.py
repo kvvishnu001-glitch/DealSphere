@@ -76,6 +76,17 @@ class User(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+    
+    id = Column(String, primary_key=True)
+    username = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
 class Session(Base):
     __tablename__ = "sessions"
     
@@ -145,3 +156,33 @@ class UserResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+class AdminUserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class AdminUserLogin(BaseModel):
+    username: str
+    password: str
+
+class AdminUserResponse(BaseModel):
+    id: str
+    username: str
+    email: str
+    is_active: bool
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class AdminMetrics(BaseModel):
+    total_deals: int
+    ai_approved_deals: int
+    pending_deals: int
+    total_clicks: int
+    total_shares: int
+    revenue_estimate: float
+    top_categories: List[Dict[str, Any]]
+    top_stores: List[Dict[str, Any]]
+    recent_activity: List[Dict[str, Any]]
