@@ -174,6 +174,84 @@ async def create_deal(
     await db.refresh(deal)
     return deal
 
+@router.patch("/deals/{deal_id}", response_model=DealResponse)
+async def update_deal(
+    deal_id: str,
+    deal_data: DealCreate,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update an existing deal"""
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
+    
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    
+    for field, value in deal_data.model_dump(exclude_unset=True).items():
+        setattr(deal, field, value)
+    
+    await db.commit()
+    await db.refresh(deal)
+    return deal
+
+@router.patch("/deals/{deal_id}/approve")
+async def approve_deal(
+    deal_id: str,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Approve a deal"""
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
+    
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    
+    deal.is_ai_approved = True
+    deal.status = "approved"
+    deal.updated_at = datetime.utcnow()
+    
+    await db.commit()
+    return {"message": "Deal approved successfully"}
+
+@router.patch("/deals/{deal_id}/reject")
+async def reject_deal(
+    deal_id: str,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Reject a deal (will be auto-deleted after 24 hours)"""
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
+    
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    
+    deal.is_ai_approved = False
+    deal.status = "rejected"
+    deal.updated_at = datetime.utcnow()
+    
+    await db.commit()
+    return {"message": "Deal rejected and will be deleted in 24 hours"}
+
+@router.delete("/deals/{deal_id}")
+async def delete_deal(
+    deal_id: str,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Permanently delete a deal"""
+    result = await db.execute(select(Deal).where(Deal.id == deal_id))
+    deal = result.scalar_one_or_none()
+    
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    
+    await db.delete(deal)
+    await db.commit()
+    return {"message": "Deal deleted successfully"}
+
 @router.put("/deals/{deal_id}", response_model=DealResponse)
 async def update_deal(
     deal_id: str,

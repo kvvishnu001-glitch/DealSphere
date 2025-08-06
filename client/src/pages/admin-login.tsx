@@ -21,9 +21,9 @@ export default function AdminLogin() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    console.log('AdminLogin render - isLoggedIn:', !!localStorage.getItem('adminToken'));
+    console.log('AdminLogin render - isLoggedIn:', !!localStorage.getItem('admin_token'));
     // Check if already logged in
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem('admin_token');
     if (token) {
       setLocation('/admin/dashboard');
       return;
@@ -31,7 +31,7 @@ export default function AdminLogin() {
     
     console.log('AdminLogin mounted - clearing localStorage');
     // Clear any old tokens on mount
-    localStorage.removeItem('adminToken');
+    localStorage.removeItem('admin_token');
   }, [setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -50,7 +50,7 @@ export default function AdminLogin() {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('adminToken', data.access_token);
+        localStorage.setItem('admin_token', data.access_token);
         localStorage.setItem('adminUser', JSON.stringify(data.admin));
         setLocation('/admin/dashboard');
       } else {
