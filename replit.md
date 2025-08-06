@@ -4,10 +4,12 @@ DealSphere is an AI-powered deals and coupons platform that aggregates product d
 
 ## Recent Changes (2025-08-06)
 - **Public Access**: Removed authentication requirement for viewing deals - anyone can now browse all deals
-- **Deal Types Display**: Homepage now shows all three deal categories (Top Deals, Hot Deals, Latest Deals) simultaneously
+- **Deal Types Display**: Homepage now shows all three deal categories (Top Deals, Hot Deals, Latest Deals) simultaneously  
 - **Admin Dashboard**: Admin features are accessible only at `/admin` route, not visible to general public
 - **Sample Data**: Added comprehensive sample deals across all categories with realistic pricing and product information
-- **Python Backend**: Developed complete Python FastAPI backend as alternative to Node.js (available but not currently active)
+- **Code Cleanup**: Removed unnecessary TypeScript authentication code (useAuth.ts, authUtils.ts)
+- **Social Sharing**: Added social share buttons to all deal card variants (compact, list, and full)
+- **Python Backend**: Developed complete Python FastAPI backend as alternative to Node.js (currently using Node.js backend, Python ready for switch)
 
 # User Preferences
 

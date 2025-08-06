@@ -47,13 +47,10 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 async def health_check():
     return {"status": "healthy", "message": "DealSphere API is running"}
 
-# Mount static files and serve frontend
-app.mount("/assets", StaticFiles(directory="client/dist/assets"), name="assets")
-
-@app.get("/{full_path:path}")
-async def serve_frontend(full_path: str):
-    # Serve index.html for all frontend routes
-    return FileResponse("client/dist/index.html")
+# Root endpoint
+@app.get("/")
+async def root():
+    return {"message": "DealSphere API is running", "status": "healthy"}
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
