@@ -92,16 +92,16 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
 
   if (variant === "list") {
     return (
-      <div className="flex items-center p-4 hover:bg-gray-50 transition-colors min-h-[120px]">
+      <div className="flex flex-col sm:flex-row sm:items-center p-4 hover:bg-gray-50 transition-colors min-h-[120px] space-y-3 sm:space-y-0">
         <img
           src={deal.imageUrl || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=100&h=100&fit=crop"}
           alt={deal.title}
-          className="w-16 h-16 rounded-lg object-cover mr-4 flex-shrink-0"
+          className="w-16 h-16 rounded-lg object-cover sm:mr-4 flex-shrink-0 self-start"
         />
-        <div className="flex-1 min-w-0 pr-4">
-          <h4 className="font-semibold text-gray-900 truncate">{deal.title}</h4>
-          <p className="text-sm text-gray-600">{deal.store} • Just added</p>
-          <div className="flex items-center space-x-2 mt-1">
+        <div className="flex-1 min-w-0 sm:pr-4">
+          <h4 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 sm:truncate">{deal.title}</h4>
+          <p className="text-sm text-gray-600 mt-1">{deal.store} • Just added</p>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className="text-lg font-bold text-red-600">
               {formatPrice(deal.salePrice)}
             </span>
@@ -113,16 +113,18 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             </Badge>
           </div>
         </div>
-        <div className="flex flex-col space-y-2 items-end flex-shrink-0">
+        <div className="flex flex-row sm:flex-col space-x-2 sm:space-x-0 sm:space-y-2 items-start sm:items-end flex-shrink-0 w-full sm:w-auto">
           <Button
             onClick={handleDealClick}
             disabled={isLoading}
-            className="bg-red-600 hover:bg-red-700 text-white px-6"
+            className="bg-red-600 hover:bg-red-700 text-white flex-1 sm:flex-none sm:px-6"
             size="sm"
           >
             {isLoading ? "Loading..." : "Get Deal"}
           </Button>
-          <SocialShare deal={deal} />
+          <div className="flex-shrink-0">
+            <SocialShare deal={deal} />
+          </div>
         </div>
       </div>
     );
