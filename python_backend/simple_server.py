@@ -131,6 +131,11 @@ frontend_dist_path = Path("../client/dist")
 if frontend_dist_path.exists():
     app.mount("/assets", StaticFiles(directory="../client/dist/assets"), name="assets")
     
+    # Specific route for admin
+    @app.get("/admin")
+    async def serve_admin():
+        return FileResponse("../client/dist/index.html")
+    
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
         # API routes should not be caught here
