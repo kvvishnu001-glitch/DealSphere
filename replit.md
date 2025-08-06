@@ -3,13 +3,15 @@
 DealSphere is an AI-powered deals and coupons platform that aggregates product deals from various stores and uses artificial intelligence to validate and categorize them. The platform now features a public-facing deals browser that shows all deal types (top deals, hot deals, latest deals) without requiring authentication, and an admin dashboard for managing deal submissions, approvals, and analytics. Built as a full-stack application with React frontend and Express backend, it leverages OpenAI for deal validation. A Python backend implementation has also been developed as an alternative.
 
 ## Recent Changes (2025-08-06)
+- **Backend Migration**: Completely switched from TypeScript/Node.js to Python FastAPI backend
+- **AWS Deployment Ready**: Created Docker configuration, ECS task definitions, and deployment guides
 - **Public Access**: Removed authentication requirement for viewing deals - anyone can now browse all deals
 - **Deal Types Display**: Homepage now shows all three deal categories (Top Deals, Hot Deals, Latest Deals) simultaneously  
 - **Admin Dashboard**: Admin features are accessible only at `/admin` route, not visible to general public
 - **Sample Data**: Added comprehensive sample deals across all categories with realistic pricing and product information
 - **Code Cleanup**: Removed unnecessary TypeScript authentication code (useAuth.ts, authUtils.ts)
 - **Social Sharing**: Added social share buttons to all deal card variants (compact, list, and full)
-- **Python Backend**: Developed complete Python FastAPI backend as alternative to Node.js (currently using Node.js backend, Python ready for switch)
+- **Production Ready**: Created Dockerfile, docker-compose.yml, and AWS deployment documentation
 
 # User Preferences
 
@@ -19,17 +21,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Frontend Architecture
 - **Framework**: React with TypeScript using Vite as the build tool
-- **Routing**: Wouter for client-side routing with conditional rendering based on authentication
+- **Routing**: Wouter for client-side routing with public access for deals browsing
 - **UI Framework**: Shadcn/ui components built on Radix UI primitives with Tailwind CSS for styling
 - **State Management**: TanStack Query for server state management and data fetching
-- **Authentication Flow**: Conditional routing that redirects unauthenticated users to a landing page and authenticated users to the main application
+- **Build**: Optimized production build served statically by Python backend
 
 ## Backend Architecture
-- **Framework**: Express.js with TypeScript running on Node.js
-- **Authentication**: Replit's OpenID Connect (OIDC) authentication system with Passport.js
-- **Session Management**: Express sessions stored in PostgreSQL using connect-pg-simple
-- **API Structure**: RESTful endpoints organized by feature (deals, auth, admin) with middleware for logging and error handling
-- **File Organization**: Modular structure with separate files for routes, services, storage, and database configuration
+- **Framework**: FastAPI with Python 3.11 for high-performance async API
+- **Database**: PostgreSQL with SQLAlchemy async ORM and asyncpg driver
+- **API Structure**: RESTful endpoints with automatic OpenAPI documentation
+- **Static Files**: Serves built React frontend and handles all routing
+- **Performance**: Async/await throughout for optimal concurrent request handling
 
 ## Database Design
 - **ORM**: Drizzle ORM with PostgreSQL as the primary database

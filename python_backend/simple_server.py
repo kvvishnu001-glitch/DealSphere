@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 import uvicorn
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 # Simple imports without relative paths
-from database import get_db, init_database, Base, engine
+from database import get_db, init_database
 from models import Deal as DealModel
 
 @asynccontextmanager
@@ -119,9 +122,23 @@ async def track_deal_share(deal_id: str, db: AsyncSession = Depends(get_db)):
         print(f"Error tracking share: {e}")
         return {"error": "Failed to track share"}
 
-@app.get("/")
-async def root():
-    return {"message": "DealSphere Python API is running", "status": "healthy"}
+# Serve static files for frontend (when built)
+frontend_dist_path = Path("../client/dist")
+if frontend_dist_path.exists():
+    app.mount("/assets", StaticFiles(directory="../client/dist/assets"), name="assets")
+    
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        # API routes should not be caught here
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        
+        # Serve index.html for all frontend routes
+        return FileResponse("../client/dist/index.html")
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "DealSphere Python API is running", "status": "healthy", "note": "Frontend not built"}
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
