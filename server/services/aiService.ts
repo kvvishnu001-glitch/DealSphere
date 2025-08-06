@@ -18,6 +18,7 @@ export interface DealValidationResult {
 export class AIService {
   async validateDeal(deal: Partial<InsertDeal>): Promise<DealValidationResult> {
     try {
+      console.log(`Validating deal: ${deal.title}`);
       const prompt = `
         Analyze this deal and provide a validation assessment in JSON format:
 

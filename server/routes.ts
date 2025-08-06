@@ -166,13 +166,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Seed sample deals (development only)
-  app.post('/api/admin/seed-deals', isAuthenticated, async (req, res) => {
+  app.post('/api/seed-deals', async (req, res) => {
     try {
+      console.log("Starting to seed deals...");
       await seedDeals();
+      console.log("Deals seeded successfully");
       res.json({ success: true, message: "Sample deals seeded successfully" });
     } catch (error) {
       console.error("Error seeding deals:", error);
-      res.status(500).json({ message: "Failed to seed deals" });
+      res.status(500).json({ message: "Failed to seed deals", error: error.message });
+    }
+  });
+
+  // Quick add deals without AI validation (for testing)
+  app.post('/api/quick-seed', async (req, res) => {
+    try {
+      console.log("Quick seeding deals without AI validation...");
+      const deals = [
+        {
+          title: "Echo Dot (5th Gen) Smart Speaker with Alexa",
+          description: "Compact smart speaker with improved audio, LED display, and Alexa voice control. Perfect for any room.",
+          originalPrice: "59.99",
+          salePrice: "19.99",
+          discountPercentage: 67,
+          imageUrl: "https://images.unsplash.com/photo-1589492477829-5e65395b66cc?ixlib=rb-4.0.3&w=800&h=600&fit=crop",
+          affiliateUrl: "https://amazon.com/echo-dot-5th-gen",
+          store: "Amazon",
+          storeLogoUrl: "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?ixlib=rb-4.0.3&w=100&h=100&fit=crop",
+          category: "electronics",
+          rating: "4.7",
+          reviewCount: 47821,
+          sourceApi: "amazon_api",
+          status: "approved",
+          aiScore: 9.2,
+          dealType: "top",
+          isActive: true,
+          isAiApproved: true
+        },
+        {
+          title: "Fire TV Stick 4K Max Streaming Device",
+          description: "Stream 4K Ultra HD content with Wi-Fi 6 support, Alexa Voice Remote, and faster app starts.",
+          originalPrice: "54.99",
+          salePrice: "27.99",
+          discountPercentage: 49,
+          imageUrl: "https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?ixlib=rb-4.0.3&w=800&h=600&fit=crop",
+          affiliateUrl: "https://amazon.com/fire-tv-stick-4k-max",
+          store: "Amazon",
+          storeLogoUrl: "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?ixlib=rb-4.0.3&w=100&h=100&fit=crop",
+          category: "electronics",
+          rating: "4.6",
+          reviewCount: 231654,
+          sourceApi: "amazon_api",
+          status: "approved",
+          aiScore: 8.8,
+          dealType: "hot",
+          isActive: true,
+          isAiApproved: true
+        }
+      ];
+
+      for (const deal of deals) {
+        await storage.createDeal(deal);
+        console.log(`Added deal: ${deal.title}`);
+      }
+
+      res.json({ success: true, message: "Quick deals added successfully" });
+    } catch (error) {
+      console.error("Error quick seeding deals:", error);
+      res.status(500).json({ message: "Failed to quick seed deals", error: error.message });
     }
   });
 
