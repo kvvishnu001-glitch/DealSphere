@@ -28,7 +28,26 @@ class DealsService:
         only_approved: bool = True
     ) -> List[DealResponse]:
         """Get deals with optional filtering"""
-        query = select(DealModel).where(DealModel.is_active == True)
+        query = select(DealModel).where(
+            and_(
+                DealModel.is_active == True,
+                # Apply mandatory field validation at database level
+                DealModel.title.isnot(None),
+                DealModel.title != '',
+                DealModel.description.isnot(None), 
+                DealModel.description != '',
+                DealModel.original_price.isnot(None),
+                DealModel.sale_price.isnot(None),
+                DealModel.store.isnot(None),
+                DealModel.store != '',
+                DealModel.category.isnot(None),
+                DealModel.category != '',
+                DealModel.affiliate_url.isnot(None),
+                DealModel.affiliate_url != '',
+                DealModel.image_url.isnot(None),
+                DealModel.image_url != ''
+            )
+        )
         
         if only_approved:
             query = query.where(DealModel.is_ai_approved == True)
@@ -55,9 +74,10 @@ class DealsService:
         result = await self.db.execute(query)
         deals = result.scalars().all()
         
-        # Filter out deals that don't meet mandatory field requirements
+        # Convert to response format (all deals should now be valid)
         valid_deals = []
         for deal in deals:
+            # Sanitize and optimize the deal data
             deal_dict = {
                 'title': deal.title,
                 'description': deal.description,
@@ -68,45 +88,40 @@ class DealsService:
                 'affiliate_url': deal.affiliate_url,
                 'image_url': deal.image_url
             }
+            sanitized_deal_data = self.validator.sanitize_deal_data(deal_dict)
             
-            validation = self.validator.validate_deal_completeness(deal_dict)
-            if validation['is_valid']:
-                # Sanitize and optimize the deal data
-                sanitized_deal_data = self.validator.sanitize_deal_data(deal_dict)
-                
-                # Update the deal with sanitized image URL (external, properly sized)
-                deal.image_url = sanitized_deal_data.get('image_url', deal.image_url)
-                
-                # Ensure all required fields have proper defaults before validation
-                deal_dict_for_response = {
-                    'id': deal.id,
-                    'title': deal.title,
-                    'description': deal.description,
-                    'original_price': float(deal.original_price),
-                    'sale_price': float(deal.sale_price),
-                    'discount_percentage': deal.discount_percentage,
-                    'image_url': deal.image_url,
-                    'affiliate_url': deal.affiliate_url,
-                    'store': deal.store,
-                    'store_logo_url': deal.store_logo_url,
-                    'category': deal.category,
-                    'rating': float(deal.rating) if deal.rating else None,
-                    'review_count': deal.review_count or 0,
-                    'expires_at': deal.expires_at,
-                    'is_active': deal.is_active,
-                    'is_ai_approved': deal.is_ai_approved or False,
-                    'ai_score': float(deal.ai_score) if deal.ai_score else 0.0,
-                    'popularity': deal.popularity or 0,
-                    'click_count': deal.click_count or 0,
-                    'share_count': deal.share_count or 0,
-                    'deal_type': deal.deal_type or 'latest',
-                    'coupon_code': deal.coupon_code,
-                    'coupon_required': deal.coupon_required or False,
-                    'created_at': deal.created_at,
-                    'updated_at': deal.updated_at
-                }
-                valid_deals.append(DealResponse.model_validate(deal_dict_for_response))
-            # Deals that fail validation are excluded from results
+            # Update the deal with sanitized image URL (external, properly sized)
+            deal.image_url = sanitized_deal_data.get('image_url', deal.image_url)
+            
+            # Ensure all required fields have proper defaults before validation
+            deal_dict_for_response = {
+                'id': deal.id,
+                'title': deal.title,
+                'description': deal.description,
+                'original_price': float(deal.original_price),
+                'sale_price': float(deal.sale_price),
+                'discount_percentage': deal.discount_percentage,
+                'image_url': deal.image_url,
+                'affiliate_url': deal.affiliate_url,
+                'store': deal.store,
+                'store_logo_url': deal.store_logo_url,
+                'category': deal.category,
+                'rating': float(deal.rating) if deal.rating else None,
+                'review_count': deal.review_count or 0,
+                'expires_at': deal.expires_at,
+                'is_active': deal.is_active,
+                'is_ai_approved': deal.is_ai_approved or False,
+                'ai_score': float(deal.ai_score) if deal.ai_score else 0.0,
+                'popularity': deal.popularity or 0,
+                'click_count': deal.click_count or 0,
+                'share_count': deal.share_count or 0,
+                'deal_type': deal.deal_type or 'latest',
+                'coupon_code': deal.coupon_code,
+                'coupon_required': deal.coupon_required or False,
+                'created_at': deal.created_at,
+                'updated_at': deal.updated_at
+            }
+            valid_deals.append(DealResponse.model_validate(deal_dict_for_response))
         
         return valid_deals
 
