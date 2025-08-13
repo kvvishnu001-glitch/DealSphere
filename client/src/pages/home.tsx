@@ -113,9 +113,9 @@ export default function Home() {
     return true;
   }) || [];
 
-  const topDeals = filteredDeals.filter((deal: Deal) => deal.dealType === 'top').slice(0, 3);
-  const hotDeals = filteredDeals.filter((deal: Deal) => deal.dealType === 'hot').slice(0, 4);
-  const latestDeals = filteredDeals.filter((deal: Deal) => deal.dealType === 'latest').slice(0, 5);
+  const topDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'top').slice(0, 3);
+  const hotDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'hot').slice(0, 4);
+  const latestDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'latest').slice(0, 5);
 
   const clearFilters = () => {
     setSelectedCategory("all");

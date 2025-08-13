@@ -3,7 +3,22 @@ import { Button } from "@/components/ui/button";
 import { Facebook, Twitter, MessageCircle, Link } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Deal } from "@shared/schema";
+// Use local Deal type to match API response format
+interface Deal {
+  id: string;
+  title: string;
+  description: string;
+  original_price: number;
+  sale_price: number;
+  discount_percentage: number;
+  image_url: string;
+  affiliate_url: string;
+  store: string;
+  category: string;
+  rating?: number;
+  review_count?: number;
+  deal_type?: string;
+}
 
 interface SocialShareProps {
   deal: Deal;
