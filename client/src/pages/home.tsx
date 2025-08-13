@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -52,15 +52,25 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Fetch all deals
-  const { data: deals, isLoading } = useQuery({
+  const { data: deals, isLoading, error } = useQuery({
     queryKey: ['/api/deals', { limit: 100 }],
-    queryFn: ({ queryKey }) => {
+    queryFn: async ({ queryKey }) => {
       const [path, params] = queryKey as [string, { limit: number }];
       const url = new URL(path, window.location.origin);
       url.searchParams.set('limit', params.limit.toString());
-      return fetch(url.toString()).then(res => res.json());
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Raw API Response:', data);
+      return data;
     },
   });
+
+  if (error) {
+    console.error('Query error:', error);
+  }
 
   // Get unique filter options from actual deals data
   const availableCategories = [...new Set(deals?.map((deal: Deal) => deal.category) || [])];
@@ -73,53 +83,43 @@ export default function Home() {
     return null;
   }).filter(Boolean) || [])];
 
-  // Filter deals based on selected filters and search query
-  const filteredDeals = deals?.filter((deal: Deal) => {
-    // Ensure deal has essential fields
-    if (!deal.title || !deal.original_price || !deal.sale_price || !deal.store || !deal.category) {
-      return false;
-    }
-    
-    // Search filter
-    if (searchQuery.trim() !== "") {
-      const query = searchQuery.toLowerCase();
-      const searchable = `${deal.title} ${deal.description} ${deal.store} ${deal.category}`.toLowerCase();
-      if (!searchable.includes(query)) return false;
-    }
-    
-    // Category filter
-    if (selectedCategory !== "all" && deal.category !== selectedCategory) return false;
-    
-    // Store filter  
-    if (selectedStore !== "all" && deal.store !== selectedStore) return false;
-    
-    // Discount filter
-    if (selectedDiscount !== "all") {
-      const discount = deal.discount_percentage;
-      switch (selectedDiscount) {
-        case "50+":
-          if (discount < 50) return false;
-          break;
-        case "30+":
-          if (discount < 30) return false;
-          break;
-        case "10+":
-          if (discount < 10) return false;
-          break;
-      }
-    }
-    return true;
-  }) || [];
+  // Simplified filtering - just return all deals for now to debug
+  const filteredDeals = deals || [];
+  
+  // Let's also try manual filtering step by step
+  console.log('Starting manual filter check...');
+  if (deals && deals.length > 0) {
+    deals.forEach((deal: any, index: number) => {
+      console.log(`Deal ${index + 1}:`, {
+        title: deal.title,
+        has_title: !!deal.title,
+        has_original_price: !!deal.original_price,
+        has_sale_price: !!deal.sale_price,
+        has_store: !!deal.store,
+        has_category: !!deal.category,
+        deal_type: deal.deal_type
+      });
+    });
+  }
 
   // Debug logging
   console.log('All deals from API:', deals?.length || 0);
   console.log('Filtered deals:', filteredDeals?.length || 0);
+  
+  if (deals && deals.length > 0) {
+    console.log('First deal sample:', deals[0]);
+    console.log('Deal types found:', [...new Set(deals.map((d: any) => d.deal_type))]);
+  }
   
   const topDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'top').slice(0, 3);
   const hotDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'hot').slice(0, 4);
   const latestDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'latest').slice(0, 5);
   
   console.log('Top deals:', topDeals.length, 'Hot deals:', hotDeals.length, 'Latest deals:', latestDeals.length);
+  
+  if (filteredDeals && filteredDeals.length > 0) {
+    console.log('Filtered deals sample:', filteredDeals[0]);
+  }
 
   const clearFilters = () => {
     setSelectedCategory("all");
