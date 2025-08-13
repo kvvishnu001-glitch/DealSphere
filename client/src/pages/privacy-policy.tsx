@@ -1,10 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Mail, MapPin, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Shield, Mail, MapPin, Clock, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 
 export default function PrivacyPolicy() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Navigation Header */}
+      <div className="mb-6">
+        <Link href="/">
+          <Button variant="outline" className="mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to DealSphere
+          </Button>
+        </Link>
+      </div>
       <div className="mb-8">
         <div className="flex items-center mb-4">
           <Shield className="w-8 h-8 text-blue-600 mr-3" />

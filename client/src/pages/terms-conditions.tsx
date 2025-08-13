@@ -1,10 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Mail, MapPin, Clock, Bot, Link as LinkIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, Mail, MapPin, Clock, Bot, Link as LinkIcon, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 
 export default function TermsConditions() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Navigation Header */}
+      <div className="mb-6">
+        <Link href="/">
+          <Button variant="outline" className="mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to DealSphere
+          </Button>
+        </Link>
+      </div>
       <div className="mb-8">
         <div className="flex items-center mb-4">
           <FileText className="w-8 h-8 text-blue-600 mr-3" />
