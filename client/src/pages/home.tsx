@@ -83,24 +83,43 @@ export default function Home() {
     return null;
   }).filter(Boolean) || [])];
 
-  // Simplified filtering - just return all deals for now to debug
-  const filteredDeals = deals || [];
-  
-  // Let's also try manual filtering step by step
-  console.log('Starting manual filter check...');
-  if (deals && deals.length > 0) {
-    deals.forEach((deal: any, index: number) => {
-      console.log(`Deal ${index + 1}:`, {
-        title: deal.title,
-        has_title: !!deal.title,
-        has_original_price: !!deal.original_price,
-        has_sale_price: !!deal.sale_price,
-        has_store: !!deal.store,
-        has_category: !!deal.category,
-        deal_type: deal.deal_type
-      });
-    });
-  }
+  // Filter deals properly
+  const filteredDeals = deals?.filter((deal: Deal) => {
+    // Basic field validation
+    if (!deal.title || !deal.original_price || !deal.sale_price || !deal.store || !deal.category) {
+      return false;
+    }
+    
+    // Search filter
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase();
+      const searchable = `${deal.title} ${deal.description} ${deal.store} ${deal.category}`.toLowerCase();
+      if (!searchable.includes(query)) return false;
+    }
+    
+    // Category filter
+    if (selectedCategory !== "all" && deal.category !== selectedCategory) return false;
+    
+    // Store filter  
+    if (selectedStore !== "all" && deal.store !== selectedStore) return false;
+    
+    // Discount filter
+    if (selectedDiscount !== "all") {
+      const discount = deal.discount_percentage;
+      switch (selectedDiscount) {
+        case "50+":
+          if (discount < 50) return false;
+          break;
+        case "30+":
+          if (discount < 30) return false;
+          break;
+        case "10+":
+          if (discount < 10) return false;
+          break;
+      }
+    }
+    return true;
+  }) || [];
 
   // Debug logging
   console.log('All deals from API:', deals?.length || 0);
