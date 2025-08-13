@@ -3,6 +3,11 @@
 DealSphere is an AI-powered deals and coupons platform that aggregates product deals from various stores and uses artificial intelligence to validate and categorize them. The platform now features a public-facing deals browser that shows all deal types (top deals, hot deals, latest deals) without requiring authentication, and an admin dashboard for managing deal submissions, approvals, and analytics. Built as a full-stack application with React frontend and Express backend, it leverages OpenAI for deal validation. A Python backend implementation has also been developed as an alternative.
 
 ## Recent Changes (2025-08-13)
+- **Rich Social Media Sharing**: Complete Open Graph meta tags integration for Facebook, WhatsApp, Twitter with dynamic deal images and descriptions
+- **Short URL System**: Generate shareable short URLs (e.g., /s/ABC123) that redirect to deal pages with full social media previews
+- **AI Review Column in CSV**: Added `needs_ai_review` column to CSV uploads - false = auto-approved, true = requires AI screening
+- **Enhanced Deal Click Tracking**: Fixed JSON parsing errors, now properly redirects users to affiliate URLs with click tracking
+- **Social Media Preview Cards**: Deal pages now display rich previews with images, titles, descriptions, and pricing when shared
 - **Complete US Affiliate Network Support**: Built comprehensive system supporting Amazon Associates, Commission Junction, ClickBank, ShareASale, Rakuten, Impact, Partnerize, AvantLink, AWIN, and more
 - **Compliance Management System**: Full FTC compliance validation, network-specific terms enforcement, and automatic violation detection
 - **Admin Affiliate Portal**: Complete UI for configuring all affiliate networks with API credentials, testing connections, and monitoring compliance

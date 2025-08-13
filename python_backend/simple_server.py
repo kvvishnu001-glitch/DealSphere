@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 import uvicorn
@@ -140,28 +140,105 @@ async def track_deal_click(deal_id: str, db: AsyncSession = Depends(get_db)):
         return {"error": "Failed to track click"}
 
 @app.post("/api/deals/{deal_id}/share")
-async def track_deal_share(deal_id: str, db: AsyncSession = Depends(get_db)):
+async def create_share_url(deal_id: str, platform: str = "general", db: AsyncSession = Depends(get_db)):
+    """Create short URL for sharing and track social share"""
     try:
-        # Get deal
-        result = await db.execute(select(DealModel).where(DealModel.id == deal_id))
-        deal = result.scalar_one_or_none()
+        from services.deals_service import DealsService
+        from models import SocialShareCreate
         
-        if not deal:
-            return {"error": "Deal not found"}
+        deals_service = DealsService(db)
         
-        # Increment share count
-        deal.share_count = (deal.share_count or 0) + 1
-        await db.commit()
+        share_data = SocialShareCreate(
+            deal_id=deal_id,
+            platform=platform,
+            ip_address="127.0.0.1"  # Default for simple server
+        )
         
-        return {"success": True}
+        short_url = await deals_service.create_share_url(deal_id, share_data)
+        
+        if not short_url:
+            raise HTTPException(status_code=400, detail="Failed to create share URL")
+        
+        return {"shortUrl": short_url}
     except Exception as e:
-        print(f"Error tracking share: {e}")
-        return {"error": "Failed to track share"}
+        print(f"Error creating share URL: {e}")
+        return {"error": "Failed to create share URL"}
+
+@app.get("/s/{short_code}")
+async def redirect_short_url(short_code: str, db: AsyncSession = Depends(get_db)):
+    """Redirect short URL to deal page"""
+    try:
+        from services.deals_service import DealsService
+        
+        deals_service = DealsService(db)
+        deal_url = await deals_service.resolve_short_url(short_code)
+        
+        if not deal_url:
+            raise HTTPException(status_code=404, detail="Short URL not found")
+        
+        # Redirect to the deal page
+        return RedirectResponse(url=deal_url, status_code=302)
+    except Exception as e:
+        print(f"Error resolving short URL: {e}")
+        raise HTTPException(status_code=404, detail="Short URL not found")
 
 # Serve static files for frontend (when built)
 frontend_dist_path = Path("../client/dist")
 if frontend_dist_path.exists():
     app.mount("/assets", StaticFiles(directory="../client/dist/assets"), name="assets")
+    
+    # Handle deal pages with Open Graph meta tags for social sharing
+    @app.api_route("/deals/{deal_id}", methods=["GET", "HEAD"])
+    async def serve_deal_page(deal_id: str, request: Request, db: AsyncSession = Depends(get_db)):
+        """Serve deal page with Open Graph meta tags for rich social sharing"""
+        try:
+            # Get deal data
+            result = await db.execute(select(DealModel).where(DealModel.id == deal_id))
+            deal = result.scalar_one_or_none()
+            
+            # Read the base HTML template
+            html_path = "../client/dist/index.html"
+            with open(html_path, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            
+            if deal:
+                # Get base URL for absolute URLs
+                base_url = str(request.base_url).rstrip('/')
+                
+                # Create Open Graph meta tags
+                og_title = f"{deal.title} - {deal.discount_percentage}% OFF"
+                og_description = deal.description or f"Get {deal.title} for just ${deal.sale_price} (was ${deal.original_price}). Save ${float(deal.original_price) - float(deal.sale_price):.2f}!"
+                og_image = deal.image_url or "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=630&fit=crop"
+                og_url = f"{base_url}/deals/{deal_id}"
+                
+                # Insert Open Graph meta tags into the HTML
+                meta_tags = f'''
+    <!-- Open Graph Meta Tags for Social Sharing -->
+    <meta property="og:title" content="{og_title.replace('"', '&quot;')}" />
+    <meta property="og:description" content="{og_description.replace('"', '&quot;')}" />
+    <meta property="og:image" content="{og_image}" />
+    <meta property="og:url" content="{og_url}" />
+    <meta property="og:type" content="product" />
+    <meta property="og:site_name" content="DealSphere" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{og_title.replace('"', '&quot;')}" />
+    <meta name="twitter:description" content="{og_description.replace('"', '&quot;')}" />
+    <meta name="twitter:image" content="{og_image}" />
+    
+    <!-- Additional Meta Tags -->
+    <meta name="description" content="{og_description.replace('"', '&quot;')}" />
+    <title>{og_title.replace('"', '&quot;')}</title>
+'''
+                
+                # Insert meta tags before closing </head> tag
+                html_content = html_content.replace('</head>', f'{meta_tags}</head>')
+            
+            return Response(content=html_content, media_type="text/html")
+        except Exception as e:
+            print(f"Error serving deal page: {e}")
+            return FileResponse("../client/dist/index.html")
     
     # Specific route for admin
     @app.get("/admin")
@@ -171,7 +248,7 @@ if frontend_dist_path.exists():
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
         # API routes should not be caught here
-        if full_path.startswith("api/"):
+        if full_path.startswith("api/") or full_path.startswith("s/"):
             raise HTTPException(status_code=404, detail="Not found")
         
         # Serve index.html for all frontend routes
