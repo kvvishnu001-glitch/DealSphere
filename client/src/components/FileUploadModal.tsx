@@ -1,13 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 interface FileUploadModalProps {
   open: boolean;
@@ -48,16 +40,15 @@ const SUPPORTED_FORMATS = [
 ];
 
 export function FileUploadModal({ open, onClose, onUploadComplete }: FileUploadModalProps) {
+  const [selectedNetwork, setSelectedNetwork] = useState('');
+  const [description, setDescription] = useState('');
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [selectedNetwork, setSelectedNetwork] = useState<string>('');
-  const [notes, setNotes] = useState<string>('');
   const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map(file => ({
       file,
-      preview: file.name,
+      preview: URL.createObjectURL(file),
       uploading: false,
       progress: 0
     }));
@@ -84,34 +75,16 @@ export function FileUploadModal({ open, onClose, onUploadComplete }: FileUploadM
   };
 
   const uploadFiles = async () => {
-    if (!selectedNetwork) {
-      toast({
-        title: "Network Required",
-        description: "Please select an affiliate network",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (files.length === 0) {
-      toast({
-        title: "No Files",
-        description: "Please select files to upload",
-        variant: "destructive"
-      });
+    if (!selectedNetwork || files.length === 0) {
+      alert('Please select a network and add at least one file');
       return;
     }
 
     setUploading(true);
-
+    
     try {
-      let processedCount = 0;
-      let totalDeals = 0;
-
       for (let i = 0; i < files.length; i++) {
         const fileData = files[i];
-        
-        // Update file progress
         setFiles(prev => prev.map((f, idx) => 
           idx === i ? { ...f, uploading: true, progress: 0 } : f
         ));
@@ -119,208 +92,296 @@ export function FileUploadModal({ open, onClose, onUploadComplete }: FileUploadM
         const formData = new FormData();
         formData.append('file', fileData.file);
         formData.append('network', selectedNetwork);
-        formData.append('notes', notes);
+        if (description) {
+          formData.append('description', description);
+        }
 
-        try {
-          const response = await fetch('/api/admin/deals/upload', {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-            }
-          });
+        const response = await fetch('/api/admin/upload-deals', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          },
+          body: formData
+        });
 
-          if (!response.ok) {
-            throw new Error(`Upload failed: ${response.statusText}`);
-          }
-
+        if (response.ok) {
           const result = await response.json();
-          
           setFiles(prev => prev.map((f, idx) => 
-            idx === i ? { ...f, uploading: false, progress: 100, success: true } : f
+            idx === i ? { ...f, uploading: false, success: true, progress: 100 } : f
           ));
-
-          totalDeals += result.deals_processed || 0;
-          processedCount++;
-
-        } catch (error) {
+        } else {
+          const error = await response.text();
           setFiles(prev => prev.map((f, idx) => 
-            idx === i ? { ...f, uploading: false, error: error.message } : f
+            idx === i ? { ...f, uploading: false, error, progress: 0 } : f
           ));
         }
       }
 
-      if (processedCount > 0) {
-        toast({
-          title: "Upload Complete",
-          description: `Successfully processed ${processedCount} file(s) with ${totalDeals} deals`,
-          variant: "default"
-        });
-        onUploadComplete();
-        handleClose();
+      // If all successful, close modal and refresh
+      const allSuccessful = files.every(f => f.success);
+      if (allSuccessful) {
+        setTimeout(() => {
+          onUploadComplete();
+          onClose();
+          resetForm();
+        }, 1000);
       }
-
     } catch (error) {
-      toast({
-        title: "Upload Error",
-        description: `Failed to upload files: ${error.message}`,
-        variant: "destructive"
-      });
+      console.error('Upload error:', error);
+      alert('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleClose = () => {
-    setFiles([]);
+  const resetForm = () => {
     setSelectedNetwork('');
-    setNotes('');
+    setDescription('');
+    setFiles([]);
     setUploading(false);
-    onClose();
   };
 
-  const getFileIcon = (file: File) => {
-    if (file.type.includes('csv') || file.type.includes('excel') || file.type.includes('sheet')) {
-      return <FileText className="h-8 w-8 text-green-500" />;
+  const downloadSample = async (network: string) => {
+    try {
+      const response = await fetch(`/api/admin/sample-files/${network}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${network}_deals_sample.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Download error:', error);
     }
-    return <FileText className="h-8 w-8 text-blue-500" />;
   };
+
+  if (!open) return null;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Upload Deal Files</DialogTitle>
-          <DialogDescription>
-            Upload deal files from affiliate networks that don't provide API access. 
-            Supports CSV, Excel, XML, JSON, and text files.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Network Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="network">Affiliate Network *</Label>
-            <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select affiliate network..." />
-              </SelectTrigger>
-              <SelectContent>
-                {AFFILIATE_NETWORKS.map(network => (
-                  <SelectItem key={network.value} value={network.value}>
-                    {network.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* File Upload Area */}
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragActive 
-                ? 'border-primary bg-primary/5' 
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-            data-testid="file-drop-zone"
+    <div style={{ 
+      position: "fixed", 
+      top: 0, 
+      left: 0, 
+      right: 0, 
+      bottom: 0, 
+      backgroundColor: "rgba(0,0,0,0.5)", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center", 
+      zIndex: 1000 
+    }}>
+      <div style={{ 
+        backgroundColor: "white", 
+        padding: "30px", 
+        borderRadius: "8px", 
+        width: "90%", 
+        maxWidth: "800px", 
+        maxHeight: "90vh", 
+        overflowY: "auto" 
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+          <h2 style={{ margin: 0, color: "#333" }}>Upload Deal Files</h2>
+          <button
+            onClick={onClose}
+            style={{ 
+              background: "none", 
+              border: "none", 
+              fontSize: "24px", 
+              cursor: "pointer", 
+              color: "#666" 
+            }}
           >
-            <input {...getInputProps()} />
-            <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            {isDragActive ? (
-              <p className="text-lg">Drop the files here...</p>
-            ) : (
-              <div>
-                <p className="text-lg mb-2">Drag & drop deal files here, or click to browse</p>
-                <p className="text-sm text-gray-500">
-                  Supports: CSV, Excel (.xls, .xlsx), XML, JSON, TXT files up to 50MB
-                </p>
-              </div>
-            )}
-          </div>
+            ×
+          </button>
+        </div>
 
-          {/* Uploaded Files List */}
-          {files.length > 0 && (
-            <div className="space-y-4">
-              <Label>Uploaded Files ({files.length})</Label>
-              <div className="space-y-3">
-                {files.map((fileData, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      {getFileIcon(fileData.file)}
-                      <div>
-                        <p className="font-medium">{fileData.file.name}</p>
-                        <p className="text-sm text-gray-500">
-                          {(fileData.file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      {fileData.uploading && (
-                        <div className="w-24">
-                          <Progress value={fileData.progress} className="h-2" />
-                        </div>
-                      )}
-                      {fileData.success && (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      )}
-                      {fileData.error && (
-                        <div className="flex items-center space-x-1">
-                          <AlertCircle className="h-5 w-5 text-red-500" />
-                          <span className="text-sm text-red-500">{fileData.error}</span>
-                        </div>
-                      )}
-                      {!fileData.uploading && !uploading && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(index)}
-                          data-testid={`remove-file-${index}`}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Network Selection */}
+        <div style={{ marginBottom: "20px" }}>
+          <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+            Affiliate Network *
+          </label>
+          <select
+            value={selectedNetwork}
+            onChange={(e) => setSelectedNetwork(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              fontSize: "14px"
+            }}
+          >
+            <option value="">Select Network</option>
+            {AFFILIATE_NETWORKS.map(network => (
+              <option key={network.value} value={network.value}>
+                {network.label}
+              </option>
+            ))}
+          </select>
+          
+          {selectedNetwork && ['amazon', 'cj', 'shareasale'].includes(selectedNetwork) && (
+            <button
+              onClick={() => downloadSample(selectedNetwork)}
+              style={{
+                marginTop: "10px",
+                padding: "8px 16px",
+                backgroundColor: "#17a2b8",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px"
+              }}
+            >
+              📥 Download Sample File
+            </button>
+          )}
+        </div>
+
+        {/* Description */}
+        <div style={{ marginBottom: "20px" }}>
+          <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+            Description (Optional)
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Brief description of the deals being uploaded..."
+            style={{
+              width: "100%",
+              padding: "10px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              fontSize: "14px",
+              minHeight: "80px",
+              resize: "vertical"
+            }}
+          />
+        </div>
+
+        {/* File Upload Area */}
+        <div 
+          {...getRootProps()} 
+          style={{
+            border: "2px dashed #ccc",
+            borderRadius: "8px",
+            padding: "40px",
+            textAlign: "center",
+            cursor: "pointer",
+            backgroundColor: isDragActive ? "#f8f9fa" : "white",
+            marginBottom: "20px"
+          }}
+        >
+          <input {...getInputProps()} />
+          <div style={{ fontSize: "48px", marginBottom: "10px" }}>📁</div>
+          {isDragActive ? (
+            <p>Drop the files here...</p>
+          ) : (
+            <div>
+              <p style={{ fontSize: "16px", marginBottom: "10px" }}>
+                Drag & drop deal files here, or click to select
+              </p>
+              <p style={{ fontSize: "12px", color: "#666" }}>
+                Supported formats: CSV, Excel, XML, JSON, TXT (Max 50MB per file)
+              </p>
             </div>
           )}
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              placeholder="Add any notes about this upload (e.g., file source, date range, special instructions...)"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              data-testid="upload-notes"
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={handleClose}
-              disabled={uploading}
-              data-testid="cancel-upload"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={uploadFiles}
-              disabled={uploading || files.length === 0 || !selectedNetwork}
-              data-testid="start-upload"
-            >
-              {uploading ? "Uploading..." : `Upload ${files.length} File(s)`}
-            </Button>
-          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        {/* File List */}
+        {files.length > 0 && (
+          <div style={{ marginBottom: "20px" }}>
+            <h4 style={{ marginBottom: "10px" }}>Selected Files:</h4>
+            {files.map((file, index) => (
+              <div key={index} style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "space-between",
+                padding: "10px",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                marginBottom: "10px",
+                backgroundColor: file.success ? "#d4edda" : file.error ? "#f8d7da" : "white"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span>📄</span>
+                  <div>
+                    <div style={{ fontWeight: "bold", fontSize: "14px" }}>{file.file.name}</div>
+                    <div style={{ fontSize: "12px", color: "#666" }}>
+                      {(file.file.size / 1024 / 1024).toFixed(2)} MB
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  {file.uploading && (
+                    <div style={{ fontSize: "12px", color: "#007bff" }}>Uploading...</div>
+                  )}
+                  {file.success && (
+                    <div style={{ fontSize: "12px", color: "#28a745" }}>✓ Uploaded</div>
+                  )}
+                  {file.error && (
+                    <div style={{ fontSize: "12px", color: "#dc3545" }}>✗ Failed</div>
+                  )}
+                  <button
+                    onClick={() => removeFile(index)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#dc3545",
+                      cursor: "pointer",
+                      fontSize: "16px"
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#6c757d",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={uploadFiles}
+            disabled={uploading || !selectedNetwork || files.length === 0}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: uploading ? "#6c757d" : "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: uploading ? "not-allowed" : "pointer"
+            }}
+          >
+            {uploading ? "Uploading..." : "Upload Files"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
