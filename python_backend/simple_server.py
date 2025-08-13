@@ -38,8 +38,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include admin router
+# Include routers
 app.include_router(admin_router, prefix="/api")
+
+# Import and include automation router
+try:
+    from routes.automation import router as automation_router
+    app.include_router(automation_router, prefix="/api")
+except ImportError as e:
+    print(f"Warning: Could not import automation router: {e}")
 
 @app.get("/api/health")
 async def health_check():

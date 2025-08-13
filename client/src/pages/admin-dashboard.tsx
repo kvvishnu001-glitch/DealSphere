@@ -24,6 +24,10 @@ export default function AdminDashboard() {
     image_url: "",
     deal_type: "regular"
   });
+  
+  // Automation state
+  const [automationStatus, setAutomationStatus] = useState<any>(null);
+  const [automationLoading, setAutomationLoading] = useState(false);
 
   const categories = ["Electronics", "Clothing", "Home & Garden", "Sports", "Books", "Toys", "Beauty", "Automotive", "Food", "Health"];
   const dealTypes = ["regular", "hot", "top"];
@@ -35,7 +39,10 @@ export default function AdminDashboard() {
       return;
     }
     fetchData();
-  }, []);
+    if (activeTab === "automation") {
+      fetchAutomationStatus();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     filterDeals();
@@ -234,6 +241,66 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchAutomationStatus = async () => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/admin/automation/status", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAutomationStatus(data);
+      }
+    } catch (error) {
+      console.error("Error fetching automation status:", error);
+    }
+  };
+
+  const triggerManualFetch = async () => {
+    setAutomationLoading(true);
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/admin/automation/fetch-deals", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Manual fetch completed! ${result.details.saved_deals_count} new deals added.`);
+        fetchData(); // Refresh deals
+        fetchAutomationStatus(); // Refresh automation status
+      } else {
+        alert("Failed to trigger manual fetch");
+      }
+    } catch (error) {
+      alert("Error triggering manual fetch: " + error);
+    } finally {
+      setAutomationLoading(false);
+    }
+  };
+
+  const toggleAutomation = async (start: boolean) => {
+    setAutomationLoading(true);
+    try {
+      const token = localStorage.getItem("admin_token");
+      const endpoint = start ? "/api/admin/automation/start-scheduler" : "/api/admin/automation/stop-scheduler";
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        alert(start ? "Automation started successfully!" : "Automation stopped successfully!");
+        fetchAutomationStatus();
+      } else {
+        alert("Failed to toggle automation");
+      }
+    } catch (error) {
+      alert("Error toggling automation: " + error);
+    } finally {
+      setAutomationLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
     window.location.href = "/admin";
@@ -272,6 +339,19 @@ export default function AdminDashboard() {
                 }}
               >
                 Manage Deals
+              </button>
+              <button
+                onClick={() => setActiveTab("automation")}
+                style={{ 
+                  padding: "8px 15px", 
+                  backgroundColor: activeTab === "automation" ? "#007bff" : "transparent", 
+                  color: activeTab === "automation" ? "white" : "#333",
+                  border: "1px solid #007bff",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Automation
               </button>
             </nav>
           </div>
@@ -569,6 +649,221 @@ export default function AdminDashboard() {
             ) : (
               <div style={{ backgroundColor: "white", padding: "40px", textAlign: "center", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
                 <p style={{ color: "#666", margin: 0 }}>No deals found matching your criteria.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Automation Tab */}
+        {activeTab === "automation" && (
+          <div>
+            <h2 style={{ marginBottom: "20px", color: "#333" }}>Deal Automation & AI</h2>
+            
+            {/* Automation Status Cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px", marginBottom: "30px" }}>
+              <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
+                <h3 style={{ margin: "0 0 15px 0", color: "#333" }}>Automation Status</h3>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
+                  <div style={{ 
+                    width: "12px", 
+                    height: "12px", 
+                    borderRadius: "50%", 
+                    backgroundColor: automationStatus?.running ? "#28a745" : "#dc3545" 
+                  }}></div>
+                  <span style={{ fontWeight: "bold" }}>
+                    {automationStatus?.running ? "Running" : "Stopped"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    onClick={() => toggleAutomation(true)}
+                    disabled={automationLoading || automationStatus?.running}
+                    style={{ 
+                      padding: "8px 16px", 
+                      backgroundColor: automationLoading ? "#ccc" : "#28a745", 
+                      color: "white", 
+                      border: "none", 
+                      borderRadius: "4px", 
+                      cursor: automationLoading ? "not-allowed" : "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    Start
+                  </button>
+                  <button
+                    onClick={() => toggleAutomation(false)}
+                    disabled={automationLoading || !automationStatus?.running}
+                    style={{ 
+                      padding: "8px 16px", 
+                      backgroundColor: automationLoading ? "#ccc" : "#dc3545", 
+                      color: "white", 
+                      border: "none", 
+                      borderRadius: "4px", 
+                      cursor: automationLoading ? "not-allowed" : "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    Stop
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
+                <h3 style={{ margin: "0 0 15px 0", color: "#333" }}>API Configuration</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Amazon Associates:</span>
+                    <span style={{ 
+                      color: automationStatus?.api_configurations?.amazon_configured ? "#28a745" : "#dc3545",
+                      fontWeight: "bold" 
+                    }}>
+                      {automationStatus?.api_configurations?.amazon_configured ? "✓ Configured" : "✗ Not Configured"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Commission Junction:</span>
+                    <span style={{ 
+                      color: automationStatus?.api_configurations?.cj_configured ? "#28a745" : "#dc3545",
+                      fontWeight: "bold" 
+                    }}>
+                      {automationStatus?.api_configurations?.cj_configured ? "✓ Configured" : "✗ Not Configured"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>ClickBank:</span>
+                    <span style={{ 
+                      color: automationStatus?.api_configurations?.clickbank_configured ? "#28a745" : "#dc3545",
+                      fontWeight: "bold" 
+                    }}>
+                      {automationStatus?.api_configurations?.clickbank_configured ? "✓ Configured" : "✗ Not Configured"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>OpenAI (AI Validation):</span>
+                    <span style={{ 
+                      color: automationStatus?.api_configurations?.openai_configured ? "#28a745" : "#dc3545",
+                      fontWeight: "bold" 
+                    }}>
+                      {automationStatus?.api_configurations?.openai_configured ? "✓ Configured" : "✗ Not Configured"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
+                <h3 style={{ margin: "0 0 15px 0", color: "#333" }}>Manual Actions</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <button
+                    onClick={triggerManualFetch}
+                    disabled={automationLoading}
+                    style={{ 
+                      padding: "10px 16px", 
+                      backgroundColor: automationLoading ? "#ccc" : "#007bff", 
+                      color: "white", 
+                      border: "none", 
+                      borderRadius: "4px", 
+                      cursor: automationLoading ? "not-allowed" : "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    {automationLoading ? "Fetching..." : "Fetch Deals Now"}
+                  </button>
+                  <button
+                    onClick={fetchAutomationStatus}
+                    style={{ 
+                      padding: "10px 16px", 
+                      backgroundColor: "#6c757d", 
+                      color: "white", 
+                      border: "none", 
+                      borderRadius: "4px", 
+                      cursor: "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    Refresh Status
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Configuration Guide */}
+            <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", marginBottom: "20px" }}>
+              <h3 style={{ marginBottom: "15px", color: "#333" }}>Setup Guide</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
+                <div>
+                  <h4 style={{ color: "#007bff", marginBottom: "10px" }}>Amazon Associates</h4>
+                  <p style={{ fontSize: "14px", marginBottom: "10px" }}>Required environment variables:</p>
+                  <ul style={{ fontSize: "12px", margin: "0", paddingLeft: "20px" }}>
+                    <li>AWS_ACCESS_KEY_ID</li>
+                    <li>AWS_SECRET_ACCESS_KEY</li>
+                    <li>AMAZON_ASSOCIATE_TAG</li>
+                  </ul>
+                  <p style={{ fontSize: "12px", marginTop: "10px" }}>
+                    <a href="https://affiliate-program.amazon.com/" target="_blank" style={{ color: "#007bff" }}>
+                      Sign up for Amazon Associates →
+                    </a>
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 style={{ color: "#007bff", marginBottom: "10px" }}>Commission Junction</h4>
+                  <p style={{ fontSize: "14px", marginBottom: "10px" }}>Required environment variables:</p>
+                  <ul style={{ fontSize: "12px", margin: "0", paddingLeft: "20px" }}>
+                    <li>CJ_DEVELOPER_KEY</li>
+                    <li>CJ_WEBSITE_ID</li>
+                  </ul>
+                  <p style={{ fontSize: "12px", marginTop: "10px" }}>
+                    <a href="https://www.cj.com/" target="_blank" style={{ color: "#007bff" }}>
+                      Sign up for CJ Affiliate →
+                    </a>
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 style={{ color: "#007bff", marginBottom: "10px" }}>ClickBank</h4>
+                  <p style={{ fontSize: "14px", marginBottom: "10px" }}>Required environment variables:</p>
+                  <ul style={{ fontSize: "12px", margin: "0", paddingLeft: "20px" }}>
+                    <li>CLICKBANK_CLIENT_ID</li>
+                    <li>CLICKBANK_DEVELOPER_KEY</li>
+                    <li>CLICKBANK_NICKNAME</li>
+                  </ul>
+                  <p style={{ fontSize: "12px", marginTop: "10px" }}>
+                    <a href="https://www.clickbank.com/" target="_blank" style={{ color: "#007bff" }}>
+                      Sign up for ClickBank →
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity Log */}
+            {automationStatus?.recent_logs && (
+              <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
+                <h3 style={{ marginBottom: "15px", color: "#333" }}>Recent Automation Activity</h3>
+                <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                  {automationStatus.recent_logs.slice(0, 10).map((log: any, index: number) => (
+                    <div key={index} style={{ 
+                      padding: "10px", 
+                      borderBottom: "1px solid #eee", 
+                      display: "flex", 
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: "bold", fontSize: "14px" }}>{log.task}</div>
+                        <div style={{ fontSize: "12px", color: "#666" }}>{log.result}</div>
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#666" }}>
+                        {log.executed_at ? new Date(log.executed_at).toLocaleString() : 'Unknown time'}
+                      </div>
+                    </div>
+                  ))}
+                  {automationStatus.recent_logs.length === 0 && (
+                    <div style={{ textAlign: "center", color: "#666", padding: "20px" }}>
+                      No automation activity yet
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
