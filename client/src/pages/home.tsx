@@ -22,27 +22,27 @@ import {
   X,
   LogOut
 } from "lucide-react";
-// Define types locally since @shared/schema doesn't exist
+// Define types to match API response
 interface Deal {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  originalPrice: string;
-  salePrice: string;
-  discountPercentage: number;
-  imageUrl: string;
-  affiliateUrl: string;
+  original_price: number;
+  sale_price: number;
+  discount_percentage: number;
+  image_url: string;
+  affiliate_url: string;
   store: string;
-  storeLogoUrl?: string;
+  store_logo_url?: string;
   category: string;
-  rating?: string;
-  reviewCount?: number;
-  expiresAt?: string;
-  isActive: boolean;
-  isAiApproved?: boolean;
-  aiScore?: string;
-  clickCount?: number;
-  dealType?: string;
+  rating?: number;
+  review_count?: number;
+  expires_at?: string;
+  is_active: boolean;
+  is_ai_approved?: boolean;
+  ai_score?: number;
+  click_count?: number;
+  deal_type?: string;
 }
 
 export default function Home() {
@@ -66,7 +66,7 @@ export default function Home() {
   const availableCategories = [...new Set(deals?.map((deal: Deal) => deal.category) || [])];
   const availableStores = [...new Set(deals?.map((deal: Deal) => deal.store) || [])];
   const availableDiscounts = [...new Set(deals?.map((deal: Deal) => {
-    const discount = deal.discountPercentage;
+    const discount = deal.discount_percentage;
     if (discount >= 50) return "50+";
     if (discount >= 30) return "30+";
     if (discount >= 10) return "10+";
@@ -77,8 +77,8 @@ export default function Home() {
   // Only show deals that have all mandatory fields (validated on backend)
   const filteredDeals = deals?.filter((deal: Deal) => {
     // Ensure deal has all mandatory fields before applying user filters
-    const hasRequiredFields = deal.title && deal.description && deal.originalPrice && 
-                             deal.salePrice && deal.store && deal.category && deal.affiliateUrl;
+    const hasRequiredFields = deal.title && deal.description && deal.original_price && 
+                             deal.sale_price && deal.store && deal.category && deal.affiliate_url;
     
     if (!hasRequiredFields) return false;
     
@@ -97,7 +97,7 @@ export default function Home() {
     
     // Discount filter
     if (selectedDiscount !== "all") {
-      const discount = deal.discountPercentage;
+      const discount = deal.discount_percentage;
       switch (selectedDiscount) {
         case "50+":
           if (discount < 50) return false;
