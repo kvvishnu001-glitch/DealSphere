@@ -206,8 +206,18 @@ class AffiliateNetworkManager:
             secret_key = config.get('aws_secret_access_key')
             associate_tag = config.get('associate_tag')
             
+            # Validate credentials are not dummy/test values
             if not all([access_key, secret_key, associate_tag]):
-                return []
+                raise ValueError("Missing required Amazon credentials")
+            
+            # Check for dummy/test credentials
+            dummy_patterns = ['test', 'dummy', 'fake', 'example', 'placeholder', 'xxx', '123']
+            for field_name, field_value in [('access_key', access_key), ('secret_key', secret_key), ('associate_tag', associate_tag)]:
+                if any(pattern in str(field_value).lower() for pattern in dummy_patterns):
+                    raise ValueError(f"Invalid {field_name}: appears to be test/dummy data")
+            
+            if len(access_key) < 10 or len(secret_key) < 20:
+                raise ValueError("Amazon credentials appear to be invalid (too short)")
                 
             keywords = config.get('keywords', ['deal', 'discount', 'sale'])
             
@@ -237,7 +247,9 @@ class AffiliateNetworkManager:
                 await asyncio.sleep(1)  # Rate limiting
                 
         except Exception as e:
-            logger.error(f"Error fetching Amazon deals: {e}")
+            if "Invalid" in str(e) or "appears to be" in str(e) or "Missing required" in str(e):
+                raise e  # Re-raise validation errors
+            print(f"Error fetching Amazon deals: {e}")
             
         return deals
 

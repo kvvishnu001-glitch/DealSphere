@@ -136,30 +136,40 @@ async def test_network_connection(
             if not config:
                 raise HTTPException(status_code=400, detail="Network not configured")
             
-            # Test connection by fetching a small number of deals
-            if network_id == 'amazon':
-                deals = await manager.fetch_amazon_deals(config)
-            elif network_id == 'shareasale':
-                deals = await manager.fetch_shareasale_deals(config)
-            elif network_id == 'rakuten':
-                deals = await manager.fetch_rakuten_deals(config)
-            elif network_id == 'impact':
-                deals = await manager.fetch_impact_deals(config)
-            elif network_id == 'partnerize':
-                deals = await manager.fetch_partnerize_deals(config)
-            elif network_id == 'avantlink':
-                deals = await manager.fetch_avantlink_deals(config)
-            elif network_id == 'awin':
-                deals = await manager.fetch_awin_deals(config)
-            else:
-                deals = []
-            
-            return {
-                "status": "success",
-                "connection": "working",
-                "deals_found": len(deals),
-                "test_timestamp": datetime.utcnow().isoformat()
-            }
+            # Test connection by validating credentials and fetching deals
+            try:
+                if network_id == 'amazon':
+                    deals = await manager.fetch_amazon_deals(config)
+                elif network_id == 'shareasale':
+                    deals = await manager.fetch_shareasale_deals(config)
+                elif network_id == 'rakuten':
+                    deals = await manager.fetch_rakuten_deals(config)
+                elif network_id == 'impact':
+                    deals = await manager.fetch_impact_deals(config)
+                elif network_id == 'partnerize':
+                    deals = await manager.fetch_partnerize_deals(config)
+                elif network_id == 'avantlink':
+                    deals = await manager.fetch_avantlink_deals(config)
+                elif network_id == 'awin':
+                    deals = await manager.fetch_awin_deals(config)
+                else:
+                    raise ValueError(f"Unsupported network: {network_id}")
+                
+                return {
+                    "status": "success",
+                    "connection": "working",
+                    "deals_found": len(deals),
+                    "test_timestamp": datetime.utcnow().isoformat()
+                }
+                
+            except ValueError as ve:
+                # Validation errors should be returned as connection failures
+                return {
+                    "status": "error",
+                    "connection": "failed",
+                    "error_message": str(ve),
+                    "test_timestamp": datetime.utcnow().isoformat()
+                }
             
     except Exception as e:
         return {
