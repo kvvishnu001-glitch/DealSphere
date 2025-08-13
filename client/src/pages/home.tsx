@@ -73,7 +73,14 @@ export default function Home() {
   }).filter(Boolean) || [])];
 
   // Filter deals based on selected filters and search query
+  // Only show deals that have all mandatory fields (validated on backend)
   const filteredDeals = deals?.filter((deal: Deal) => {
+    // Ensure deal has all mandatory fields before applying user filters
+    const hasRequiredFields = deal.title && deal.description && deal.originalPrice && 
+                             deal.salePrice && deal.store && deal.category && deal.affiliateUrl;
+    
+    if (!hasRequiredFields) return false;
+    
     // Search filter
     if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase();

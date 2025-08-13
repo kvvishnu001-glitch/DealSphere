@@ -11,10 +11,12 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from models import Deal as DealModel, DealClick as DealClickModel, SocialShare as SocialShareModel
 from models import DealResponse, DealCreate, DealClickCreate, SocialShareCreate
+from utils.deal_validator import DealValidator
 
 class DealsService:
     def __init__(self, db: AsyncSession):
         self.db = db
+        self.validator = DealValidator()
 
     async def get_deals(
         self, 
@@ -53,7 +55,31 @@ class DealsService:
         result = await self.db.execute(query)
         deals = result.scalars().all()
         
-        return [DealResponse.model_validate(deal) for deal in deals]
+        # Filter out deals that don't meet mandatory field requirements
+        valid_deals = []
+        for deal in deals:
+            deal_dict = {
+                'title': deal.title,
+                'description': deal.description,
+                'original_price': deal.original_price,
+                'sale_price': deal.sale_price,
+                'store': deal.store,
+                'category': deal.category,
+                'affiliate_url': deal.affiliate_url,
+                'image_url': deal.image_url
+            }
+            
+            validation = self.validator.validate_deal_completeness(deal_dict)
+            if validation['is_valid']:
+                # Sanitize and optimize the deal data
+                sanitized_deal_data = self.validator.sanitize_deal_data(deal_dict)
+                
+                # Update the deal with sanitized image URL (external, properly sized)
+                deal.image_url = sanitized_deal_data.get('image_url', deal.image_url)
+                
+                valid_deals.append(DealResponse.model_validate(deal))
+        
+        return valid_deals
 
     async def get_deal_by_id(self, deal_id: str) -> Optional[DealResponse]:
         """Get a single deal by ID"""

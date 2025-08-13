@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SocialShare } from "@/components/social-share";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Star, Clock, Flame, Bot } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -53,10 +54,11 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
     return (
       <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
         <div className="relative">
-          <img
+          <OptimizedImage 
             src={deal.imageUrl || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=400&h=200&fit=crop"}
             alt={deal.title}
-            className="w-full h-32 object-cover"
+            sizes="thumbnail"
+            className="w-full"
           />
           <Badge className="absolute top-2 left-2 bg-amber-500 text-white">
             {deal.discountPercentage}% OFF
@@ -93,10 +95,11 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
   if (variant === "list") {
     return (
       <div className="flex flex-col sm:flex-row sm:items-center p-4 hover:bg-gray-50 transition-colors min-h-[120px] space-y-3 sm:space-y-0">
-        <img
+        <OptimizedImage 
           src={deal.imageUrl || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=100&h=100&fit=crop"}
           alt={deal.title}
-          className="w-16 h-16 rounded-lg object-cover sm:mr-4 flex-shrink-0 self-start"
+          sizes="thumbnail"
+          className="w-16 h-16 rounded-lg sm:mr-4 flex-shrink-0 self-start"
         />
         <div className="flex-1 min-w-0 sm:pr-4">
           <h4 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 sm:truncate">{deal.title}</h4>
@@ -133,10 +136,11 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
       <div className="relative">
-        <img
+        <OptimizedImage 
           src={deal.imageUrl || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=800&h=600&fit=crop"}
           alt={deal.title}
-          className="w-full h-48 object-cover"
+          sizes="card"
+          className="w-full"
         />
         <Badge className="absolute top-4 left-4 bg-red-600 text-white font-bold">
           {deal.discountPercentage}% OFF
@@ -151,9 +155,10 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
 
       <CardContent className="p-6 flex flex-col flex-grow">
         <div className="flex items-center mb-2">
-          <img
+          <OptimizedImage 
             src={deal.storeLogoUrl || "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?ixlib=rb-4.0.3&w=100&h=100&fit=crop"}
             alt={`${deal.store} logo`}
+            sizes="thumbnail"
             className="w-6 h-6 rounded mr-2"
           />
           <span className="text-sm text-gray-600">{deal.store}</span>

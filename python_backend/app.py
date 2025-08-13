@@ -18,6 +18,7 @@ from contextlib import asynccontextmanager
 from database import get_db, init_database
 from models import Deal as DealModel
 from routes.admin import router as admin_router
+from middleware.deal_validation_middleware import DealValidationMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,8 +43,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add deal validation middleware (ensures only complete deals are returned)
+app.add_middleware(DealValidationMiddleware)
+
 # Include routers
 app.include_router(admin_router, prefix="/api")
+
+# Import and include additional routers
+from routes.deals import router as deals_router
+from routes.validation import router as validation_router
+
+app.include_router(deals_router, prefix="/api")
+app.include_router(validation_router, prefix="/api")
 
 # API Routes
 @app.get("/api/health")
