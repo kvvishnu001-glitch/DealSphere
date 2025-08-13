@@ -45,6 +45,13 @@ app.include_router(admin_router, prefix="/api")
 from routes.sample_files import router as sample_files_router
 app.include_router(sample_files_router, prefix="/api/admin/sample-files")
 
+# Include file upload router
+try:
+    from routes.file_upload_simple import router as file_upload_router
+    app.include_router(file_upload_router, prefix="/api/admin")
+except ImportError as e:
+    print(f"Warning: Could not import file upload router: {e}")
+
 # Import and include automation router
 try:
     from routes.automation import router as automation_router

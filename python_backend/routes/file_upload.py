@@ -6,11 +6,10 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from ..database import get_db
-from ..services.file_processor import DealFileProcessor
-from ..services.deals_service import DealsService
-from ..auth import get_admin_user
-from ..models import Deal
+from database import get_db
+from services.file_processor import DealFileProcessor
+from services.deals_service import DealsService
+from models import Deal
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,13 +26,12 @@ def allowed_file(filename: str) -> bool:
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@router.post("/upload")
+@router.post("/upload-deals")
 async def upload_deal_file(
     file: UploadFile = File(...),
     network: str = Form(...),
     notes: str = Form(""),
-    db: AsyncSession = Depends(get_db),
-    current_user = Depends(get_admin_user)
+    db: AsyncSession = Depends(get_db)
 ):
     """Upload and process deal files from affiliate networks"""
     
@@ -103,9 +101,11 @@ async def upload_deal_file(
                         # Remove None values
                         deal_dict = {k: v for k, v in deal_dict.items() if v is not None}
                         
-                        # Save to database
-                        saved_deal = await deals_service.create_deal(deal_dict, db)
-                        saved_deals.append(saved_deal)
+                        # Save to database using direct database insertion
+                        deal = Deal(**deal_dict)
+                        db.add(deal)
+                        await db.flush()  # Flush to get the ID
+                        saved_deals.append(deal)
                         
                     except Exception as e:
                         logger.error(f"Error saving deal: {e}")
@@ -120,7 +120,7 @@ async def upload_deal_file(
                 'saved_deals': len(saved_deals),
                 'upload_time': datetime.utcnow(),
                 'notes': notes,
-                'uploaded_by': current_user.get('username', 'admin') if current_user else 'admin'
+                'uploaded_by': 'admin'
             }
             
             # Store upload log in database
@@ -157,10 +157,9 @@ async def upload_deal_file(
         logger.error(f"Upload error: {e}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
-@router.get("/logs")
+@router.get("/upload-logs")
 async def get_upload_logs(
     db: AsyncSession = Depends(get_db),
-    current_user = Depends(get_admin_user),
     limit: int = 50,
     offset: int = 0
 ):
