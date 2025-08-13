@@ -85,8 +85,15 @@ export default function Home() {
 
   // Filter deals properly
   const filteredDeals = deals?.filter((deal: Deal) => {
+    // Check if deal is active and approved (critical filters)
+    if (!deal.is_active || deal.is_ai_approved === false) {
+      console.log(`Deal filtered out: ${deal.title} - Active: ${deal.is_active}, Approved: ${deal.is_ai_approved}`);
+      return false;
+    }
+    
     // Basic field validation
     if (!deal.title || !deal.original_price || !deal.sale_price || !deal.store || !deal.category) {
+      console.log(`Deal missing required fields: ${deal.title}`);
       return false;
     }
     
@@ -121,24 +128,38 @@ export default function Home() {
     return true;
   }) || [];
 
-  // Debug logging
+  // Debug logging with detailed filtering info
+  console.log('=== DEAL DEBUGGING ===');
   console.log('All deals from API:', deals?.length || 0);
   console.log('Filtered deals:', filteredDeals?.length || 0);
   
   if (deals && deals.length > 0) {
     console.log('First deal sample:', deals[0]);
     console.log('Deal types found:', [...new Set(deals.map((d: any) => d.deal_type))]);
+    
+    // Check for Beats deal specifically
+    const beatsDeals = deals.filter((d: any) => d.title && d.title.toLowerCase().includes('beats'));
+    console.log('Beats deals found:', beatsDeals.length);
+    if (beatsDeals.length > 0) {
+      beatsDeals.forEach((deal: any) => {
+        console.log('Beats deal details:', {
+          title: deal.title,
+          deal_type: deal.deal_type,
+          is_active: deal.is_active,
+          is_ai_approved: deal.is_ai_approved,
+          has_required_fields: !!(deal.title && deal.original_price && deal.sale_price && deal.store && deal.category)
+        });
+      });
+    }
   }
   
   const topDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'top').slice(0, 3);
   const hotDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'hot').slice(0, 4);
   const latestDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'latest').slice(0, 5);
   
-  console.log('Top deals:', topDeals.length, 'Hot deals:', hotDeals.length, 'Latest deals:', latestDeals.length);
-  
-  if (filteredDeals && filteredDeals.length > 0) {
-    console.log('Filtered deals sample:', filteredDeals[0]);
-  }
+  console.log('Section counts - Top:', topDeals.length, 'Hot:', hotDeals.length, 'Latest:', latestDeals.length);
+  console.log('Hot deals found:', hotDeals.map(d => d.title));
+  console.log('=== END DEBUGGING ===');
 
   const clearFilters = () => {
     setSelectedCategory("all");

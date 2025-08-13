@@ -147,15 +147,34 @@ class DealValidator:
                 result['errors'].append('Invalid affiliate URL format')
                 result['valid'] = False
             
-            # Check for common affiliate tracking parameters
+            # Check for common affiliate tracking parameters or known affiliate domains
             tracking_indicators = [
                 'tag=', 'affiliate', 'ref=', 'partner', 'click', 'track',
                 'hop.clickbank', 'tkqlhce', 'avantlink', 'shareasale'
             ]
             
+            # Known affiliate domains that are inherently tracked
+            affiliate_domains = [
+                'a.co',  # Amazon shortened links
+                'amzn.to',  # Amazon shortened links  
+                'amazon.com',
+                'clickbank.com',
+                'shareasale.com',
+                'cj.com',
+                'commission-junction.com',
+                'rakuten.com',
+                'impact.com',
+                'partnerize.com',
+                'avantlink.com',
+                'awin.com',
+                'linksynergy.com'
+            ]
+            
             has_tracking = any(indicator in url.lower() for indicator in tracking_indicators)
-            if not has_tracking:
-                result['errors'].append('Affiliate URL missing tracking parameters')
+            is_affiliate_domain = any(domain in parsed.netloc.lower() for domain in affiliate_domains)
+            
+            if not has_tracking and not is_affiliate_domain:
+                result['errors'].append('Affiliate URL missing tracking parameters or not from recognized affiliate network')
                 result['valid'] = False
                 
         except Exception:

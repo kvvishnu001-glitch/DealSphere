@@ -78,6 +78,7 @@ class DealsService:
                 deal.image_url = sanitized_deal_data.get('image_url', deal.image_url)
                 
                 valid_deals.append(DealResponse.model_validate(deal))
+            # Deals that fail validation are excluded from results
         
         return valid_deals
 
