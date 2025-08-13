@@ -51,8 +51,8 @@ export default function DealDetail() {
   
   const dealId = params?.id;
 
-  // Fetch deal details
-  const { data: deal, isLoading, error } = useQuery<Deal>({
+  // Fetch deal details with periodic refresh to update click/share counts
+  const { data: deal, isLoading, error, refetch } = useQuery<Deal>({
     queryKey: ['/api/deals', dealId],
     queryFn: async () => {
       if (!dealId) throw new Error('No deal ID');
@@ -63,6 +63,7 @@ export default function DealDetail() {
       return response.json();
     },
     enabled: !!dealId,
+    refetchInterval: 10000, // Refresh every 10 seconds to update stats
   });
 
   // Generate short URL when component loads
@@ -92,6 +93,8 @@ export default function DealDetail() {
     try {
       await apiRequest('POST', `/api/deals/${deal.id}/click`);
       window.open(deal.affiliate_url, '_blank', 'noopener,noreferrer');
+      // Refresh deal data to update click count
+      setTimeout(() => refetch(), 1000);
     } catch (error) {
       console.error('Failed to track deal click:', error);
       window.open(deal.affiliate_url, '_blank', 'noopener,noreferrer');
@@ -301,7 +304,7 @@ export default function DealDetail() {
               <CardTitle className="text-center">Share This Deal</CardTitle>
             </CardHeader>
             <CardContent>
-              <SocialShare deal={deal} />
+              <SocialShare deal={deal} onShare={() => setTimeout(() => refetch(), 1000)} />
             </CardContent>
           </Card>
         </div>
