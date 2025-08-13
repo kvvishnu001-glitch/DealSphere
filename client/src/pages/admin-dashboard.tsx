@@ -1884,6 +1884,19 @@ export default function AdminDashboard() {
                   </select>
                 </div>
                 
+                <div>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Deal Type</label>
+                  <select
+                    value={editingDeal.deal_type || "regular"}
+                    onChange={(e) => setEditingDeal({...editingDeal, deal_type: e.target.value})}
+                    style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+                  >
+                    {dealTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                
                 <div style={{ gridColumn: "1 / -1" }}>
                   <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Affiliate URL</label>
                   <input
