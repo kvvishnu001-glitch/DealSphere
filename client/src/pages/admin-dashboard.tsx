@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FileUploadModal } from "@/components/FileUploadModal";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -10,6 +11,7 @@ export default function AdminDashboard() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddDeal, setShowAddDeal] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
   const [editingDeal, setEditingDeal] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [newDeal, setNewDeal] = useState({
@@ -551,20 +553,37 @@ export default function AdminDashboard() {
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h2 style={{ color: "#333" }}>Manage Deals</h2>
-              <button
-                onClick={() => setShowAddDeal(true)}
-                style={{ 
-                  padding: "10px 20px", 
-                  backgroundColor: "#28a745", 
-                  color: "white", 
-                  border: "none", 
-                  borderRadius: "4px", 
-                  cursor: "pointer",
-                  fontSize: "14px"
-                }}
-              >
-                + Add Deal
-              </button>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  onClick={() => setShowFileUpload(true)}
+                  style={{ 
+                    padding: "10px 20px", 
+                    backgroundColor: "#007bff", 
+                    color: "white", 
+                    border: "none", 
+                    borderRadius: "4px", 
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  }}
+                  data-testid="upload-deals-button"
+                >
+                  📁 Upload Deal Files
+                </button>
+                <button
+                  onClick={() => setShowAddDeal(true)}
+                  style={{ 
+                    padding: "10px 20px", 
+                    backgroundColor: "#28a745", 
+                    color: "white", 
+                    border: "none", 
+                    borderRadius: "4px", 
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  }}
+                >
+                  + Add Deal
+                </button>
+              </div>
             </div>
 
             {/* Filters */}
@@ -1565,6 +1584,15 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* File Upload Modal */}
+      <FileUploadModal
+        open={showFileUpload}
+        onClose={() => setShowFileUpload(false)}
+        onUploadComplete={() => {
+          fetchData(); // Refresh deals data after upload
+        }}
+      />
     </div>
   );
 }
