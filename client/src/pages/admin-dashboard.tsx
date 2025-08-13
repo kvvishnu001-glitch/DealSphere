@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { FileUploadModal } from "@/components/FileUploadModal";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -1585,14 +1584,67 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* File Upload Modal */}
-      <FileUploadModal
-        open={showFileUpload}
-        onClose={() => setShowFileUpload(false)}
-        onUploadComplete={() => {
-          fetchData(); // Refresh deals data after upload
-        }}
-      />
+      {/* File Upload Modal - Simple Version */}
+      {showFileUpload && (
+        <div style={{ 
+          position: "fixed", 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          backgroundColor: "rgba(0,0,0,0.5)", 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center", 
+          zIndex: 1000 
+        }}>
+          <div style={{ 
+            backgroundColor: "white", 
+            padding: "30px", 
+            borderRadius: "8px", 
+            width: "90%", 
+            maxWidth: "600px", 
+            maxHeight: "90vh", 
+            overflowY: "auto" 
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0, color: "#333" }}>Upload Deal Files</h3>
+              <button
+                onClick={() => setShowFileUpload(false)}
+                style={{ 
+                  background: "none", 
+                  border: "none", 
+                  fontSize: "24px", 
+                  cursor: "pointer", 
+                  color: "#666" 
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ textAlign: "center", padding: "40px" }}>
+              <p style={{ fontSize: "18px", marginBottom: "20px" }}>📁 File Upload Coming Soon</p>
+              <p style={{ fontSize: "14px", color: "#666", marginBottom: "20px" }}>
+                Upload CSV, Excel, XML, JSON files from affiliate networks like Amazon, CJ, ShareASale
+              </p>
+              <button
+                onClick={() => setShowFileUpload(false)}
+                style={{ 
+                  padding: "12px 24px", 
+                  backgroundColor: "#007bff", 
+                  color: "white", 
+                  border: "none", 
+                  borderRadius: "4px", 
+                  cursor: "pointer" 
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
