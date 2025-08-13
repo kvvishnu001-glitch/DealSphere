@@ -74,13 +74,11 @@ export default function Home() {
   }).filter(Boolean) || [])];
 
   // Filter deals based on selected filters and search query
-  // Only show deals that have all mandatory fields (validated on backend)
   const filteredDeals = deals?.filter((deal: Deal) => {
-    // Ensure deal has all mandatory fields before applying user filters
-    const hasRequiredFields = deal.title && deal.description && deal.original_price && 
-                             deal.sale_price && deal.store && deal.category && deal.affiliate_url;
-    
-    if (!hasRequiredFields) return false;
+    // Ensure deal has essential fields
+    if (!deal.title || !deal.original_price || !deal.sale_price || !deal.store || !deal.category) {
+      return false;
+    }
     
     // Search filter
     if (searchQuery.trim() !== "") {
@@ -113,9 +111,15 @@ export default function Home() {
     return true;
   }) || [];
 
+  // Debug logging
+  console.log('All deals from API:', deals?.length || 0);
+  console.log('Filtered deals:', filteredDeals?.length || 0);
+  
   const topDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'top').slice(0, 3);
   const hotDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'hot').slice(0, 4);
   const latestDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'latest').slice(0, 5);
+  
+  console.log('Top deals:', topDeals.length, 'Hot deals:', hotDeals.length, 'Latest deals:', latestDeals.length);
 
   const clearFilters = () => {
     setSelectedCategory("all");
@@ -297,9 +301,13 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {topDeals.map((deal: Deal) => (
+            {topDeals.length > 0 ? topDeals.map((deal: Deal) => (
               <DealCard key={deal.id} deal={deal} variant="full" />
-            ))}
+            )) : (
+              <div className="col-span-full text-center text-gray-500 py-8">
+                No top deals available
+              </div>
+            )}
           </div>
         </section>
 
@@ -314,9 +322,13 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {hotDeals.map((deal: Deal) => (
+            {hotDeals.length > 0 ? hotDeals.map((deal: Deal) => (
               <DealCard key={deal.id} deal={deal} variant="compact" />
-            ))}
+            )) : (
+              <div className="col-span-full text-center text-gray-500 py-8">
+                No hot deals available
+              </div>
+            )}
           </div>
         </section>
 
@@ -333,9 +345,13 @@ export default function Home() {
           <Card>
             <CardContent className="p-0">
               <div className="divide-y divide-gray-100">
-                {latestDeals.map((deal: Deal) => (
+                {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
                   <DealCard key={deal.id} deal={deal} variant="list" />
-                ))}
+                )) : (
+                  <div className="text-center text-gray-500 py-8">
+                    No latest deals available
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
