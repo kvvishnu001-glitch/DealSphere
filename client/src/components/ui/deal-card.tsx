@@ -125,24 +125,28 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
     return (
       <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
         <div className="relative">
-          <img 
-            src={deal.image_url}
-            alt={deal.title}
-            className="w-full h-48 object-cover"
-            onError={(e) => {
-              console.log('Image failed to load for deal:', deal.title, deal.image_url);
-              setImageError(true);
-            }}
-            onLoad={() => setImageLoaded(true)}
-          />
+          <Link href={`/deals/${deal.id}`}>
+            <img 
+              src={deal.image_url}
+              alt={deal.title}
+              className="w-full h-48 object-cover cursor-pointer"
+              onError={(e) => {
+                console.log('Image failed to load for deal:', deal.title, deal.image_url);
+                setImageError(true);
+              }}
+              onLoad={() => setImageLoaded(true)}
+            />
+          </Link>
           <Badge className="absolute top-2 left-2 bg-amber-500 text-white">
             {calculatedPercentage}% OFF
           </Badge>
         </div>
         <CardContent className="p-4 flex flex-col flex-grow">
-          <h4 className="font-semibold text-sm text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem]">
-            {deal.title}
-          </h4>
+          <Link href={`/deals/${deal.id}`}>
+            <h4 className="font-semibold text-sm text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem] hover:text-red-600 transition-colors cursor-pointer">
+              {deal.title}
+            </h4>
+          </Link>
           <p className="text-xs text-gray-500 mb-2 flex items-center">
             <Clock className="w-3 h-3 mr-1" />
             {formatDate(deal.created_at)}
@@ -174,18 +178,22 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
   if (variant === "list") {
     return (
       <div className="flex flex-col sm:flex-row sm:items-center p-4 hover:bg-gray-50 transition-colors min-h-[120px] space-y-3 sm:space-y-0">
-        <img 
-          src={deal.image_url}
-          alt={deal.title}
-          className="w-16 h-16 rounded-lg sm:mr-4 flex-shrink-0 self-start object-cover"
-          onError={(e) => {
-            console.log('Image failed to load for deal:', deal.title, deal.image_url);
-            setImageError(true);
-          }}
-          onLoad={() => setImageLoaded(true)}
-        />
+        <Link href={`/deals/${deal.id}`}>
+          <img 
+            src={deal.image_url}
+            alt={deal.title}
+            className="w-16 h-16 rounded-lg sm:mr-4 flex-shrink-0 self-start object-cover cursor-pointer"
+            onError={(e) => {
+              console.log('Image failed to load for deal:', deal.title, deal.image_url);
+              setImageError(true);
+            }}
+            onLoad={() => setImageLoaded(true)}
+          />
+        </Link>
         <div className="flex-1 min-w-0 sm:pr-4">
-          <h4 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 sm:truncate">{deal.title}</h4>
+          <Link href={`/deals/${deal.id}`}>
+            <h4 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 sm:truncate hover:text-red-600 transition-colors cursor-pointer">{deal.title}</h4>
+          </Link>
           <p className="text-sm text-gray-600 mt-1 flex items-center">
             {deal.store} • <Clock className="w-3 h-3 ml-1 mr-1" /> {formatDate(deal.created_at)}
           </p>
@@ -197,7 +205,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
               {formatPrice(deal.original_price)}
             </span>
             <Badge className="bg-red-600 text-white text-xs">
-              {deal.discount_percentage}% OFF
+              {calculatedPercentage}% OFF
             </Badge>
             {deal.coupon_code && (
               <CouponCode code={deal.coupon_code} variant="badge" />
