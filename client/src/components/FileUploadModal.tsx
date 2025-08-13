@@ -143,7 +143,7 @@ export function FileUploadModal({ open, onClose, onUploadComplete }: FileUploadM
 
   const downloadSample = async (network: string) => {
     try {
-      const response = await fetch(`/api/admin/sample-files/${network}`, {
+      const response = await fetch(`/api/admin/sample-files/download/${network}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
         }

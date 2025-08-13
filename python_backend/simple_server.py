@@ -41,6 +41,10 @@ app.add_middleware(
 # Include routers
 app.include_router(admin_router, prefix="/api")
 
+# Include sample files router
+from routes.sample_files import router as sample_files_router
+app.include_router(sample_files_router, prefix="/api/admin/sample-files")
+
 # Import and include automation router
 try:
     from routes.automation import router as automation_router
