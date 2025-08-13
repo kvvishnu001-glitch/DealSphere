@@ -301,11 +301,12 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {topDeals.length > 0 ? topDeals.map((deal: Deal) => (
-              <DealCard key={deal.id} deal={deal} variant="full" />
-            )) : (
-              <div className="col-span-full text-center text-gray-500 py-8">
-                No top deals available
+            {topDeals.length > 0 ? topDeals.map((deal: Deal) => {
+              console.log('Rendering top deal:', deal.title, deal.id);
+              return <DealCard key={deal.id} deal={deal} variant="full" />;
+            }) : (
+              <div className="col-span-full text-center text-gray-500 py-8 bg-red-100 p-4 rounded">
+                No top deals available (Total filtered deals: {filteredDeals.length})
               </div>
             )}
           </div>
@@ -322,11 +323,12 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {hotDeals.length > 0 ? hotDeals.map((deal: Deal) => (
-              <DealCard key={deal.id} deal={deal} variant="compact" />
-            )) : (
-              <div className="col-span-full text-center text-gray-500 py-8">
-                No hot deals available
+            {hotDeals.length > 0 ? hotDeals.map((deal: Deal) => {
+              console.log('Rendering hot deal:', deal.title, deal.id);
+              return <DealCard key={deal.id} deal={deal} variant="compact" />;
+            }) : (
+              <div className="col-span-full text-center text-gray-500 py-8 bg-yellow-100 p-4 rounded">
+                No hot deals available (Total filtered deals: {filteredDeals.length})
               </div>
             )}
           </div>
@@ -345,11 +347,12 @@ export default function Home() {
           <Card>
             <CardContent className="p-0">
               <div className="divide-y divide-gray-100">
-                {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
-                  <DealCard key={deal.id} deal={deal} variant="list" />
-                )) : (
-                  <div className="text-center text-gray-500 py-8">
-                    No latest deals available
+                {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => {
+                  console.log('Rendering latest deal:', deal.title, deal.id);
+                  return <DealCard key={deal.id} deal={deal} variant="list" />;
+                }) : (
+                  <div className="text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
+                    No latest deals available (Total filtered deals: {filteredDeals.length})
                   </div>
                 )}
               </div>

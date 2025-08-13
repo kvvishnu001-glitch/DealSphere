@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,8 @@ interface DealCardProps {
 export function DealCard({ deal, variant = "full" }: DealCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  console.log('DealCard rendering:', deal.title, 'variant:', variant);
 
   const handleDealClick = async () => {
     if (isLoading) return;
