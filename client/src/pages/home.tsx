@@ -221,6 +221,7 @@ export default function Home() {
   
   console.log('Section counts - Top:', topDeals.length, 'Hot:', hotDeals.length, 'Latest:', latestDeals.length);
   console.log('Hot deals found:', hotDeals.map(d => d.title));
+  console.log('Latest deals found (includes regular):', latestDeals.map(d => `${d.title} (${d.deal_type})`));
   console.log('=== END DEBUGGING ===');
 
   const clearFilters = () => {
