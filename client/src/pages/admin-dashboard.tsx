@@ -867,7 +867,7 @@ export default function AdminDashboard() {
                               <button
                                 onClick={() => shareOnX(deal)}
                                 style={{
-                                  padding: "6px",
+                                  padding: "8px",
                                   backgroundColor: "#000000",
                                   border: "none",
                                   borderRadius: "4px",
@@ -876,14 +876,14 @@ export default function AdminDashboard() {
                                   alignItems: "center",
                                   justifyContent: "center"
                                 }}
-                                title="Share on X (Twitter)"
+                                title="Share on X"
                               >
-                                <span style={{ color: "white", fontSize: "12px", fontWeight: "bold" }}>𝕏</span>
+                                <span style={{ color: "white", fontSize: "14px", fontWeight: "bold" }}>𝕏</span>
                               </button>
                               <button
                                 onClick={() => shareOnWhatsApp(deal)}
                                 style={{
-                                  padding: "6px",
+                                  padding: "8px",
                                   backgroundColor: "#25D366",
                                   border: "none",
                                   borderRadius: "4px",
@@ -894,12 +894,12 @@ export default function AdminDashboard() {
                                 }}
                                 title="Share on WhatsApp"
                               >
-                                <span style={{ color: "white", fontSize: "12px" }}>💬</span>
+                                <span style={{ color: "white", fontSize: "14px" }}>💬</span>
                               </button>
                               <button
                                 onClick={() => shareOnFacebook(deal)}
                                 style={{
-                                  padding: "6px",
+                                  padding: "8px",
                                   backgroundColor: "#1877F2",
                                   border: "none",
                                   borderRadius: "4px",
@@ -910,12 +910,12 @@ export default function AdminDashboard() {
                                 }}
                                 title="Share on Facebook"
                               >
-                                <span style={{ color: "white", fontSize: "12px" }}>f</span>
+                                <span style={{ color: "white", fontSize: "14px", fontWeight: "bold" }}>f</span>
                               </button>
                               <button
                                 onClick={() => copyDealLink(deal)}
                                 style={{
-                                  padding: "6px",
+                                  padding: "8px",
                                   backgroundColor: "#6c757d",
                                   border: "none",
                                   borderRadius: "4px",
@@ -926,7 +926,7 @@ export default function AdminDashboard() {
                                 }}
                                 title="Copy Link"
                               >
-                                <span style={{ color: "white", fontSize: "12px" }}>📋</span>
+                                <span style={{ color: "white", fontSize: "14px" }}>📋</span>
                               </button>
                             </div>
                           </td>
