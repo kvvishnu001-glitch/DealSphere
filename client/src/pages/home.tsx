@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect, useCallback } from "react";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useRealTimeUpdates } from "@/hooks/use-auto-refresh";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,8 @@ import {
   Instagram, 
   Youtube, 
   X,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
 // Define types to match API response
 interface Deal {
@@ -67,29 +68,72 @@ export default function Home() {
   // Enable real-time updates
   useRealTimeUpdates();
 
-  // Fetch all deals with auto-refresh
-  const { data: deals, isLoading, error } = useQuery({
-    queryKey: ['/api/deals', { limit: 10000 }],
-    queryFn: async ({ queryKey }) => {
-      const [path, params] = queryKey as [string, { limit: number }];
-      const url = new URL(path, window.location.origin);
-      url.searchParams.set('limit', params.limit.toString());
+  // Fetch deals count for the hero section
+  const { data: dealsCount } = useQuery({
+    queryKey: ['/api/deals/count'],
+    queryFn: async () => {
+      const response = await fetch('/api/deals/count');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    refetchInterval: 30000,
+  });
+
+  // Fetch deals with infinite scroll pagination
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['/api/deals'],
+    queryFn: async ({ pageParam = 0 }) => {
+      const url = new URL('/api/deals', window.location.origin);
+      url.searchParams.set('limit', '20');
+      url.searchParams.set('offset', pageParam.toString());
+      
       const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
-      console.log('Raw API Response:', data);
-      return data;
+      const deals = await response.json();
+      console.log('Raw API Response:', deals);
+      return deals;
     },
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
-    refetchIntervalInBackground: true, // Continue refreshing when tab is not active
-    staleTime: 10000, // Consider data stale after 10 seconds
+    getNextPageParam: (lastPage, allPages) => {
+      // If we got less than 20 deals, we've reached the end
+      if (lastPage.length < 20) return undefined;
+      // Return the offset for the next page
+      return allPages.length * 20;
+    },
+    refetchInterval: 30000,
+    staleTime: 10000,
   });
+
+  // Flatten all pages into a single array of deals
+  const deals = data?.pages.flatMap(page => page) || [];
 
   if (error) {
     console.error('Query error:', error);
   }
+
+  // Scroll handler for infinite loading
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isFetchingNextPage || !hasNextPage) {
+        return;
+      }
+      fetchNextPage();
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [fetchNextPage, isFetchingNextPage, hasNextPage]);
 
   // Get unique filter options from actual deals data
   const availableCategories = [...new Set(deals?.map((deal: Deal) => deal.category) || [])];
@@ -316,7 +360,7 @@ export default function Home() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-red-100 max-w-2xl mx-auto">
             <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold">{deals?.length || 0}</div>
+              <div className="text-2xl sm:text-3xl font-bold">{dealsCount?.count || 0}</div>
               <div className="text-sm">Active Deals</div>
             </div>
             <div className="text-center">
@@ -624,6 +668,21 @@ export default function Home() {
               </Button>
             </CardContent>
           </Card>
+        )}
+
+        {/* Infinite Scroll Loading Indicator */}
+        {isFetchingNextPage && (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+            <span className="ml-2 text-gray-600">Loading more deals...</span>
+          </div>
+        )}
+        
+        {/* End of deals indicator */}
+        {!hasNextPage && deals.length > 0 && (
+          <div className="flex justify-center items-center py-8">
+            <span className="text-gray-500">You've reached the end of our deals!</span>
+          </div>
         )}
       </main>
 

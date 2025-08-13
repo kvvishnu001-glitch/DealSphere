@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 from typing import List, Optional
 
 import sys
@@ -7,7 +8,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from database import get_db
-from models import DealResponse, DealClickCreate, SocialShareCreate
+from models import DealResponse, DealClickCreate, SocialShareCreate, Deal
 from services.deals_service import DealsService
 
 router = APIRouter()
@@ -17,7 +18,7 @@ async def get_deals(
     deal_type: Optional[str] = Query(None, description="Filter by deal type (top, hot, latest)"),
     category: Optional[str] = Query(None, description="Filter by category"),
     store: Optional[str] = Query(None, description="Filter by store"),
-    limit: int = Query(10000, ge=1, le=10000, description="Number of deals to return"),
+    limit: int = Query(20, ge=1, le=100, description="Number of deals to return"),
     offset: int = Query(0, ge=0, description="Number of deals to skip"),
     db: AsyncSession = Depends(get_db)
 ):
@@ -32,6 +33,18 @@ async def get_deals(
         only_approved=True  # Only show approved deals to public
     )
     return deals
+
+@router.get("/deals/count")
+async def get_deals_count(db: AsyncSession = Depends(get_db)):
+    """Get count of active and approved deals - publicly accessible"""
+    active_approved_result = await db.execute(
+        select(func.count(Deal.id)).where(
+            Deal.is_active == True,
+            Deal.is_ai_approved == True
+        )
+    )
+    count = active_approved_result.scalar() or 0
+    return {"count": count}
 
 @router.get("/deals/{deal_id}", response_model=DealResponse)
 async def get_deal(deal_id: str, db: AsyncSession = Depends(get_db)):
