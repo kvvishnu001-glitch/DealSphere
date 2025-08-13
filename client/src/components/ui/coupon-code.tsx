@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface CouponCodeProps {
   code: string;
-  variant?: "card" | "inline" | "badge";
+  variant?: "card" | "inline" | "badge" | "modal";
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -64,6 +64,33 @@ export function CouponCode({ code, variant = "card", size = "md", className }: C
           className="h-6 px-2 text-xs"
         >
           {copied ? <CheckCircle className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+        </Button>
+      </div>
+    );
+  }
+
+  if (variant === "modal") {
+    return (
+      <div className={cn("text-center", className)}>
+        <div className="inline-flex items-center gap-3 px-6 py-3 bg-white border-2 border-dashed border-green-300 rounded-lg">
+          <Tag className="w-5 h-5 text-green-600" />
+          <span className="font-mono text-xl font-bold text-gray-800">{code}</span>
+        </div>
+        <Button
+          onClick={handleCopy}
+          className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white"
+        >
+          {copied ? (
+            <>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Copied to Clipboard!
+            </>
+          ) : (
+            <>
+              <Copy className="w-4 h-4 mr-2" />
+              Copy Coupon Code
+            </>
+          )}
         </Button>
       </div>
     );

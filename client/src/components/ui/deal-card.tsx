@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SocialShare } from "@/components/social-share";
-import { Star, Clock, Flame, Bot } from "lucide-react";
+import { Star, Clock, Flame, Bot, X, Tag, ExternalLink } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CouponCode } from "@/components/ui/coupon-code";
@@ -37,6 +37,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);
   const { toast } = useToast();
   
   console.log('DealCard rendering:', deal.title, 'variant:', variant);
@@ -49,6 +50,17 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
   const handleDealClick = async () => {
     if (isLoading) return;
     
+    // If deal has coupon code, show modal first
+    if (deal.coupon_code) {
+      setShowCouponModal(true);
+      return;
+    }
+    
+    // Otherwise redirect directly
+    await redirectToDeal();
+  };
+
+  const redirectToDeal = async () => {
     setIsLoading(true);
     try {
       const response = await apiRequest('POST', `/api/deals/${deal.id}/click`);
@@ -72,6 +84,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
       });
     } finally {
       setIsLoading(false);
+      setShowCouponModal(false);
     }
   };
 
@@ -310,6 +323,55 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
           <SocialShare deal={deal} />
         </div>
       </CardContent>
+      
+      {/* Coupon Modal */}
+      {showCouponModal && deal.coupon_code && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowCouponModal(false)}>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <Tag className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-semibold">Coupon Code Available!</h3>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowCouponModal(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="text-center mb-6">
+              <p className="text-gray-600 mb-4">
+                {deal.coupon_required 
+                  ? "This coupon code is required to get the deal price. Copy it and apply during checkout."
+                  : "Use this coupon code for additional savings on top of the sale price!"
+                }
+              </p>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <CouponCode code={deal.coupon_code} variant="modal" />
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={redirectToDeal}
+                  disabled={isLoading}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  {isLoading ? "Opening Deal..." : "Continue to Store"}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCouponModal(false)}
+                  className="w-full"
+                >
+                  Copy Code Later
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
