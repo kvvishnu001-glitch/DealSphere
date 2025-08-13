@@ -41,6 +41,13 @@ app.add_middleware(
 # Include routers
 app.include_router(admin_router, prefix="/api")
 
+# Include deals router
+try:
+    from routes.deals import router as deals_router
+    app.include_router(deals_router, prefix="/api")
+except ImportError as e:
+    print(f"Warning: Could not import deals router: {e}")
+
 # Include sample files router
 from routes.sample_files import router as sample_files_router
 app.include_router(sample_files_router, prefix="/api/admin/sample-files")
