@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -472,6 +473,13 @@ export default function Home() {
                   </button>
                 </li>
                 <li>
+                  <Link href="/privacy-policy">
+                    <a className="hover:text-white transition-colors">
+                      Privacy Policy
+                    </a>
+                  </Link>
+                </li>
+                <li>
                   <button 
                     onClick={() => window.scrollTo({ bottom: 0, behavior: 'smooth' })}
                     className="hover:text-white transition-colors text-left"
@@ -485,9 +493,16 @@ export default function Home() {
           
           <div className="border-t border-gray-600 mt-8 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-gray-300 text-sm mb-4 md:mb-0">
-                © 2024 DealSphere. All rights reserved.
-              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-4 text-gray-300 text-sm mb-4 md:mb-0">
+                <p>© 2025 DealSphere. All rights reserved.</p>
+                <div className="flex gap-4">
+                  <Link href="/privacy-policy">
+                    <a className="hover:text-white transition-colors" data-testid="link-privacy-policy">
+                      Privacy Policy
+                    </a>
+                  </Link>
+                </div>
+              </div>
               <div className="text-sm text-gray-300 max-w-md">
                 <strong>Affiliate Disclosure:</strong> DealSphere is a participant in various affiliate programs and may earn commissions from qualifying purchases made through our links.
               </div>
