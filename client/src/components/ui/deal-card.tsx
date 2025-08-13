@@ -236,7 +236,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
           />
         </Link>
         <Badge className="absolute top-3 left-3 bg-red-600 text-white">
-          {deal.discount_percentage}% OFF
+          {calculatedPercentage}% OFF
         </Badge>
         {deal.deal_type === "hot" && (
           <Badge className="absolute top-3 right-3 bg-amber-500 text-white">
@@ -292,7 +292,13 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
         
         {/* Coupon Code */}
         {deal.coupon_code && (
-          <div className="mb-4">
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Tag className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-medium text-green-800">
+                {deal.coupon_required ? "Coupon Required" : "Bonus Coupon Available"}
+              </span>
+            </div>
             <CouponCode code={deal.coupon_code} variant="inline" size="sm" />
           </div>
         )}
@@ -322,7 +328,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             className="w-full bg-red-600 hover:bg-red-700 text-white py-3 font-semibold"
             data-testid={`button-get-deal-${deal.id}`}
           >
-            {isLoading ? "Loading..." : "Get Deal"}
+            {isLoading ? "Loading..." : (deal.coupon_code ? "Get Deal & Copy Code" : "Get Deal")}
           </Button>
           <SocialShare deal={deal} />
         </div>
