@@ -22,9 +22,10 @@ interface Deal {
 
 interface SocialShareProps {
   deal: Deal;
+  onShare?: () => void;
 }
 
-export function SocialShare({ deal }: SocialShareProps) {
+export function SocialShare({ deal, onShare }: SocialShareProps) {
   const [isSharing, setIsSharing] = useState(false);
   const { toast } = useToast();
 
@@ -51,6 +52,7 @@ export function SocialShare({ deal }: SocialShareProps) {
         title: "Shared on Facebook",
         description: "Thanks for sharing this deal!",
       });
+      onShare?.(); // Call callback to refresh stats
     } catch (error) {
       console.error('Facebook share error:', error);
       // Fallback to regular URL if short URL creation fails
@@ -84,7 +86,7 @@ export function SocialShare({ deal }: SocialShareProps) {
       const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=twitter`);
       const { shortUrl } = await response.json();
       
-      const tweetText = `${deal.title} - ${deal.discountPercentage}% OFF! Get it for just $${deal.salePrice} (was $${deal.originalPrice})`;
+      const tweetText = `${deal.title} - ${deal.discount_percentage}% OFF! Get it for just $${deal.sale_price} (was $${deal.original_price})`;
       const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shortUrl)}`;
       
       window.open(shareUrl, '_blank', 'width=600,height=400');
@@ -93,12 +95,13 @@ export function SocialShare({ deal }: SocialShareProps) {
         title: "Shared on Twitter",
         description: "Thanks for sharing this deal!",
       });
+      onShare?.(); // Call callback to refresh stats
     } catch (error) {
       console.error('Twitter share error:', error);
       // Fallback to regular URL if short URL creation fails
       try {
         const dealUrl = `${window.location.origin}/deals/${deal.id}`;
-        const tweetText = `${deal.title} - ${deal.discountPercentage}% OFF! Get it for just $${deal.salePrice} (was $${deal.originalPrice})`;
+        const tweetText = `${deal.title} - ${deal.discount_percentage}% OFF! Get it for just $${deal.sale_price} (was $${deal.original_price})`;
         const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(dealUrl)}`;
         
         await trackShare('twitter');
@@ -127,7 +130,7 @@ export function SocialShare({ deal }: SocialShareProps) {
       const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=whatsapp`);
       const { shortUrl } = await response.json();
       
-      const message = `Check out this amazing deal: ${deal.title} - ${deal.discountPercentage}% OFF! ${shortUrl}`;
+      const message = `Check out this amazing deal: ${deal.title} - ${deal.discount_percentage}% OFF! ${shortUrl}`;
       const shareUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
       
       window.open(shareUrl, '_blank');
@@ -136,12 +139,13 @@ export function SocialShare({ deal }: SocialShareProps) {
         title: "Shared on WhatsApp",
         description: "Thanks for sharing this deal!",
       });
+      onShare?.(); // Call callback to refresh stats
     } catch (error) {
       console.error('WhatsApp share error:', error);
       // Fallback to regular URL if short URL creation fails
       try {
         const dealUrl = `${window.location.origin}/deals/${deal.id}`;
-        const message = `Check out this amazing deal: ${deal.title} - ${deal.discountPercentage}% OFF! ${dealUrl}`;
+        const message = `Check out this amazing deal: ${deal.title} - ${deal.discount_percentage}% OFF! ${dealUrl}`;
         const shareUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
         
         await trackShare('whatsapp');
