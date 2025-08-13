@@ -17,7 +17,7 @@ async def get_deals(
     deal_type: Optional[str] = Query(None, description="Filter by deal type (top, hot, latest)"),
     category: Optional[str] = Query(None, description="Filter by category"),
     store: Optional[str] = Query(None, description="Filter by store"),
-    limit: int = Query(50, ge=1, le=100, description="Number of deals to return"),
+    limit: int = Query(10000, ge=1, le=10000, description="Number of deals to return"),
     offset: int = Query(0, ge=0, description="Number of deals to skip"),
     db: AsyncSession = Depends(get_db)
 ):

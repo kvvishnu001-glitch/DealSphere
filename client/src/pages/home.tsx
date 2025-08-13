@@ -69,7 +69,7 @@ export default function Home() {
 
   // Fetch all deals with auto-refresh
   const { data: deals, isLoading, error } = useQuery({
-    queryKey: ['/api/deals', { limit: 100 }],
+    queryKey: ['/api/deals', { limit: 10000 }],
     queryFn: async ({ queryKey }) => {
       const [path, params] = queryKey as [string, { limit: number }];
       const url = new URL(path, window.location.origin);
