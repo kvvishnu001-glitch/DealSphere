@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Facebook, Twitter, MessageCircle, Link } from "lucide-react";
+import { Facebook, MessageCircle, Link, MessageSquare, Smartphone } from "lucide-react";
+import { SiX, SiWhatsapp } from "react-icons/si";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 // Use local Deal type to match API response format
@@ -79,42 +80,42 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
     }
   };
 
-  const shareOnTwitter = async () => {
+  const shareOnX = async () => {
     setIsSharing(true);
     try {
-      // Create short URL for Twitter sharing
-      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=twitter`);
+      // Create short URL for X sharing
+      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=x`);
       const { shortUrl } = await response.json();
       
-      const tweetText = `${deal.title} - ${deal.discount_percentage}% OFF! Get it for just $${deal.sale_price} (was $${deal.original_price})`;
-      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shortUrl)}`;
+      const postText = `${deal.title} - ${deal.discount_percentage}% OFF! Get it for just $${deal.sale_price} (was $${deal.original_price})`;
+      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(postText)}&url=${encodeURIComponent(shortUrl)}`;
       
       window.open(shareUrl, '_blank', 'width=600,height=400');
       
       toast({
-        title: "Shared on Twitter",
+        title: "Shared on X",
         description: "Thanks for sharing this deal!",
       });
       onShare?.(); // Call callback to refresh stats
     } catch (error) {
-      console.error('Twitter share error:', error);
+      console.error('X share error:', error);
       // Fallback to regular URL if short URL creation fails
       try {
         const dealUrl = `${window.location.origin}/deals/${deal.id}`;
-        const tweetText = `${deal.title} - ${deal.discount_percentage}% OFF! Get it for just $${deal.sale_price} (was $${deal.original_price})`;
-        const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(dealUrl)}`;
+        const postText = `${deal.title} - ${deal.discount_percentage}% OFF! Get it for just $${deal.sale_price} (was $${deal.original_price})`;
+        const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(postText)}&url=${encodeURIComponent(dealUrl)}`;
         
-        await trackShare('twitter');
+        await trackShare('x');
         window.open(shareUrl, '_blank', 'width=600,height=400');
         
         toast({
-          title: "Shared on Twitter",
+          title: "Shared on X",
           description: "Thanks for sharing this deal!",
         });
       } catch (fallbackError) {
         toast({
           title: "Error",
-          description: "Failed to share on Twitter",
+          description: "Failed to share on X",
           variant: "destructive",
         });
       }
@@ -167,6 +168,49 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
     }
   };
 
+  const shareViaSMS = async () => {
+    setIsSharing(true);
+    try {
+      // Create short URL for SMS sharing
+      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=sms`);
+      const { shortUrl } = await response.json();
+      
+      const message = `Check out this deal: ${deal.title} - ${deal.discount_percentage}% OFF! ${shortUrl}`;
+      const smsUrl = `sms:?body=${encodeURIComponent(message)}`;
+      
+      window.location.href = smsUrl;
+      
+      toast({
+        title: "SMS App Opened",
+        description: "Share this deal via text message!",
+      });
+      onShare?.(); // Call callback to refresh stats
+    } catch (error) {
+      console.error('SMS share error:', error);
+      try {
+        const dealUrl = `${window.location.origin}/deals/${deal.id}`;
+        const message = `Check out this deal: ${deal.title} - ${deal.discount_percentage}% OFF! ${dealUrl}`;
+        const smsUrl = `sms:?body=${encodeURIComponent(message)}`;
+        
+        await trackShare('sms');
+        window.location.href = smsUrl;
+        
+        toast({
+          title: "SMS App Opened",
+          description: "Share this deal via text message!",
+        });
+      } catch (fallbackError) {
+        toast({
+          title: "Error",
+          description: "Failed to open SMS app",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const copyLink = async () => {
     setIsSharing(true);
     try {
@@ -179,6 +223,7 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
         title: "Short Link Copied",
         description: "Shareable link copied to clipboard!",
       });
+      onShare?.(); // Call callback to refresh stats
     } catch (error) {
       console.error('Copy link error:', error);
       // Fallback to regular URL if short URL creation fails
@@ -212,18 +257,20 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
         disabled={isSharing}
         className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
         title="Share on Facebook"
+        data-testid="button-facebook-share"
       >
         <Facebook className="w-4 h-4" />
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        onClick={shareOnTwitter}
+        onClick={shareOnX}
         disabled={isSharing}
-        className="text-blue-400 hover:text-blue-500 hover:bg-blue-50"
-        title="Share on Twitter"
+        className="text-black hover:text-gray-800 hover:bg-gray-100"
+        title="Share on X"
+        data-testid="button-x-share"
       >
-        <Twitter className="w-4 h-4" />
+        <SiX className="w-4 h-4" />
       </Button>
       <Button
         variant="ghost"
@@ -232,8 +279,20 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
         disabled={isSharing}
         className="text-green-600 hover:text-green-700 hover:bg-green-50"
         title="Share on WhatsApp"
+        data-testid="button-whatsapp-share"
       >
-        <MessageCircle className="w-4 h-4" />
+        <SiWhatsapp className="w-5 h-5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={shareViaSMS}
+        disabled={isSharing}
+        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+        title="Share via SMS"
+        data-testid="button-sms-share"
+      >
+        <MessageSquare className="w-4 h-4" />
       </Button>
       <Button
         variant="ghost"
@@ -242,6 +301,7 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
         disabled={isSharing}
         className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
         title="Copy Link"
+        data-testid="button-copy-link"
       >
         <Link className="w-4 h-4" />
       </Button>
