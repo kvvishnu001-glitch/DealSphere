@@ -122,9 +122,10 @@ export default function Home() {
     // Store filter  
     if (selectedStore !== "all" && deal.store !== selectedStore) return false;
     
-    // Discount filter
+    // Discount filter - use calculated percentage if stored is 0
     if (selectedDiscount !== "all") {
-      const discount = deal.discount_percentage;
+      const discount = deal.discount_percentage || 
+        Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100);
       switch (selectedDiscount) {
         case "50+":
           if (discount < 50) return false;

@@ -161,6 +161,10 @@ export default function DealDetail() {
     });
   };
 
+  // Calculate discount percentage if not provided
+  const calculatedPercentage = deal ? (deal.discount_percentage || 
+    Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100)) : 0;
+
   if (!match) return null;
 
   if (isLoading) {
@@ -305,7 +309,7 @@ export default function DealDetail() {
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <Badge variant="destructive" className="text-sm sm:text-lg px-2 sm:px-3 py-1 w-fit">
-                    {deal.discount_percentage}% OFF
+                    {calculatedPercentage}% OFF
                   </Badge>
                   <span className="text-sm text-gray-600">
                     Save ${(deal.original_price - deal.sale_price).toFixed(2)}

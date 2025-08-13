@@ -903,7 +903,20 @@ export default function AdminDashboard() {
                                 }}
                               />
                               <div>
-                                <div style={{ fontWeight: "bold", fontSize: "14px", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <div 
+                                  style={{ 
+                                    fontWeight: "bold", 
+                                    fontSize: "14px", 
+                                    maxWidth: "200px", 
+                                    overflow: "hidden", 
+                                    textOverflow: "ellipsis", 
+                                    whiteSpace: "nowrap",
+                                    cursor: "pointer",
+                                    color: "#007bff"
+                                  }}
+                                  onClick={() => window.open(`/deals/${deal.id}`, '_blank')}
+                                  title="Click to view deal page"
+                                >
                                   {deal.title}
                                 </div>
                                 <div style={{ fontSize: "12px", color: "#666" }}>{deal.deal_type}</div>
