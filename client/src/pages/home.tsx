@@ -43,6 +43,7 @@ interface Deal {
   ai_score?: number;
   click_count?: number;
   deal_type?: string;
+  created_at?: string;
 }
 
 export default function Home() {

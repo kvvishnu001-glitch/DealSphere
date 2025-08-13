@@ -41,6 +41,7 @@ interface Deal {
   click_count?: number;
   share_count?: number;
   deal_type?: string;
+  created_at?: string;
 }
 
 export default function DealDetail() {
@@ -116,6 +117,25 @@ export default function DealDetail() {
         variant: "destructive",
       });
     }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Recently posted";
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInHours / 24);
+    
+    if (diffInHours < 1) return "Just posted";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+    });
   };
 
   if (!match) return null;
@@ -228,6 +248,10 @@ export default function DealDetail() {
                   </Badge>
                 </div>
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">{deal.title}</h1>
+                <p className="text-xs text-gray-500 mb-3 flex items-center">
+                  <Clock className="w-3 h-3 mr-1" />
+                  {formatDate(deal.created_at)}
+                </p>
                 <p className="text-gray-600">{deal.description}</p>
               </div>
 
