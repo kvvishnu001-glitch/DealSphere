@@ -24,23 +24,23 @@ interface Deal {
   id: string;
   title: string;
   description: string;
-  originalPrice: string;
-  salePrice: string;
-  discountPercentage: number;
-  imageUrl: string;
-  affiliateUrl: string;
+  original_price: number;
+  sale_price: number;
+  discount_percentage: number;
+  image_url: string;
+  affiliate_url: string;
   store: string;
-  storeLogoUrl?: string;
+  store_logo_url?: string;
   category: string;
-  rating?: string;
-  reviewCount?: number;
-  expiresAt?: string;
-  isActive: boolean;
-  isAiApproved?: boolean;
-  aiScore?: string;
-  clickCount?: number;
-  shareCount?: number;
-  dealType?: string;
+  rating?: number;
+  review_count?: number;
+  expires_at?: string;
+  is_active: boolean;
+  is_ai_approved?: boolean;
+  ai_score?: number;
+  click_count?: number;
+  share_count?: number;
+  deal_type?: string;
 }
 
 export default function DealDetail() {
@@ -91,10 +91,10 @@ export default function DealDetail() {
     
     try {
       await apiRequest('POST', `/api/deals/${deal.id}/click`);
-      window.open(deal.affiliateUrl, '_blank', 'noopener,noreferrer');
+      window.open(deal.affiliate_url, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Failed to track deal click:', error);
-      window.open(deal.affiliateUrl, '_blank', 'noopener,noreferrer');
+      window.open(deal.affiliate_url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -173,7 +173,7 @@ export default function DealDetail() {
             {/* Deal Image */}
             <div className="space-y-4">
               <img
-                src={deal.imageUrl}
+                src={deal.image_url}
                 alt={deal.title}
                 className="w-full h-96 object-cover rounded-lg shadow-lg"
                 onError={(e) => {
@@ -235,9 +235,9 @@ export default function DealDetail() {
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     <span className="ml-1 text-sm font-medium">{deal.rating}</span>
                   </div>
-                  {deal.reviewCount && deal.reviewCount > 0 && (
+                  {deal.review_count && deal.review_count > 0 && (
                     <span className="text-sm text-gray-500">
-                      ({deal.reviewCount.toLocaleString()} reviews)
+                      ({deal.review_count.toLocaleString()} reviews)
                     </span>
                   )}
                 </div>
@@ -247,27 +247,27 @@ export default function DealDetail() {
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl font-bold text-green-600">
-                    ${parseFloat(deal.salePrice).toFixed(2)}
+                    ${deal.sale_price.toFixed(2)}
                   </span>
                   <span className="text-lg text-gray-500 line-through">
-                    ${parseFloat(deal.originalPrice).toFixed(2)}
+                    ${deal.original_price.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="destructive" className="text-lg px-3 py-1">
-                    {deal.discountPercentage}% OFF
+                    {deal.discount_percentage}% OFF
                   </Badge>
                   <span className="text-sm text-gray-600">
-                    Save ${(parseFloat(deal.originalPrice) - parseFloat(deal.salePrice)).toFixed(2)}
+                    Save ${(deal.original_price - deal.sale_price).toFixed(2)}
                   </span>
                 </div>
               </div>
 
               {/* Expiration */}
-              {deal.expiresAt && (
+              {deal.expires_at && (
                 <div className="flex items-center gap-2 text-sm text-orange-600">
                   <Clock className="w-4 h-4" />
-                  <span>Expires {new Date(deal.expiresAt).toLocaleDateString()}</span>
+                  <span>Expires {new Date(deal.expires_at).toLocaleDateString()}</span>
                 </div>
               )}
 
@@ -284,11 +284,11 @@ export default function DealDetail() {
               {/* Deal Stats */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{deal.clickCount || 0}</div>
+                  <div className="text-2xl font-bold text-blue-600">{deal.click_count || 0}</div>
                   <div className="text-sm text-gray-600">Clicks</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{deal.shareCount || 0}</div>
+                  <div className="text-2xl font-bold text-green-600">{deal.share_count || 0}</div>
                   <div className="text-sm text-gray-600">Shares</div>
                 </div>
               </div>
