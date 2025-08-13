@@ -567,7 +567,7 @@ export default function AdminDashboard() {
                   }}
                   data-testid="upload-deals-button"
                 >
-                  📁 Upload Files
+                  📁 UPLOAD FILES
                 </button>
                 <button
                   onClick={() => setShowAddDeal(true)}
