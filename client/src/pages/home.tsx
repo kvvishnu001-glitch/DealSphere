@@ -50,6 +50,15 @@ export default function Home() {
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [selectedDiscount, setSelectedDiscount] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  
+  // View All states for infinite scroll
+  const [showAllTop, setShowAllTop] = useState(false);
+  const [showAllHot, setShowAllHot] = useState(false);
+  const [showAllLatest, setShowAllLatest] = useState(false);
+  const [topDealsPage, setTopDealsPage] = useState(1);
+  const [hotDealsPage, setHotDealsPage] = useState(1);
+  const [latestDealsPage, setLatestDealsPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Fetch all deals
   const { data: deals, isLoading, error } = useQuery({
@@ -153,9 +162,64 @@ export default function Home() {
     }
   }
   
-  const topDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'top').slice(0, 3);
-  const hotDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'hot').slice(0, 4);
-  const latestDeals = filteredDeals.filter((deal: Deal) => deal.deal_type === 'latest').slice(0, 5);
+  // Get available categories and stores for filters
+  const availableCategories = Array.from(new Set(deals?.map((deal: Deal) => deal.category))).filter(Boolean);
+  const availableStores = Array.from(new Set(deals?.map((deal: Deal) => deal.store))).filter(Boolean);
+  const availableDiscounts = ["50+", "30+", "10+"];
+
+  // Load more function for infinite scroll
+  const loadMoreDeals = (section: 'top' | 'hot' | 'latest') => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    
+    setTimeout(() => {
+      if (section === 'top') {
+        setTopDealsPage(prev => prev + 1);
+      } else if (section === 'hot') {
+        setHotDealsPage(prev => prev + 1);
+      } else if (section === 'latest') {
+        setLatestDealsPage(prev => prev + 1);
+      }
+      setLoadingMore(false);
+    }, 500);
+  };
+
+  // Enhanced deal sections with image validation and pagination
+  const topDealsLimit = showAllTop ? topDealsPage * 30 : 3;
+  const topDeals = filteredDeals
+    .filter((deal: Deal) => deal.deal_type === 'top' && deal.image_url && deal.image_url.trim() !== '')
+    .slice(0, topDealsLimit);
+  
+  const hotDealsLimit = showAllHot ? hotDealsPage * 30 : 4;  
+  const hotDeals = filteredDeals
+    .filter((deal: Deal) => deal.deal_type === 'hot' && deal.image_url && deal.image_url.trim() !== '')
+    .slice(0, hotDealsLimit);
+  
+  const latestDealsLimit = showAllLatest ? latestDealsPage * 30 : 5;
+  const latestDeals = filteredDeals
+    .filter((deal: Deal) => deal.deal_type === 'latest' && deal.image_url && deal.image_url.trim() !== '')
+    .slice(0, latestDealsLimit);
+
+  // Infinite scroll effect
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop < document.documentElement.offsetHeight - 1000) return;
+      
+      // Check which section is currently in "view all" mode and load more
+      if (showAllTop && topDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'top' && d.image_url).length) {
+        loadMoreDeals('top');
+      } else if (showAllHot && hotDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'hot' && d.image_url).length) {
+        loadMoreDeals('hot');
+      } else if (showAllLatest && latestDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'latest' && d.image_url).length) {
+        loadMoreDeals('latest');
+      }
+    };
+
+    if (showAllTop || showAllHot || showAllLatest) {
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, [showAllTop, showAllHot, showAllLatest, topDeals.length, hotDeals.length, latestDeals.length, filteredDeals, loadingMore]);
   
   console.log('Section counts - Top:', topDeals.length, 'Hot:', hotDeals.length, 'Latest:', latestDeals.length);
   console.log('Hot deals found:', hotDeals.map(d => d.title));
@@ -333,14 +397,39 @@ export default function Home() {
         {/* Top Deals Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <Flame className="text-red-600 mr-2" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+              <Flame className="text-red-600 mr-2 w-5 h-5 sm:w-6 sm:h-6" />
               Top Deals
             </h2>
-            <span className="text-sm text-gray-500">AI-curated best deals</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs sm:text-sm text-gray-500">AI-curated best deals</span>
+              {!showAllTop && topDeals.length >= 3 && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowAllTop(true)}
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                >
+                  View All
+                </Button>
+              )}
+              {showAllTop && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setShowAllTop(false);
+                    setTopDealsPage(1);
+                  }}
+                  className="text-gray-600 border-gray-600 hover:bg-gray-50"
+                >
+                  Show Less
+                </Button>
+              )}
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`grid gap-4 sm:gap-6 ${showAllTop ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
             {topDeals.length > 0 ? topDeals.map((deal: Deal) => {
               console.log('Rendering top deal:', deal.title, deal.id);
               return <DealCard key={deal.id} deal={deal} variant="full" />;
@@ -350,19 +439,52 @@ export default function Home() {
               </div>
             )}
           </div>
+          
+          {showAllTop && loadingMore && (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
+                Loading more deals...
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Hot Deals Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <Flame className="text-amber-500 mr-2" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+              <Flame className="text-amber-500 mr-2 w-5 h-5 sm:w-6 sm:h-6" />
               Hot Deals
             </h2>
-            <span className="text-sm text-gray-500">Trending now</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs sm:text-sm text-gray-500">Trending now</span>
+              {!showAllHot && hotDeals.length >= 4 && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowAllHot(true)}
+                  className="text-amber-600 border-amber-600 hover:bg-amber-50"
+                >
+                  View All
+                </Button>
+              )}
+              {showAllHot && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setShowAllHot(false);
+                    setHotDealsPage(1);
+                  }}
+                  className="text-gray-600 border-gray-600 hover:bg-gray-50"
+                >
+                  Show Less
+                </Button>
+              )}
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className={`grid gap-4 ${showAllHot ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
             {hotDeals.length > 0 ? hotDeals.map((deal: Deal) => {
               console.log('Rendering hot deal:', deal.title, deal.id);
               return <DealCard key={deal.id} deal={deal} variant="compact" />;
@@ -372,32 +494,86 @@ export default function Home() {
               </div>
             )}
           </div>
+          
+          {showAllHot && loadingMore && (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
+                Loading more deals...
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Latest Deals Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <Clock className="text-blue-500 mr-2" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+              <Clock className="text-blue-500 mr-2 w-5 h-5 sm:w-6 sm:h-6" />
               Latest Deals
             </h2>
-            <span className="text-sm text-gray-500">Just added</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs sm:text-sm text-gray-500">Just added</span>
+              {!showAllLatest && latestDeals.length >= 5 && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowAllLatest(true)}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  View All
+                </Button>
+              )}
+              {showAllLatest && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setShowAllLatest(false);
+                    setLatestDealsPage(1);
+                  }}
+                  className="text-gray-600 border-gray-600 hover:bg-gray-50"
+                >
+                  Show Less
+                </Button>
+              )}
+            </div>
           </div>
           
-          <Card>
-            <CardContent className="p-0">
-              <div className="divide-y divide-gray-100">
-                {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => {
-                  console.log('Rendering latest deal:', deal.title, deal.id);
-                  return <DealCard key={deal.id} deal={deal} variant="list" />;
-                }) : (
-                  <div className="text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
-                    No latest deals available (Total filtered deals: {filteredDeals.length})
-                  </div>
-                )}
+          {showAllLatest ? (
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => {
+                console.log('Rendering latest deal:', deal.title, deal.id);
+                return <DealCard key={deal.id} deal={deal} variant="full" />;
+              }) : (
+                <div className="col-span-full text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
+                  No latest deals available (Total filtered deals: {filteredDeals.length})
+                </div>
+              )}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <div className="divide-y divide-gray-100">
+                  {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => {
+                    console.log('Rendering latest deal:', deal.title, deal.id);
+                    return <DealCard key={deal.id} deal={deal} variant="list" />;
+                  }) : (
+                    <div className="text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
+                      No latest deals available (Total filtered deals: {filteredDeals.length})
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {showAllLatest && loadingMore && (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
+                Loading more deals...
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          )}
         </section>
 
         {filteredDeals.length === 0 && (

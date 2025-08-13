@@ -31,9 +31,16 @@ interface DealCardProps {
 
 export function DealCard({ deal, variant = "full" }: DealCardProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const { toast } = useToast();
   
   console.log('DealCard rendering:', deal.title, 'variant:', variant);
+
+  // Hide the deal card if image failed to load
+  if (imageError) {
+    return null;
+  }
 
   const handleDealClick = async () => {
     if (isLoading) return;
@@ -79,9 +86,14 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
       <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
         <div className="relative">
           <img 
-            src={deal.image_url || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=400&h=200&fit=crop"}
+            src={deal.image_url}
             alt={deal.title}
             className="w-full h-48 object-cover"
+            onError={(e) => {
+              console.log('Image failed to load for deal:', deal.title, deal.image_url);
+              setImageError(true);
+            }}
+            onLoad={() => setImageLoaded(true)}
           />
           <Badge className="absolute top-2 left-2 bg-amber-500 text-white">
             {deal.discount_percentage}% OFF
@@ -119,9 +131,14 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
     return (
       <div className="flex flex-col sm:flex-row sm:items-center p-4 hover:bg-gray-50 transition-colors min-h-[120px] space-y-3 sm:space-y-0">
         <img 
-          src={deal.image_url || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=100&h=100&fit=crop"}
+          src={deal.image_url}
           alt={deal.title}
           className="w-16 h-16 rounded-lg sm:mr-4 flex-shrink-0 self-start object-cover"
+          onError={(e) => {
+            console.log('Image failed to load for deal:', deal.title, deal.image_url);
+            setImageError(true);
+          }}
+          onLoad={() => setImageLoaded(true)}
         />
         <div className="flex-1 min-w-0 sm:pr-4">
           <h4 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 sm:truncate">{deal.title}</h4>
@@ -159,9 +176,14 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
       <div className="relative">
         <Link href={`/deals/${deal.id}`}>
           <img 
-            src={deal.image_url || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&w=400&h=300&fit=crop"}
+            src={deal.image_url}
             alt={deal.title}
             className="w-full h-64 object-cover cursor-pointer"
+            onError={(e) => {
+              console.log('Image failed to load for deal:', deal.title, deal.image_url);
+              setImageError(true);
+            }}
+            onLoad={() => setImageLoaded(true)}
           />
         </Link>
         <Badge className="absolute top-3 left-3 bg-red-600 text-white">

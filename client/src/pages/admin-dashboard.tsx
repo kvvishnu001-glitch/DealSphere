@@ -251,6 +251,43 @@ export default function AdminDashboard() {
     }
   };
 
+  // Social sharing functions for admin
+  const shareOnX = (deal: any) => {
+    const text = `🔥 Amazing Deal Alert! ${deal.title} - Save ${deal.discount_percentage}% at ${deal.store}! Only $${deal.sale_price} (was $${deal.original_price})`;
+    const url = `${window.location.origin}/deals/${deal.id}`;
+    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+  };
+
+  const shareOnWhatsApp = (deal: any) => {
+    const text = `🔥 Amazing Deal Alert! ${deal.title} - Save ${deal.discount_percentage}% at ${deal.store}! Only $${deal.sale_price} (was $${deal.original_price}). Check it out: ${window.location.origin}/deals/${deal.id}`;
+    const shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(shareUrl, '_blank');
+  };
+
+  const shareOnFacebook = (deal: any) => {
+    const url = `${window.location.origin}/deals/${deal.id}`;
+    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(deal.title)}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+  };
+
+  const copyDealLink = async (deal: any) => {
+    const url = `${window.location.origin}/deals/${deal.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      alert('Deal link copied to clipboard!');
+    } catch (error) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Deal link copied to clipboard!');
+    }
+  };
+
   const fetchAutomationStatus = async () => {
     try {
       const token = localStorage.getItem("admin_token");
@@ -659,6 +696,7 @@ export default function AdminDashboard() {
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Price</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Status</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Stats</th>
+                        <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Social Share</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Actions</th>
                       </tr>
                     </thead>
@@ -703,6 +741,74 @@ export default function AdminDashboard() {
                           <td style={{ padding: "12px", fontSize: "12px", color: "#666" }}>
                             <div>{deal.click_count || 0} clicks</div>
                             <div>{deal.share_count || 0} shares</div>
+                          </td>
+                          <td style={{ padding: "12px" }}>
+                            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                              <button
+                                onClick={() => shareOnX(deal)}
+                                style={{
+                                  padding: "6px",
+                                  backgroundColor: "#000000",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center"
+                                }}
+                                title="Share on X (Twitter)"
+                              >
+                                <span style={{ color: "white", fontSize: "12px", fontWeight: "bold" }}>𝕏</span>
+                              </button>
+                              <button
+                                onClick={() => shareOnWhatsApp(deal)}
+                                style={{
+                                  padding: "6px",
+                                  backgroundColor: "#25D366",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center"
+                                }}
+                                title="Share on WhatsApp"
+                              >
+                                <span style={{ color: "white", fontSize: "12px" }}>💬</span>
+                              </button>
+                              <button
+                                onClick={() => shareOnFacebook(deal)}
+                                style={{
+                                  padding: "6px",
+                                  backgroundColor: "#1877F2",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center"
+                                }}
+                                title="Share on Facebook"
+                              >
+                                <span style={{ color: "white", fontSize: "12px" }}>f</span>
+                              </button>
+                              <button
+                                onClick={() => copyDealLink(deal)}
+                                style={{
+                                  padding: "6px",
+                                  backgroundColor: "#6c757d",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center"
+                                }}
+                                title="Copy Link"
+                              >
+                                <span style={{ color: "white", fontSize: "12px" }}>📋</span>
+                              </button>
+                            </div>
                           </td>
                           <td style={{ padding: "12px" }}>
                             <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
