@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useRealTimeUpdates } from "@/hooks/use-auto-refresh";
 import { FileUploadModal } from "../components/FileUploadModal";
 
 export default function AdminDashboard() {
@@ -41,6 +42,9 @@ export default function AdminDashboard() {
   // Deal issues tracking for "Needs Review" functionality
   const [dealIssues, setDealIssues] = useState<Record<string, string[]>>({});
 
+  // Enable real-time updates
+  useRealTimeUpdates();
+
   const categories = ["Electronics", "Clothing", "Home & Garden", "Sports", "Books", "Toys", "Beauty", "Automotive", "Food", "Health"];
   const dealTypes = ["regular", "hot", "top"];
 
@@ -56,6 +60,13 @@ export default function AdminDashboard() {
     } else if (activeTab === "affiliates") {
       fetchAffiliateNetworks();
     }
+    
+    // Set up auto-refresh for deals and metrics every 30 seconds
+    const autoRefreshInterval = setInterval(() => {
+      fetchData();
+    }, 30000);
+    
+    return () => clearInterval(autoRefreshInterval);
   }, [activeTab]);
 
   useEffect(() => {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRealTimeUpdates } from "@/hooks/use-auto-refresh";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,7 +64,10 @@ export default function Home() {
   const [latestDealsPage, setLatestDealsPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // Fetch all deals
+  // Enable real-time updates
+  useRealTimeUpdates();
+
+  // Fetch all deals with auto-refresh
   const { data: deals, isLoading, error } = useQuery({
     queryKey: ['/api/deals', { limit: 100 }],
     queryFn: async ({ queryKey }) => {
@@ -78,6 +82,9 @@ export default function Home() {
       console.log('Raw API Response:', data);
       return data;
     },
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    refetchIntervalInBackground: true, // Continue refreshing when tab is not active
+    staleTime: 10000, // Consider data stale after 10 seconds
   });
 
   if (error) {
