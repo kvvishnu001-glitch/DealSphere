@@ -24,10 +24,12 @@ export function SocialShare({ deal }: SocialShareProps) {
   const shareOnFacebook = async () => {
     setIsSharing(true);
     try {
-      const dealUrl = `${window.location.origin}/deals/${deal.id}`;
-      const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(dealUrl)}&quote=${encodeURIComponent(deal.title)}`;
+      // Create short URL for Facebook sharing
+      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=facebook`);
+      const { shortUrl } = await response.json();
       
-      await trackShare('facebook');
+      const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shortUrl)}&quote=${encodeURIComponent(deal.title)}`;
+      
       window.open(shareUrl, '_blank', 'width=600,height=400');
       
       toast({
@@ -36,6 +38,25 @@ export function SocialShare({ deal }: SocialShareProps) {
       });
     } catch (error) {
       console.error('Facebook share error:', error);
+      // Fallback to regular URL if short URL creation fails
+      try {
+        const dealUrl = `${window.location.origin}/deals/${deal.id}`;
+        const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(dealUrl)}&quote=${encodeURIComponent(deal.title)}`;
+        
+        await trackShare('facebook');
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+        
+        toast({
+          title: "Shared on Facebook",
+          description: "Thanks for sharing this deal!",
+        });
+      } catch (fallbackError) {
+        toast({
+          title: "Error",
+          description: "Failed to share on Facebook",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSharing(false);
     }
@@ -44,11 +65,13 @@ export function SocialShare({ deal }: SocialShareProps) {
   const shareOnTwitter = async () => {
     setIsSharing(true);
     try {
-      const dealUrl = `${window.location.origin}/deals/${deal.id}`;
-      const tweetText = `${deal.title} - ${deal.discountPercentage}% OFF! Get it for just $${deal.salePrice} (was $${deal.originalPrice})`;
-      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(dealUrl)}`;
+      // Create short URL for Twitter sharing
+      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=twitter`);
+      const { shortUrl } = await response.json();
       
-      await trackShare('twitter');
+      const tweetText = `${deal.title} - ${deal.discountPercentage}% OFF! Get it for just $${deal.salePrice} (was $${deal.originalPrice})`;
+      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shortUrl)}`;
+      
       window.open(shareUrl, '_blank', 'width=600,height=400');
       
       toast({
@@ -57,6 +80,26 @@ export function SocialShare({ deal }: SocialShareProps) {
       });
     } catch (error) {
       console.error('Twitter share error:', error);
+      // Fallback to regular URL if short URL creation fails
+      try {
+        const dealUrl = `${window.location.origin}/deals/${deal.id}`;
+        const tweetText = `${deal.title} - ${deal.discountPercentage}% OFF! Get it for just $${deal.salePrice} (was $${deal.originalPrice})`;
+        const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(dealUrl)}`;
+        
+        await trackShare('twitter');
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+        
+        toast({
+          title: "Shared on Twitter",
+          description: "Thanks for sharing this deal!",
+        });
+      } catch (fallbackError) {
+        toast({
+          title: "Error",
+          description: "Failed to share on Twitter",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSharing(false);
     }
@@ -65,11 +108,13 @@ export function SocialShare({ deal }: SocialShareProps) {
   const shareOnWhatsApp = async () => {
     setIsSharing(true);
     try {
-      const dealUrl = `${window.location.origin}/deals/${deal.id}`;
-      const message = `Check out this amazing deal: ${deal.title} - ${deal.discountPercentage}% OFF! ${dealUrl}`;
+      // Create short URL for WhatsApp sharing
+      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=whatsapp`);
+      const { shortUrl } = await response.json();
+      
+      const message = `Check out this amazing deal: ${deal.title} - ${deal.discountPercentage}% OFF! ${shortUrl}`;
       const shareUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
       
-      await trackShare('whatsapp');
       window.open(shareUrl, '_blank');
       
       toast({
@@ -78,6 +123,26 @@ export function SocialShare({ deal }: SocialShareProps) {
       });
     } catch (error) {
       console.error('WhatsApp share error:', error);
+      // Fallback to regular URL if short URL creation fails
+      try {
+        const dealUrl = `${window.location.origin}/deals/${deal.id}`;
+        const message = `Check out this amazing deal: ${deal.title} - ${deal.discountPercentage}% OFF! ${dealUrl}`;
+        const shareUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        
+        await trackShare('whatsapp');
+        window.open(shareUrl, '_blank');
+        
+        toast({
+          title: "Shared on WhatsApp",
+          description: "Thanks for sharing this deal!",
+        });
+      } catch (fallbackError) {
+        toast({
+          title: "Error",
+          description: "Failed to share on WhatsApp",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSharing(false);
     }
