@@ -456,21 +456,13 @@ export default function Home() {
                     Contact Support
                   </button>
                 </li>
+
                 <li>
-                  <button 
-                    onClick={() => alert('Privacy Policy: DealSphere protects your data. We use cookies for analytics and personalization. No personal data is sold to third parties.')}
-                    className="hover:text-white transition-colors text-left"
-                  >
-                    Privacy Policy
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => alert('Terms of Service: By using DealSphere, you agree to our fair use policy. Deals are verified by AI but prices may change. We earn affiliate commissions on purchases.')}
-                    className="hover:text-white transition-colors text-left"
-                  >
-                    Terms of Service
-                  </button>
+                  <Link href="/terms-conditions">
+                    <a className="hover:text-white transition-colors">
+                      Terms of Service
+                    </a>
+                  </Link>
                 </li>
                 <li>
                   <Link href="/privacy-policy">
@@ -499,6 +491,11 @@ export default function Home() {
                   <Link href="/privacy-policy">
                     <a className="hover:text-white transition-colors" data-testid="link-privacy-policy">
                       Privacy Policy
+                    </a>
+                  </Link>
+                  <Link href="/terms-conditions">
+                    <a className="hover:text-white transition-colors" data-testid="link-terms-conditions">
+                      Terms & Conditions
                     </a>
                   </Link>
                 </div>
