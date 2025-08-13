@@ -161,11 +161,6 @@ export default function Home() {
       });
     }
   }
-  
-  // Get available categories and stores for filters
-  const availableCategories = Array.from(new Set(deals?.map((deal: Deal) => deal.category))).filter(Boolean);
-  const availableStores = Array.from(new Set(deals?.map((deal: Deal) => deal.store))).filter(Boolean);
-  const availableDiscounts = ["50+", "30+", "10+"];
 
   // Load more function for infinite scroll
   const loadMoreDeals = (section: 'top' | 'hot' | 'latest') => {
