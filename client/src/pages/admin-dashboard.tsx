@@ -28,6 +28,12 @@ export default function AdminDashboard() {
   // Automation state
   const [automationStatus, setAutomationStatus] = useState<any>(null);
   const [automationLoading, setAutomationLoading] = useState(false);
+  
+  // Affiliate networks state
+  const [affiliateNetworks, setAffiliateNetworks] = useState<any[]>([]);
+  const [selectedNetwork, setSelectedNetwork] = useState<any>(null);
+  const [networkConfig, setNetworkConfig] = useState<any>({});
+  const [showConfigModal, setShowConfigModal] = useState(false);
 
   const categories = ["Electronics", "Clothing", "Home & Garden", "Sports", "Books", "Toys", "Beauty", "Automotive", "Food", "Health"];
   const dealTypes = ["regular", "hot", "top"];
@@ -41,6 +47,8 @@ export default function AdminDashboard() {
     fetchData();
     if (activeTab === "automation") {
       fetchAutomationStatus();
+    } else if (activeTab === "affiliates") {
+      fetchAffiliateNetworks();
     }
   }, [activeTab]);
 
@@ -301,6 +309,94 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchAffiliateNetworks = async () => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/admin/affiliates/networks", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAffiliateNetworks(data);
+      }
+    } catch (error) {
+      console.error("Error fetching affiliate networks:", error);
+    }
+  };
+
+  const configureNetwork = async (networkId: string, configData: any) => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(`/api/admin/affiliates/networks/${networkId}/configure`, {
+        method: "POST",
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(configData)
+      });
+      
+      if (response.ok) {
+        alert("Network configured successfully!");
+        fetchAffiliateNetworks();
+        setShowConfigModal(false);
+      } else {
+        const error = await response.json();
+        alert(`Configuration failed: ${error.detail}`);
+      }
+    } catch (error) {
+      alert("Error configuring network: " + error);
+    }
+  };
+
+  const testNetworkConnection = async (networkId: string) => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(`/api/admin/affiliates/networks/${networkId}/test`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === "success") {
+          alert(`Connection successful! Found ${result.deals_found} deals.`);
+        } else {
+          alert(`Connection failed: ${result.error_message}`);
+        }
+      }
+    } catch (error) {
+      alert("Error testing connection: " + error);
+    }
+  };
+
+  const toggleNetworkStatus = async (networkId: string, enable: boolean) => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(`/api/admin/affiliates/networks/${networkId}/toggle`, {
+        method: "POST",
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ enable })
+      });
+      
+      if (response.ok) {
+        alert(`Network ${enable ? 'enabled' : 'disabled'} successfully!`);
+        fetchAffiliateNetworks();
+      }
+    } catch (error) {
+      alert("Error toggling network: " + error);
+    }
+  };
+
+  const openConfigModal = (network: any) => {
+    setSelectedNetwork(network);
+    setNetworkConfig({});
+    setShowConfigModal(true);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
     window.location.href = "/admin";
@@ -352,6 +448,19 @@ export default function AdminDashboard() {
                 }}
               >
                 Automation
+              </button>
+              <button
+                onClick={() => setActiveTab("affiliates")}
+                style={{ 
+                  padding: "8px 15px", 
+                  backgroundColor: activeTab === "affiliates" ? "#007bff" : "transparent", 
+                  color: activeTab === "affiliates" ? "white" : "#333",
+                  border: "1px solid #007bff",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Affiliate Networks
               </button>
             </nav>
           </div>
@@ -866,6 +975,236 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Affiliate Networks Tab */}
+        {activeTab === "affiliates" && (
+          <div>
+            <h2 style={{ marginBottom: "20px", color: "#333" }}>Affiliate Network Management</h2>
+            
+            {/* Network Overview */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", gap: "20px", marginBottom: "30px" }}>
+              {affiliateNetworks.map((network: any) => (
+                <div key={network.network_id} style={{ 
+                  backgroundColor: "white", 
+                  padding: "20px", 
+                  borderRadius: "8px", 
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  border: network.is_active ? "2px solid #28a745" : "2px solid #dc3545"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+                    <h3 style={{ margin: 0, color: "#333" }}>{network.name}</h3>
+                    <div style={{ 
+                      padding: "4px 8px", 
+                      borderRadius: "4px", 
+                      fontSize: "12px", 
+                      fontWeight: "bold",
+                      backgroundColor: network.is_configured ? "#d4edda" : "#f8d7da",
+                      color: network.is_configured ? "#155724" : "#721c24"
+                    }}>
+                      {network.is_configured ? "Configured" : "Not Configured"}
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginBottom: "15px", fontSize: "14px", color: "#666" }}>
+                    <div><strong>Type:</strong> {network.type}</div>
+                    <div><strong>Status:</strong> {network.is_active ? "Active" : "Inactive"}</div>
+                    {network.last_sync && (
+                      <div><strong>Last Sync:</strong> {new Date(network.last_sync).toLocaleString()}</div>
+                    )}
+                  </div>
+
+                  <div style={{ marginBottom: "15px" }}>
+                    <h4 style={{ margin: "0 0 8px 0", fontSize: "14px", color: "#333" }}>Required Fields:</h4>
+                    <ul style={{ margin: 0, padding: "0 0 0 16px", fontSize: "12px", color: "#666" }}>
+                      {network.configuration_fields?.map((field: string, index: number) => (
+                        <li key={index}>{field}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => openConfigModal(network)}
+                      style={{ 
+                        padding: "6px 12px", 
+                        backgroundColor: "#007bff", 
+                        color: "white", 
+                        border: "none", 
+                        borderRadius: "4px", 
+                        cursor: "pointer",
+                        fontSize: "12px"
+                      }}
+                    >
+                      Configure
+                    </button>
+                    
+                    {network.is_configured && (
+                      <>
+                        <button
+                          onClick={() => testNetworkConnection(network.network_id)}
+                          style={{ 
+                            padding: "6px 12px", 
+                            backgroundColor: "#28a745", 
+                            color: "white", 
+                            border: "none", 
+                            borderRadius: "4px", 
+                            cursor: "pointer",
+                            fontSize: "12px"
+                          }}
+                        >
+                          Test
+                        </button>
+                        
+                        <button
+                          onClick={() => toggleNetworkStatus(network.network_id, !network.is_active)}
+                          style={{ 
+                            padding: "6px 12px", 
+                            backgroundColor: network.is_active ? "#dc3545" : "#28a745", 
+                            color: "white", 
+                            border: "none", 
+                            borderRadius: "4px", 
+                            cursor: "pointer",
+                            fontSize: "12px"
+                          }}
+                        >
+                          {network.is_active ? "Disable" : "Enable"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Compliance Terms */}
+                  <div style={{ marginTop: "15px", padding: "10px", backgroundColor: "#f8f9fa", borderRadius: "4px" }}>
+                    <h4 style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#333" }}>Compliance Requirements:</h4>
+                    <ul style={{ margin: 0, padding: "0 0 0 16px", fontSize: "11px", color: "#666" }}>
+                      {network.compliance_terms?.attribution_required && <li>Attribution required</li>}
+                      {network.compliance_terms?.data_retention && (
+                        <li>Data retention: {network.compliance_terms.data_retention.replace('_', ' ')}</li>
+                      )}
+                      {network.compliance_terms?.content_restrictions?.map((restriction: string, index: number) => (
+                        <li key={index}>{restriction.replace('_', ' ')}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Configuration Instructions */}
+            <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", marginBottom: "20px" }}>
+              <h3 style={{ marginBottom: "15px", color: "#333" }}>Setup Instructions</h3>
+              <div style={{ fontSize: "14px", lineHeight: "1.6", color: "#666" }}>
+                <h4 style={{ color: "#007bff", marginBottom: "10px" }}>How to Configure Affiliate Networks:</h4>
+                <ol style={{ paddingLeft: "20px" }}>
+                  <li><strong>Sign up</strong> for each affiliate program you want to use</li>
+                  <li><strong>Get API credentials</strong> from the affiliate network's developer section</li>
+                  <li><strong>Click "Configure"</strong> on any network above to enter your credentials</li>
+                  <li><strong>Test the connection</strong> to verify everything works</li>
+                  <li><strong>Enable the network</strong> to start fetching deals automatically</li>
+                </ol>
+                
+                <div style={{ marginTop: "15px", padding: "10px", backgroundColor: "#fff3cd", borderRadius: "4px", border: "1px solid #ffeaa7" }}>
+                  <strong>⚠️ Important:</strong> All affiliate networks have specific terms of service and compliance requirements. 
+                  Make sure to review their terms before enabling automated deal fetching.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Configuration Modal */}
+        {showConfigModal && selectedNetwork && (
+          <div style={{ 
+            position: "fixed", 
+            top: 0, 
+            left: 0, 
+            width: "100%", 
+            height: "100%", 
+            backgroundColor: "rgba(0,0,0,0.5)", 
+            display: "flex", 
+            justifyContent: "center", 
+            alignItems: "center",
+            zIndex: 1000
+          }}>
+            <div style={{ 
+              backgroundColor: "white", 
+              padding: "30px", 
+              borderRadius: "8px", 
+              maxWidth: "500px", 
+              width: "90%",
+              maxHeight: "80vh",
+              overflowY: "auto"
+            }}>
+              <h3 style={{ marginBottom: "20px", color: "#333" }}>Configure {selectedNetwork.name}</h3>
+              
+              <div style={{ marginBottom: "20px" }}>
+                {selectedNetwork.configuration_fields?.map((field: string, index: number) => (
+                  <div key={index} style={{ marginBottom: "15px" }}>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "14px" }}>
+                      {field.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}:
+                    </label>
+                    <input
+                      type={field.toLowerCase().includes('key') || field.toLowerCase().includes('secret') || field.toLowerCase().includes('token') ? "password" : "text"}
+                      value={networkConfig[field] || ""}
+                      onChange={(e) => setNetworkConfig({...networkConfig, [field]: e.target.value})}
+                      style={{ 
+                        width: "100%", 
+                        padding: "8px", 
+                        border: "1px solid #ccc", 
+                        borderRadius: "4px",
+                        fontSize: "14px"
+                      }}
+                      placeholder={`Enter your ${field}`}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Compliance Info */}
+              <div style={{ marginBottom: "20px", padding: "15px", backgroundColor: "#f8f9fa", borderRadius: "4px" }}>
+                <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", color: "#333" }}>Compliance Requirements:</h4>
+                <ul style={{ margin: 0, padding: "0 0 0 16px", fontSize: "12px", color: "#666" }}>
+                  {selectedNetwork.compliance_terms?.attribution_required && <li>All links must include proper affiliate tracking</li>}
+                  {selectedNetwork.compliance_terms?.data_retention && (
+                    <li>Data retention: {selectedNetwork.compliance_terms.data_retention.replace('_', ' ')}</li>
+                  )}
+                  {selectedNetwork.compliance_terms?.content_restrictions?.map((restriction: string, index: number) => (
+                    <li key={index}>{restriction.replace('_', ' ')}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                <button
+                  onClick={() => setShowConfigModal(false)}
+                  style={{ 
+                    padding: "10px 20px", 
+                    backgroundColor: "#6c757d", 
+                    color: "white", 
+                    border: "none", 
+                    borderRadius: "4px", 
+                    cursor: "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => configureNetwork(selectedNetwork.network_id, networkConfig)}
+                  style={{ 
+                    padding: "10px 20px", 
+                    backgroundColor: "#007bff", 
+                    color: "white", 
+                    border: "none", 
+                    borderRadius: "4px", 
+                    cursor: "pointer"
+                  }}
+                >
+                  Save Configuration
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

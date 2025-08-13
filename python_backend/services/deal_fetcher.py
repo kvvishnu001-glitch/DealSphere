@@ -21,6 +21,7 @@ from sqlalchemy import select
 from database import get_db
 from models import Deal, DealCreate
 from services.ai_service import AIService
+from services.affiliate_networks import AffiliateNetworkManager
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -180,24 +181,13 @@ class DealFetcher:
 
     async def fetch_all_deals(self) -> List[Dict]:
         """
-        Fetch deals from all configured affiliate networks
+        Fetch deals from all configured affiliate networks using the new comprehensive system
         """
         all_deals = []
         
-        # Fetch from all sources concurrently
-        tasks = [
-            self.fetch_amazon_deals(),
-            self.fetch_cj_deals(),
-            self.fetch_clickbank_deals()
-        ]
-        
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        
-        for result in results:
-            if isinstance(result, list):
-                all_deals.extend(result)
-            elif isinstance(result, Exception):
-                logger.error(f"Error in deal fetching task: {result}")
+        # Use the comprehensive affiliate network manager
+        async with AffiliateNetworkManager() as network_manager:
+            all_deals = await network_manager.fetch_all_network_deals()
                 
         return all_deals
 

@@ -144,6 +144,74 @@ class SocialShareCreate(BaseModel):
     platform: str
     ip_address: Optional[str] = None
 
+# New models for affiliate network management
+class AffiliateNetwork(Base):
+    __tablename__ = "affiliate_networks"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    network_id = Column(String(50), unique=True, index=True)
+    name = Column(String(200), nullable=False)
+    description = Column(Text)
+    api_type = Column(String(50))  # api, ftp, csv
+    base_url = Column(String(500))
+    compliance_terms = Column(JSON)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+class AffiliateConfig(Base):
+    __tablename__ = "affiliate_configs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    network_id = Column(String(50), unique=True, index=True)
+    network_name = Column(String(200), nullable=False)
+    config_data = Column(JSON)  # API keys, endpoints, etc.
+    compliance_terms = Column(JSON)
+    is_active = Column(Boolean, default=True)
+    last_sync = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+class ComplianceLog(Base):
+    __tablename__ = "compliance_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    deal_id = Column(String(36), ForeignKey("deals.id"))
+    network_id = Column(String(50))
+    compliance_check = Column(JSON)
+    is_compliant = Column(Boolean, default=True)
+    issues_found = Column(JSON)
+    created_at = Column(DateTime, server_default=func.now())
+
+# Pydantic models for affiliate networks
+class AffiliateNetworkCreate(BaseModel):
+    network_id: str
+    name: str
+    description: Optional[str] = None
+    api_type: str
+    base_url: Optional[str] = None
+    compliance_terms: Dict[str, Any]
+
+class AffiliateConfigCreate(BaseModel):
+    network_id: str
+    network_name: str
+    config_data: Dict[str, Any]
+    compliance_terms: Dict[str, Any]
+
+class AffiliateConfigResponse(BaseModel):
+    id: int
+    network_id: str
+    network_name: str
+    config_data: Dict[str, Any]
+    compliance_terms: Dict[str, Any]
+    is_active: bool
+    last_sync: Optional[datetime]
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
 class Analytics(BaseModel):
     total_deals: int
     ai_approved: int
