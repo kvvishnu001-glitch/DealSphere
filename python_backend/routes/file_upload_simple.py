@@ -40,31 +40,26 @@ async def upload_deal_file(
         for row in csv_reader:
             processed_count += 1
             try:
-                # Map CSV fields to deal model (match exact field names from models.py)
+                # Map CSV fields to deal model (all mandatory fields included)
                 deal_data = {
                     'id': str(uuid.uuid4()),  # Generate unique ID
                     'title': row.get('title', ''),
                     'description': row.get('description', ''),
-                    'sale_price': float(row.get('price', 0)) if row.get('price') else 0,
+                    'sale_price': float(row.get('sale_price', 0)) if row.get('sale_price') else 0,
                     'original_price': float(row.get('original_price', 0)) if row.get('original_price') else 0,
+                    'discount_percentage': int(row.get('discount_percentage', 0)) if row.get('discount_percentage') else 0,
                     'image_url': row.get('image_url', ''),
-                    'affiliate_url': row.get('product_url', ''),
-                    'store': row.get('brand', network.title()),  # Use brand as store, fallback to network
+                    'affiliate_url': row.get('affiliate_url', ''),
+                    'store': row.get('store', network.title()),
                     'category': row.get('category', 'General'),
                     'rating': float(row.get('rating', 0)) if row.get('rating') else None,
-                    'deal_type': 'file_upload',
+                    'deal_type': row.get('deal_type', 'latest'),
                     'status': 'pending',
                     'is_active': True,
                     'is_ai_approved': False,
                     'click_count': 0,
-                    'share_count': 0,
-                    'discount_percentage': 0  # Will calculate below
+                    'share_count': 0
                 }
-                
-                # Calculate discount percentage
-                if deal_data['sale_price'] and deal_data['original_price'] and deal_data['original_price'] > deal_data['sale_price']:
-                    discount = ((deal_data['original_price'] - deal_data['sale_price']) / deal_data['original_price']) * 100
-                    deal_data['discount_percentage'] = round(discount, 2)
                 
                 # Remove None values
                 deal_data = {k: v for k, v in deal_data.items() if v is not None}

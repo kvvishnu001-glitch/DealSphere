@@ -1,6 +1,6 @@
-title,description,price,original_price,image_url,product_url,category,brand,rating,availability
-Wireless Bluetooth Headphones,Premium noise-canceling wireless headphones with 30-hour battery life,79.99,129.99,https://example.com/headphones.jpg,https://amazon.com/dp/B08EXAMPLE,Electronics,SoundTech,4.5,In Stock
-Smart Fitness Tracker,Advanced fitness tracker with heart rate monitor and sleep tracking,45.99,69.99,https://example.com/tracker.jpg,https://amazon.com/dp/B09EXAMPLE,Health & Fitness,FitPro,4.2,In Stock
-Organic Coffee Beans 2lb,Premium organic coffee beans medium roast single origin,24.99,34.99,https://example.com/coffee.jpg,https://amazon.com/dp/B07EXAMPLE,Food & Beverage,BrewMaster,4.7,In Stock
-LED Desk Lamp,Adjustable LED desk lamp with wireless charging base,39.99,59.99,https://example.com/lamp.jpg,https://amazon.com/dp/B06EXAMPLE,Home & Garden,LightTech,4.3,In Stock
-Yoga Mat Premium,Extra thick yoga mat with carrying strap eco-friendly,29.99,49.99,https://example.com/yoga.jpg,https://amazon.com/dp/B05EXAMPLE,Sports & Outdoors,ZenMat,4.6,In Stock
+title,description,sale_price,original_price,discount_percentage,image_url,affiliate_url,store,category,rating,deal_type
+Wireless Bluetooth Headphones,Premium noise-canceling wireless headphones with 30-hour battery life,79.99,129.99,38,https://example.com/headphones.jpg,https://amazon.com/dp/B08EXAMPLE?tag=yourstore-20,SoundTech,Electronics,4.5,hot
+Smart Fitness Tracker,Advanced fitness tracker with heart rate monitor and sleep tracking,45.99,69.99,34,https://example.com/tracker.jpg,https://amazon.com/dp/B09EXAMPLE?tag=yourstore-20,FitPro,Health & Fitness,4.2,latest
+Organic Coffee Beans 2lb,Premium organic coffee beans medium roast single origin,24.99,34.99,29,https://example.com/coffee.jpg,https://amazon.com/dp/B07EXAMPLE?tag=yourstore-20,BrewMaster,Food & Beverage,4.7,top
+LED Desk Lamp,Adjustable LED desk lamp with wireless charging base,39.99,59.99,33,https://example.com/lamp.jpg,https://amazon.com/dp/B06EXAMPLE?tag=yourstore-20,LightTech,Home & Garden,4.3,latest
+Yoga Mat Premium,Extra thick yoga mat with carrying strap eco-friendly,29.99,49.99,40,https://example.com/yoga.jpg,https://amazon.com/dp/B05EXAMPLE?tag=yourstore-20,ZenMat,Sports & Outdoors,4.6,hot
