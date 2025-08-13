@@ -247,9 +247,9 @@ class AffiliateNetworkManager:
                 await asyncio.sleep(1)  # Rate limiting
                 
         except Exception as e:
-            if "Invalid" in str(e) or "appears to be" in str(e) or "Missing required" in str(e):
-                raise e  # Re-raise validation errors
             print(f"Error fetching Amazon deals: {e}")
+            # Always re-raise exceptions so they can be caught by the test endpoint
+            raise ValueError(f"Amazon API error: {str(e)}")
             
         return deals
 
