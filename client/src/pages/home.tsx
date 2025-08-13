@@ -195,7 +195,7 @@ export default function Home() {
   
   const latestDealsLimit = showAllLatest ? latestDealsPage * 30 : 5;
   const latestDeals = filteredDeals
-    .filter((deal: Deal) => deal.deal_type === 'latest' && deal.image_url && deal.image_url.trim() !== '')
+    .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '')
     .slice(0, latestDealsLimit);
 
   // Infinite scroll effect
@@ -208,7 +208,7 @@ export default function Home() {
         loadMoreDeals('top');
       } else if (showAllHot && hotDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'hot' && d.image_url).length) {
         loadMoreDeals('hot');
-      } else if (showAllLatest && latestDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'latest' && d.image_url).length) {
+      } else if (showAllLatest && latestDeals.length < filteredDeals.filter((d: Deal) => (d.deal_type === 'latest' || d.deal_type === 'regular') && d.image_url).length) {
         loadMoreDeals('latest');
       }
     };
