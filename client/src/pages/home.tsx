@@ -219,9 +219,18 @@ export default function Home() {
     }
   }, [showAllTop, showAllHot, showAllLatest, topDeals.length, hotDeals.length, latestDeals.length, filteredDeals, loadingMore]);
   
+  // Debug the exact filtering for latest deals
+  const debugLatestFilter = filteredDeals.filter((deal: Deal) => {
+    const isLatestType = deal.deal_type === 'latest' || deal.deal_type === 'regular';
+    const hasValidImage = deal.image_url && deal.image_url.trim() !== '';
+    console.log(`Deal "${deal.title}": type=${deal.deal_type}, isLatestType=${isLatestType}, hasValidImage=${hasValidImage}`);
+    return isLatestType && hasValidImage;
+  });
+  
   console.log('Section counts - Top:', topDeals.length, 'Hot:', hotDeals.length, 'Latest:', latestDeals.length);
   console.log('Hot deals found:', hotDeals.map(d => d.title));
   console.log('Latest deals found (includes regular):', latestDeals.map(d => `${d.title} (${d.deal_type})`));
+  console.log('Debug latest filter results:', debugLatestFilter.map(d => `${d.title} (${d.deal_type})`));
   console.log('=== END DEBUGGING ===');
 
   const clearFilters = () => {
