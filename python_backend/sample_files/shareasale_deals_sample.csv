@@ -1,0 +1,6 @@
+merchantname,product,description,price,saleprice,thumb,directurl,category,commission
+TechStore,Wireless Mouse,Ergonomic wireless mouse with precision tracking,49.99,29.99,https://example.com/mouse.jpg,https://shareasale.com/r.cfm?b=123,Electronics,4.50
+FashionHub,Designer Sunglasses,Premium polarized sunglasses with UV protection,199.99,99.99,https://example.com/sunglasses.jpg,https://shareasale.com/r.cfm?b=124,Fashion,20.00
+BookWorld,Programming Guide,Complete guide to modern web development frameworks,59.99,39.99,https://example.com/book.jpg,https://shareasale.com/r.cfm?b=125,Books,8.00
+HomeDecor,Wall Art Set,Modern abstract wall art set of 3 canvas prints,149.99,89.99,https://example.com/art.jpg,https://shareasale.com/r.cfm?b=126,Home Decor,18.00
+PetSupply,Dog Training Kit,Complete dog training kit with clicker and treats,39.99,24.99,https://example.com/dog.jpg,https://shareasale.com/r.cfm?b=127,Pet Supplies,5.00

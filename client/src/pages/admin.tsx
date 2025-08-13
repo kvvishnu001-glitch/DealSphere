@@ -604,6 +604,65 @@ export default function AdminPage() {
               </div>
             </div>
             
+            {/* Sample Files Section */}
+            <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>📥 Sample File Templates</h3>
+              <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "16px" }}>
+                Download sample files to see the correct format for each affiliate network:
+              </p>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+                {[
+                  { network: 'amazon', name: 'Amazon Associates', desc: 'Product details with ratings and availability' },
+                  { network: 'cj', name: 'Commission Junction', desc: 'CJ export format with commission data' },
+                  { network: 'shareasale', name: 'ShareASale', desc: 'Merchant export with affiliate links' }
+                ].map(({ network, name, desc }) => (
+                  <div key={network} style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "16px", backgroundColor: "#f9fafb" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
+                      <h4 style={{ fontSize: "14px", fontWeight: "500", color: "#374151" }}>{name}</h4>
+                      <button
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = `/api/admin/deals/samples/download/${network}`;
+                          link.download = `${network}_deals_sample.csv`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                        style={{
+                          padding: "4px 12px",
+                          backgroundColor: "#2563eb",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                          cursor: "pointer"
+                        }}
+                        data-testid={`download-sample-${network}`}
+                      >
+                        Download
+                      </button>
+                    </div>
+                    <p style={{ fontSize: "12px", color: "#6b7280", marginBottom: "8px" }}>{desc}</p>
+                    <p style={{ fontSize: "11px", color: "#9ca3af" }}>
+                      Fields: title, description, price, image_url, product_url, category
+                    </p>
+                  </div>
+                ))}
+              </div>
+              
+              <div style={{ backgroundColor: "#dbeafe", border: "1px solid #93c5fd", borderRadius: "8px", padding: "16px", marginTop: "16px" }}>
+                <h4 style={{ fontSize: "14px", fontWeight: "500", marginBottom: "8px", color: "#1e40af" }}>💡 File Format Tips</h4>
+                <ul style={{ fontSize: "12px", color: "#1e40af", margin: 0, paddingLeft: "16px" }}>
+                  <li>Include headers in the first row for CSV/Excel files</li>
+                  <li>Price fields should be numeric (29.99, not $29.99)</li>
+                  <li>Use complete URLs for images and affiliate links</li>
+                  <li>Required fields: title, description, price, product_url</li>
+                  <li>Add detailed descriptions for better AI validation scores</li>
+                </ul>
+              </div>
+            </div>
+            
             <p style={{ color: "#6b7280", fontSize: "14px", fontStyle: "italic" }}>
               Perfect for networks without API access like CJ FTP exports or initial Amazon setups.
             </p>

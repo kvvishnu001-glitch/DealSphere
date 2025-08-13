@@ -12,6 +12,10 @@ DealSphere is an AI-powered deals and coupons platform that aggregates product d
 - **Automated Deal Fetching**: Integrated system fetching from all configured networks with AI validation and compliance checking
 - **Real-Time Status Monitoring**: Live configuration health checks, connection testing, and automated compliance reporting
 - **Production-Ready Compliance**: Built-in FTC disclosure requirements, network-specific attribution, and legal compliance features
+- **File Upload System**: Comprehensive bulk deal upload system for networks without API access (CJ FTP exports, initial Amazon phases)
+- **Sample File Templates**: Downloadable sample CSV files for Amazon, CJ, ShareASale with proper field formatting and examples
+- **Smart Field Mapping**: Automatic field mapping and validation for different affiliate network export formats
+- **Multi-Format Support**: CSV, Excel, XML, JSON, and text file processing with drag-and-drop upload interface
 
 # User Preferences
 
