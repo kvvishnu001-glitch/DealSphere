@@ -36,6 +36,9 @@ export default function AdminDashboard() {
   const [selectedNetwork, setSelectedNetwork] = useState<any>(null);
   const [networkConfig, setNetworkConfig] = useState<any>({});
   const [showConfigModal, setShowConfigModal] = useState(false);
+  
+  // Deal issues tracking for "Needs Review" functionality
+  const [dealIssues, setDealIssues] = useState<Record<string, string[]>>({});
 
   const categories = ["Electronics", "Clothing", "Home & Garden", "Sports", "Books", "Toys", "Beauty", "Automotive", "Food", "Health"];
   const dealTypes = ["regular", "hot", "top"];
@@ -86,9 +89,78 @@ export default function AdminDashboard() {
       if (response.ok) {
         const data = await response.json();
         setDeals(data);
+        // Analyze deals for issues after fetching
+        analyzeDealIssues(data);
       }
     } catch (error) {
       console.error("Error fetching deals:", error);
+    }
+  };
+
+  // Function to analyze deals and identify issues
+  const analyzeDealIssues = (dealsData: any[]) => {
+    const issues: Record<string, string[]> = {};
+    
+    dealsData.forEach((deal) => {
+      const dealIssues: string[] = [];
+      
+      // Check for missing or invalid image URL
+      if (!deal.image_url || deal.image_url.trim() === '') {
+        dealIssues.push('Missing image URL');
+      } else if (!isValidImageUrl(deal.image_url)) {
+        dealIssues.push('Invalid image URL format');
+      }
+      
+      // Check for missing required fields
+      if (!deal.title || deal.title.trim() === '') {
+        dealIssues.push('Missing title');
+      }
+      if (!deal.description || deal.description.trim() === '') {
+        dealIssues.push('Missing description');
+      }
+      if (!deal.store || deal.store.trim() === '') {
+        dealIssues.push('Missing store name');
+      }
+      if (!deal.category || deal.category.trim() === '') {
+        dealIssues.push('Missing category');
+      }
+      if (!deal.affiliate_url || deal.affiliate_url.trim() === '') {
+        dealIssues.push('Missing affiliate URL');
+      }
+      
+      // Check for invalid pricing
+      if (!deal.original_price || deal.original_price <= 0) {
+        dealIssues.push('Invalid original price');
+      }
+      if (!deal.sale_price || deal.sale_price <= 0) {
+        dealIssues.push('Invalid sale price');
+      }
+      if (deal.sale_price >= deal.original_price) {
+        dealIssues.push('Sale price not lower than original price');
+      }
+      if (!deal.discount_percentage || deal.discount_percentage <= 0) {
+        dealIssues.push('Invalid discount percentage');
+      }
+      
+      // Store issues if any found
+      if (dealIssues.length > 0) {
+        issues[deal.id] = dealIssues;
+      }
+    });
+    
+    setDealIssues(issues);
+  };
+
+  // Helper function to validate image URL format
+  const isValidImageUrl = (url: string): boolean => {
+    try {
+      const urlObj = new URL(url);
+      return /\.(jpg|jpeg|png|gif|webp)$/i.test(urlObj.pathname) || 
+             url.includes('unsplash.com') || 
+             url.includes('images.') ||
+             url.includes('cdn.');
+    } catch {
+      return false;
     }
   };
 
@@ -111,9 +183,11 @@ export default function AdminDashboard() {
       if (statusFilter === "approved") {
         filtered = filtered.filter(deal => deal.is_ai_approved === true);
       } else if (statusFilter === "pending") {
-        filtered = filtered.filter(deal => deal.is_ai_approved === false);
+        filtered = filtered.filter(deal => deal.is_ai_approved === false && deal.status !== "rejected");
       } else if (statusFilter === "rejected") {
         filtered = filtered.filter(deal => deal.status === "rejected");
+      } else if (statusFilter === "needs_review") {
+        filtered = filtered.filter(deal => dealIssues[deal.id] && dealIssues[deal.id].length > 0);
       }
     }
 
@@ -554,6 +628,12 @@ export default function AdminDashboard() {
                 <div style={{ fontSize: "24px", fontWeight: "bold", color: "#333" }}>{metrics.pending_deals}</div>
                 <div style={{ fontSize: "12px", color: "#666", marginTop: "5px" }}>Awaiting approval</div>
               </div>
+              
+              <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
+                <h3 style={{ margin: "0 0 10px 0", color: "#666", fontSize: "14px" }}>Issues Found</h3>
+                <div style={{ fontSize: "24px", fontWeight: "bold", color: "#ffc107" }}>{Object.keys(dealIssues).length}</div>
+                <div style={{ fontSize: "12px", color: "#666", marginTop: "5px" }}>Deals need review</div>
+              </div>
             </div>
 
             {/* Recent Activity */}
@@ -625,7 +705,7 @@ export default function AdminDashboard() {
 
             {/* Filters */}
             <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", marginBottom: "20px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 200px 200px", gap: "15px", alignItems: "end" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 200px 200px 200px", gap: "15px", alignItems: "end" }}>
                 <div>
                   <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "14px" }}>Search</label>
                   <input
@@ -675,9 +755,10 @@ export default function AdminDashboard() {
                     }}
                   >
                     <option value="all">All Status</option>
-                    <option value="approved">Approved</option>
-                    <option value="pending">Pending</option>
-                    <option value="rejected">Rejected</option>
+                    <option value="approved">✅ Approved</option>
+                    <option value="pending">⏳ Pending</option>
+                    <option value="rejected">❌ Rejected</option>
+                    <option value="needs_review">🔧 Needs Review ({Object.keys(dealIssues).length})</option>
                   </select>
                 </div>
               </div>
@@ -695,6 +776,7 @@ export default function AdminDashboard() {
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Category</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Price</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Status</th>
+                        <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Issues</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Stats</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Social Share</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Actions</th>
@@ -728,15 +810,53 @@ export default function AdminDashboard() {
                             <div style={{ fontSize: "12px", color: "#666", textDecoration: "line-through" }}>${deal.original_price}</div>
                           </td>
                           <td style={{ padding: "12px" }}>
-                            <span style={{ 
-                              fontSize: "12px", 
-                              padding: "4px 8px", 
-                              borderRadius: "12px", 
-                              backgroundColor: deal.status === "rejected" ? "#dc3545" : deal.is_ai_approved ? "#28a745" : "#6c757d", 
-                              color: "white" 
-                            }}>
-                              {deal.status === "rejected" ? "Rejected" : deal.is_ai_approved ? "Approved" : "Pending"}
-                            </span>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                              <span style={{ 
+                                fontSize: "12px", 
+                                padding: "4px 8px", 
+                                borderRadius: "12px", 
+                                backgroundColor: deal.status === "rejected" ? "#dc3545" : deal.is_ai_approved ? "#28a745" : "#6c757d", 
+                                color: "white" 
+                              }}>
+                                {deal.status === "rejected" ? "❌ Rejected" : deal.is_ai_approved ? "✅ Approved" : "⏳ Pending"}
+                              </span>
+                              {dealIssues[deal.id] && (
+                                <span style={{
+                                  fontSize: "10px",
+                                  padding: "2px 6px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#ffc107",
+                                  color: "#212529"
+                                }}>
+                                  🔧 Needs Review
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td style={{ padding: "12px" }}>
+                            {dealIssues[deal.id] ? (
+                              <div style={{ fontSize: "12px" }}>
+                                {dealIssues[deal.id].slice(0, 3).map((issue, index) => (
+                                  <div key={index} style={{ 
+                                    color: "#dc3545", 
+                                    marginBottom: "2px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px"
+                                  }}>
+                                    <span style={{ color: "#dc3545" }}>⚠️</span>
+                                    {issue}
+                                  </div>
+                                ))}
+                                {dealIssues[deal.id].length > 3 && (
+                                  <div style={{ fontSize: "10px", color: "#6c757d", marginTop: "4px" }}>
+                                    +{dealIssues[deal.id].length - 3} more issues
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: "12px", color: "#28a745" }}>✓ No issues</span>
+                            )}
                           </td>
                           <td style={{ padding: "12px", fontSize: "12px", color: "#666" }}>
                             <div>{deal.click_count || 0} clicks</div>
