@@ -882,6 +882,7 @@ export default function AdminDashboard() {
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Store</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Category</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Price</th>
+                        <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Discount</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Status</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Issues</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Stats</th>
@@ -928,6 +929,27 @@ export default function AdminDashboard() {
                           <td style={{ padding: "12px" }}>
                             <div style={{ fontSize: "14px", fontWeight: "bold" }}>${deal.sale_price}</div>
                             <div style={{ fontSize: "12px", color: "#666", textDecoration: "line-through" }}>${deal.original_price}</div>
+                          </td>
+                          <td style={{ padding: "12px" }}>
+                            {(() => {
+                              const calculatedDiscount = deal.original_price > 0 && deal.sale_price < deal.original_price 
+                                ? Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100 * 10) / 10
+                                : deal.discount_percentage || 0;
+                              return (
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                  <span style={{
+                                    fontSize: "16px",
+                                    fontWeight: "bold",
+                                    color: calculatedDiscount >= 50 ? "#28a745" : calculatedDiscount >= 30 ? "#ffc107" : "#dc3545"
+                                  }}>
+                                    {calculatedDiscount}%
+                                  </span>
+                                  <span style={{ fontSize: "10px", color: "#666" }}>
+                                    Save ${((deal.original_price - deal.sale_price) || 0).toFixed(2)}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td style={{ padding: "12px" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
