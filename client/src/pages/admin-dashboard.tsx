@@ -19,7 +19,6 @@ export default function AdminDashboard() {
     description: "",
     original_price: "",
     sale_price: "",
-    discount_percentage: "",
     store: "",
     category: "",
     affiliate_url: "",
@@ -140,8 +139,13 @@ export default function AdminDashboard() {
       if (deal.sale_price >= deal.original_price) {
         dealIssues.push('Sale price not lower than original price');
       }
-      if (!deal.discount_percentage || deal.discount_percentage <= 0) {
-        dealIssues.push('Invalid discount percentage');
+      // Auto-calculate discount percentage if missing or invalid
+      const calculatedDiscount = deal.original_price > 0 && deal.sale_price < deal.original_price 
+        ? Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100 * 10) / 10
+        : 0;
+      
+      if (calculatedDiscount === 0 && deal.original_price > 0 && deal.sale_price >= deal.original_price) {
+        dealIssues.push('Sale price not lower than original price - no discount available');
       }
       
       // Store issues if any found
@@ -211,8 +215,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           ...newDeal,
           original_price: parseFloat(newDeal.original_price),
-          sale_price: parseFloat(newDeal.sale_price),
-          discount_percentage: parseFloat(newDeal.discount_percentage)
+          sale_price: parseFloat(newDeal.sale_price)
         })
       });
 
@@ -224,7 +227,6 @@ export default function AdminDashboard() {
           description: "",
           original_price: "",
           sale_price: "",
-          discount_percentage: "",
           store: "",
           category: "",
           affiliate_url: "",
@@ -260,8 +262,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           ...editingDeal,
           original_price: parseFloat(editingDeal.original_price),
-          sale_price: parseFloat(editingDeal.sale_price),
-          discount_percentage: parseFloat(editingDeal.discount_percentage)
+          sale_price: parseFloat(editingDeal.sale_price)
         })
       });
 
@@ -377,14 +378,20 @@ export default function AdminDashboard() {
 
   // Social sharing functions for admin
   const shareOnX = (deal: any) => {
-    const text = `🔥 Amazing Deal Alert! ${deal.title} - Save ${deal.discount_percentage}% at ${deal.store}! Only $${deal.sale_price} (was $${deal.original_price})`;
+    const calculatedDiscount = deal.original_price > 0 && deal.sale_price < deal.original_price 
+      ? Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100 * 10) / 10
+      : deal.discount_percentage || 0;
+    const text = `🔥 Amazing Deal Alert! ${deal.title} - Save ${calculatedDiscount}% at ${deal.store}! Only $${deal.sale_price} (was $${deal.original_price})`;
     const url = `${window.location.origin}/deals/${deal.id}`;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(shareUrl, '_blank', 'width=600,height=400');
   };
 
   const shareOnWhatsApp = (deal: any) => {
-    const text = `🔥 Amazing Deal Alert! ${deal.title} - Save ${deal.discount_percentage}% at ${deal.store}! Only $${deal.sale_price} (was $${deal.original_price}). Check it out: ${window.location.origin}/deals/${deal.id}`;
+    const calculatedDiscount = deal.original_price > 0 && deal.sale_price < deal.original_price 
+      ? Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100 * 10) / 10
+      : deal.discount_percentage || 0;
+    const text = `🔥 Amazing Deal Alert! ${deal.title} - Save ${calculatedDiscount}% at ${deal.store}! Only $${deal.sale_price} (was $${deal.original_price}). Check it out: ${window.location.origin}/deals/${deal.id}`;
     const shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(shareUrl, '_blank');
   };
