@@ -40,6 +40,9 @@ async def upload_deal_file(
         for row in csv_reader:
             processed_count += 1
             try:
+                # Check if AI review is needed
+                needs_ai_review = row.get('needs_ai_review', 'true').lower() == 'true'
+                
                 # Map CSV fields to deal model (all mandatory fields included)
                 deal_data = {
                     'id': str(uuid.uuid4()),  # Generate unique ID
@@ -54,9 +57,9 @@ async def upload_deal_file(
                     'category': row.get('category', 'General'),
                     'rating': float(row.get('rating', 0)) if row.get('rating') else None,
                     'deal_type': row.get('deal_type', 'latest'),
-                    'status': 'pending',
+                    'status': 'approved' if not needs_ai_review else 'pending',
                     'is_active': True,
-                    'is_ai_approved': False,
+                    'is_ai_approved': not needs_ai_review,  # Auto-approve if no AI review needed
                     'click_count': 0,
                     'share_count': 0
                 }

@@ -86,21 +86,34 @@ export function SocialShare({ deal }: SocialShareProps) {
   const copyLink = async () => {
     setIsSharing(true);
     try {
-      const dealUrl = `${window.location.origin}/deals/${deal.id}`;
-      await navigator.clipboard.writeText(dealUrl);
+      // Create short URL for sharing
+      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=copy`);
+      const { shortUrl } = await response.json();
       
-      await trackShare('copy');
+      await navigator.clipboard.writeText(shortUrl);
       toast({
-        title: "Link Copied",
-        description: "Deal link copied to clipboard!",
+        title: "Short Link Copied",
+        description: "Shareable link copied to clipboard!",
       });
     } catch (error) {
       console.error('Copy link error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to copy link",
-        variant: "destructive",
-      });
+      // Fallback to regular URL if short URL creation fails
+      try {
+        const dealUrl = `${window.location.origin}/deals/${deal.id}`;
+        await navigator.clipboard.writeText(dealUrl);
+        
+        await trackShare('copy');
+        toast({
+          title: "Link Copied",
+          description: "Deal link copied to clipboard!",
+        });
+      } catch (fallbackError) {
+        toast({
+          title: "Error",
+          description: "Failed to copy link",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSharing(false);
     }

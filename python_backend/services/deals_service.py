@@ -9,8 +9,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from models import Deal as DealModel, DealClick as DealClickModel, SocialShare as SocialShareModel
-from models import DealResponse, DealCreate, DealClickCreate, SocialShareCreate
+from models import Deal as DealModel, DealClick as DealClickModel, SocialShare as SocialShareModel, ShortUrl as ShortUrlModel
+from models import DealResponse, DealCreate, DealClickCreate, SocialShareCreate, ShortUrlCreate
 from utils.deal_validator import DealValidator
 
 class DealsService:
@@ -133,6 +133,62 @@ class DealsService:
         await self.db.commit()
         
         return deal.affiliate_url
+
+    async def create_share_url(self, deal_id: str, share_data: SocialShareCreate) -> str:
+        """Create a short URL for sharing a deal"""
+        import random
+        import string
+        
+        # Generate short code
+        short_code = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        
+        # Create original URL pointing to deal page
+        original_url = f"https://{os.getenv('REPLIT_DOMAINS', 'localhost:5000').split(',')[0]}/deals/{deal_id}"
+        
+        # Create short URL record
+        short_url_record = ShortUrlModel(
+            id=str(uuid.uuid4()),
+            short_code=short_code,
+            original_url=original_url,
+            deal_id=deal_id
+        )
+        
+        # Create share record with short URL
+        share_data.short_url = f"https://{os.getenv('REPLIT_DOMAINS', 'localhost:5000').split(',')[0]}/s/{short_code}"
+        share = SocialShareModel(
+            id=str(uuid.uuid4()),
+            **share_data.model_dump()
+        )
+        
+        # Update deal share count
+        query = select(DealModel).where(DealModel.id == deal_id)
+        result = await self.db.execute(query)
+        deal = result.scalar_one_or_none()
+        
+        if deal:
+            deal.share_count = (deal.share_count or 0) + 1
+            deal.popularity = (deal.popularity or 0) + 1
+        
+        self.db.add(short_url_record)
+        self.db.add(share)
+        await self.db.commit()
+        
+        return share_data.short_url
+    
+    async def resolve_short_url(self, short_code: str) -> str:
+        """Resolve a short URL code to the original deal URL"""
+        query = select(ShortUrlModel).where(ShortUrlModel.short_code == short_code)
+        result = await self.db.execute(query)
+        short_url = result.scalar_one_or_none()
+        
+        if not short_url:
+            return None
+            
+        # Update click count
+        short_url.click_count = (short_url.click_count or 0) + 1
+        await self.db.commit()
+        
+        return short_url.original_url
 
     async def track_social_share(self, share_data: SocialShareCreate) -> bool:
         """Track a social share"""

@@ -72,13 +72,13 @@ async def track_deal_click(
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.post("/deals/{deal_id}/share")
-async def track_social_share(
+async def create_share_url(
     deal_id: str,
     platform: str,
     request: Request,
     db: AsyncSession = Depends(get_db)
 ):
-    """Track a social share - publicly accessible"""
+    """Create short URL for sharing and track social share - publicly accessible"""
     deals_service = DealsService(db)
     
     ip_address = request.client.host if request.client else None
@@ -89,12 +89,28 @@ async def track_social_share(
         ip_address=ip_address
     )
     
-    success = await deals_service.track_social_share(share_data)
+    short_url = await deals_service.create_share_url(deal_id, share_data)
     
-    if not success:
-        raise HTTPException(status_code=400, detail="Failed to track share")
+    if not short_url:
+        raise HTTPException(status_code=400, detail="Failed to create share URL")
     
-    return {"success": True}
+    return {"shortUrl": short_url}
+
+@router.get("/s/{short_code}")
+async def redirect_short_url(
+    short_code: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Redirect short URL to deal page - publicly accessible"""
+    deals_service = DealsService(db)
+    deal_url = await deals_service.resolve_short_url(short_code)
+    
+    if not deal_url:
+        raise HTTPException(status_code=404, detail="Short URL not found")
+    
+    # Return redirect response
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=deal_url, status_code=302)
 
 @router.get("/categories", response_model=List[str])
 async def get_categories(db: AsyncSession = Depends(get_db)):

@@ -63,10 +63,24 @@ class SocialShare(Base):
     deal_id = Column(String, ForeignKey("deals.id"), nullable=False)
     platform = Column(String, nullable=False)
     ip_address = Column(String)
+    short_url = Column(String)  # Store generated short URL
     shared_at = Column(DateTime, server_default=func.now())
     
     # Relationships
     deal = relationship("Deal", back_populates="shares")
+
+class ShortUrl(Base):
+    __tablename__ = "short_urls"
+    
+    id = Column(String, primary_key=True)
+    short_code = Column(String, unique=True, nullable=False, index=True)
+    original_url = Column(Text, nullable=False)
+    deal_id = Column(String, ForeignKey("deals.id"), nullable=True)
+    click_count = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    # Relationships
+    deal = relationship("Deal")
 
 class User(Base):
     __tablename__ = "users"
@@ -143,6 +157,23 @@ class SocialShareCreate(BaseModel):
     deal_id: str
     platform: str
     ip_address: Optional[str] = None
+    short_url: Optional[str] = None
+
+class ShortUrlCreate(BaseModel):
+    short_code: str
+    original_url: str
+    deal_id: Optional[str] = None
+
+class ShortUrlResponse(BaseModel):
+    id: str
+    short_code: str
+    original_url: str
+    deal_id: Optional[str]
+    click_count: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
 
 # New models for affiliate network management
 class AffiliateNetwork(Base):
