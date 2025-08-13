@@ -44,6 +44,8 @@ interface Deal {
   click_count?: number;
   deal_type?: string;
   created_at?: string;
+  coupon_code?: string;
+  coupon_required?: boolean;
 }
 
 export default function Home() {

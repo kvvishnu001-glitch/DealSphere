@@ -9,6 +9,7 @@ import { SocialShare } from "@/components/social-share";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { CouponCode } from "@/components/ui/coupon-code";
 import { 
   Star, 
   Clock, 
@@ -42,6 +43,8 @@ interface Deal {
   share_count?: number;
   deal_type?: string;
   created_at?: string;
+  coupon_code?: string;
+  coupon_required?: boolean;
 }
 
 export default function DealDetail() {
@@ -289,6 +292,18 @@ export default function DealDetail() {
                   </span>
                 </div>
               </div>
+
+              {/* Coupon Code */}
+              {deal.coupon_code && (
+                <div>
+                  <CouponCode code={deal.coupon_code} size="md" />
+                  {deal.coupon_required && (
+                    <p className="text-sm text-amber-700 mt-2">
+                      ⚠️ This coupon code is required to get the discounted price
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Expiration */}
               {deal.expires_at && (

@@ -24,7 +24,9 @@ export default function AdminDashboard() {
     category: "",
     affiliate_url: "",
     image_url: "",
-    deal_type: "regular"
+    deal_type: "regular",
+    coupon_code: "",
+    coupon_required: false
   });
   
   // Automation state
@@ -1599,6 +1601,31 @@ export default function AdminDashboard() {
                     onChange={(e) => setNewDeal({...newDeal, image_url: e.target.value})}
                     style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
                   />
+                </div>
+                
+                <div>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Coupon Code (Optional)</label>
+                  <input
+                    type="text"
+                    value={newDeal.coupon_code}
+                    onChange={(e) => setNewDeal({...newDeal, coupon_code: e.target.value})}
+                    style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
+                    placeholder="Enter promo/coupon code"
+                  />
+                </div>
+                
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "bold" }}>
+                    <input
+                      type="checkbox"
+                      checked={newDeal.coupon_required}
+                      onChange={(e) => setNewDeal({...newDeal, coupon_required: e.target.checked})}
+                    />
+                    Coupon Required
+                  </label>
+                  <span style={{ fontSize: "12px", color: "#666" }}>
+                    (Code is mandatory for discount)
+                  </span>
                 </div>
               </div>
               

@@ -34,6 +34,8 @@ class Deal(Base):
     share_count = Column(Integer, default=0)
     deal_type = Column(String, nullable=False, default='latest')
     source_api = Column(String)
+    coupon_code = Column(String, nullable=True)  # Store coupon/promo code
+    coupon_required = Column(Boolean, default=False)  # Whether deal requires coupon
     rejected_at = Column(DateTime, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
@@ -128,6 +130,8 @@ class DealBase(BaseModel):
     expires_at: Optional[datetime] = None
     deal_type: str = 'latest'
     source_api: Optional[str] = None
+    coupon_code: Optional[str] = None
+    coupon_required: Optional[bool] = False
 
 class DealCreate(DealBase):
     pass

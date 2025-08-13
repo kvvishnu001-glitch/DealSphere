@@ -7,6 +7,7 @@ import { SocialShare } from "@/components/social-share";
 import { Star, Clock, Flame, Bot } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { CouponCode } from "@/components/ui/coupon-code";
 
 interface Deal {
   id: string;
@@ -23,6 +24,8 @@ interface Deal {
   review_count?: number;
   deal_type?: string;
   created_at?: string;
+  coupon_code?: string;
+  coupon_required?: boolean;
 }
 
 interface DealCardProps {
@@ -179,6 +182,9 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             <Badge className="bg-red-600 text-white text-xs">
               {deal.discount_percentage}% OFF
             </Badge>
+            {deal.coupon_code && (
+              <CouponCode code={deal.coupon_code} variant="badge" />
+            )}
           </div>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:ml-4">
@@ -266,6 +272,13 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             </span>
           </div>
         </div>
+        
+        {/* Coupon Code */}
+        {deal.coupon_code && (
+          <div className="mb-4">
+            <CouponCode code={deal.coupon_code} variant="inline" size="sm" />
+          </div>
+        )}
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
