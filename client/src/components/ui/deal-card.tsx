@@ -42,6 +42,10 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
   
   console.log('DealCard rendering:', deal.title, 'variant:', variant);
 
+  // Calculate discount percentage if not provided
+  const calculatedPercentage = deal.discount_percentage || 
+    Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100);
+
   // Hide the deal card if image failed to load
   if (imageError) {
     return null;
@@ -132,7 +136,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             onLoad={() => setImageLoaded(true)}
           />
           <Badge className="absolute top-2 left-2 bg-amber-500 text-white">
-            {deal.discount_percentage}% OFF
+            {calculatedPercentage}% OFF
           </Badge>
         </div>
         <CardContent className="p-4 flex flex-col flex-grow">

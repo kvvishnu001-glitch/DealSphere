@@ -150,9 +150,20 @@ class DealsService:
 
     async def create_deal(self, deal_data: DealCreate) -> DealResponse:
         """Create a new deal"""
+        deal_dict = deal_data.model_dump()
+        
+        # Auto-calculate discount percentage if not provided
+        if not deal_dict.get('discount_percentage'):
+            original_price = float(deal_dict.get('original_price', 0))
+            sale_price = float(deal_dict.get('sale_price', 0))
+            if original_price > 0 and sale_price < original_price:
+                deal_dict['discount_percentage'] = round(((original_price - sale_price) / original_price) * 100, 1)
+            else:
+                deal_dict['discount_percentage'] = 0
+        
         deal = DealModel(
             id=str(uuid.uuid4()),
-            **deal_data.model_dump()
+            **deal_dict
         )
         
         self.db.add(deal)
