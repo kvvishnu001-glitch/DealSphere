@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { FileUploadModal } from "@/components/FileUploadModal";
 
 interface AdminUser {
   id: string;
@@ -45,6 +46,7 @@ export default function AdminPage() {
   const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showAddDeal, setShowAddDeal] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [dealForm, setDealForm] = useState({
@@ -542,11 +544,81 @@ export default function AdminPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 style={{ fontSize: "24px", fontWeight: "bold" }}>Manage Deals</h2>
-              <p style={{ color: "#6b7280" }}>Deals management coming soon...</p>
+              <button
+                onClick={() => setShowFileUpload(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "12px 24px",
+                  backgroundColor: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500"
+                }}
+                data-testid="upload-deals-button"
+              >
+                📁 Upload Deal Files
+              </button>
             </div>
+            
+            {/* Upload Instructions */}
+            <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>Bulk Deal Upload</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+                <div>
+                  <h4 style={{ fontSize: "14px", fontWeight: "500", marginBottom: "8px", color: "#374151" }}>📊 Supported Formats</h4>
+                  <ul style={{ fontSize: "14px", color: "#6b7280", listStyle: "disc", marginLeft: "20px" }}>
+                    <li>CSV files (.csv)</li>
+                    <li>Excel files (.xls, .xlsx)</li>
+                    <li>XML files (.xml)</li>
+                    <li>JSON files (.json)</li>
+                    <li>Text files (.txt)</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 style={{ fontSize: "14px", fontWeight: "500", marginBottom: "8px", color: "#374151" }}>🌐 Supported Networks</h4>
+                  <ul style={{ fontSize: "14px", color: "#6b7280", listStyle: "disc", marginLeft: "20px" }}>
+                    <li>Amazon Associates</li>
+                    <li>Commission Junction (CJ)</li>
+                    <li>ShareASale</li>
+                    <li>Rakuten Advertising</li>
+                    <li>Impact Radius</li>
+                    <li>Other networks</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 style={{ fontSize: "14px", fontWeight: "500", marginBottom: "8px", color: "#374151" }}>⚙️ How it Works</h4>
+                  <ol style={{ fontSize: "14px", color: "#6b7280", listStyle: "decimal", marginLeft: "20px" }}>
+                    <li>Select affiliate network</li>
+                    <li>Upload deal files (max 50MB)</li>
+                    <li>AI validates and processes deals</li>
+                    <li>Review and approve imported deals</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+            
+            <p style={{ color: "#6b7280", fontSize: "14px", fontStyle: "italic" }}>
+              Perfect for networks without API access like CJ FTP exports or initial Amazon setups.
+            </p>
           </div>
         )}
       </main>
+      
+      {/* File Upload Modal */}
+      <FileUploadModal
+        open={showFileUpload}
+        onClose={() => setShowFileUpload(false)}
+        onUploadComplete={() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/deals'] });
+        }}
+      />
     </div>
   );
 }

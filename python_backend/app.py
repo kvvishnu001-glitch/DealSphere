@@ -52,9 +52,13 @@ app.include_router(admin_router, prefix="/api")
 # Import and include additional routers
 from routes.deals import router as deals_router
 from routes.validation import router as validation_router
+from routes.affiliate_management import router as affiliate_router
+from routes.file_upload import router as file_upload_router
 
 app.include_router(deals_router, prefix="/api")
 app.include_router(validation_router, prefix="/api")
+app.include_router(affiliate_router, prefix="/api/admin/affiliates")
+app.include_router(file_upload_router, prefix="/api/admin/deals")
 
 # API Routes
 @app.get("/api/health")
