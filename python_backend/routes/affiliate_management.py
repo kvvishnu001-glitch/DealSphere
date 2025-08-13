@@ -94,37 +94,45 @@ async def configure_network(
 ) -> Dict[str, str]:
     """Configure or update an affiliate network"""
     
-    async with AffiliateNetworkManager() as manager:
-        if network_id not in manager.networks:
-            raise HTTPException(status_code=400, detail="Invalid network ID")
-        
-        network_info = manager.networks[network_id]
-        
-        # Validate required fields
-        required_fields = _get_required_fields(network_id)
-        missing_fields = [field for field in required_fields if field not in config_data]
-        
-        if missing_fields:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Missing required fields: {', '.join(missing_fields)}"
-            )
-        
-        # Save configuration
-        await manager.save_network_config(network_id, config_data)
-        
-    return {"status": "success", "message": f"{network_info['name']} configured successfully"}
+    try:
+        async with AffiliateNetworkManager() as manager:
+            if network_id not in manager.networks:
+                raise HTTPException(status_code=400, detail="Invalid network ID")
+            
+            network_info = manager.networks[network_id]
+            
+            # Validate required fields
+            required_fields = _get_required_fields(network_id)
+            missing_fields = [field for field in required_fields if field not in config_data]
+            
+            if missing_fields:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Missing required fields: {', '.join(missing_fields)}"
+                )
+            
+            # Save configuration
+            await manager.save_network_config(network_id, config_data, db)
+            
+        return {"status": "success", "message": f"{network_info['name']} configured successfully"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error configuring network {network_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.post("/networks/{network_id}/test")
 async def test_network_connection(
     network_id: str,
-    current_admin: AdminUser = Depends(get_current_admin)
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """Test connection to an affiliate network"""
     
-    async with AffiliateNetworkManager() as manager:
-        try:
-            config = await manager.get_network_config(network_id)
+    try:
+        async with AffiliateNetworkManager() as manager:
+            config = await manager.get_network_config(network_id, db)
             if not config:
                 raise HTTPException(status_code=400, detail="Network not configured")
             
@@ -153,13 +161,13 @@ async def test_network_connection(
                 "test_timestamp": datetime.utcnow().isoformat()
             }
             
-        except Exception as e:
-            return {
-                "status": "error",
-                "connection": "failed",
-                "error_message": str(e),
-                "test_timestamp": datetime.utcnow().isoformat()
-            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "connection": "failed",
+            "error_message": str(e),
+            "test_timestamp": datetime.utcnow().isoformat()
+        }
 
 @router.post("/networks/{network_id}/toggle")
 async def toggle_network_status(

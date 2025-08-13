@@ -159,45 +159,43 @@ class AffiliateNetworkManager:
         if self.session:
             await self.session.close()
 
-    async def get_network_config(self, network_id: str) -> Optional[Dict]:
+    async def get_network_config(self, network_id: str, db: AsyncSession) -> Optional[Dict]:
         """Get network configuration from database"""
-        async with get_db() as db:
-            result = await db.execute(
-                select(AffiliateConfig).where(AffiliateConfig.network_id == network_id)
-            )
-            config = result.scalar_one_or_none()
-            return config.config_data if config else None
+        result = await db.execute(
+            select(AffiliateConfig).where(AffiliateConfig.network_id == network_id)
+        )
+        config = result.scalar_one_or_none()
+        return config.config_data if config else None
 
-    async def save_network_config(self, network_id: str, config_data: Dict):
+    async def save_network_config(self, network_id: str, config_data: Dict, db: AsyncSession):
         """Save network configuration to database"""
-        async with get_db() as db:
-            # Check if config exists
-            result = await db.execute(
-                select(AffiliateConfig).where(AffiliateConfig.network_id == network_id)
-            )
-            existing = result.scalar_one_or_none()
-            
-            if existing:
-                await db.execute(
-                    update(AffiliateConfig)
-                    .where(AffiliateConfig.network_id == network_id)
-                    .values(
-                        config_data=config_data,
-                        updated_at=datetime.utcnow(),
-                        is_active=True
-                    )
-                )
-            else:
-                new_config = AffiliateConfig(
-                    network_id=network_id,
-                    network_name=self.networks[network_id]['name'],
+        # Check if config exists
+        result = await db.execute(
+            select(AffiliateConfig).where(AffiliateConfig.network_id == network_id)
+        )
+        existing = result.scalar_one_or_none()
+        
+        if existing:
+            await db.execute(
+                update(AffiliateConfig)
+                .where(AffiliateConfig.network_id == network_id)
+                .values(
                     config_data=config_data,
-                    compliance_terms=self.networks[network_id]['compliance_terms'],
+                    updated_at=datetime.utcnow(),
                     is_active=True
                 )
-                db.add(new_config)
-            
-            await db.commit()
+            )
+        else:
+            new_config = AffiliateConfig(
+                network_id=network_id,
+                network_name=self.networks[network_id]['name'],
+                config_data=config_data,
+                compliance_terms=self.networks[network_id]['compliance_terms'],
+                is_active=True
+            )
+            db.add(new_config)
+        
+        await db.commit()
 
     async def fetch_amazon_deals(self, config: Dict) -> List[Dict]:
         """Amazon Associates Product Advertising API"""
