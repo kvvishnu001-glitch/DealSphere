@@ -249,61 +249,66 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
   };
 
   return (
-    <div className="flex justify-center space-x-3 pt-3 border-t border-gray-100">
+    <div className="flex flex-wrap justify-center gap-2 sm:gap-3 pt-3 border-t border-gray-100">
       <Button
         variant="ghost"
         size="sm"
         onClick={shareOnFacebook}
         disabled={isSharing}
-        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 sm:px-3"
         title="Share on Facebook"
         data-testid="button-facebook-share"
       >
-        <Facebook className="w-4 h-4" />
+        <Facebook className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span className="sr-only sm:not-sr-only sm:ml-2 text-xs">Facebook</span>
       </Button>
       <Button
         variant="ghost"
         size="sm"
         onClick={shareOnX}
         disabled={isSharing}
-        className="text-black hover:text-gray-800 hover:bg-gray-100"
+        className="text-black hover:text-gray-800 hover:bg-gray-100 p-2 sm:px-3"
         title="Share on X"
         data-testid="button-x-share"
       >
-        <SiX className="w-4 h-4" />
+        <SiX className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span className="sr-only sm:not-sr-only sm:ml-2 text-xs">X</span>
       </Button>
       <Button
         variant="ghost"
         size="sm"
         onClick={shareOnWhatsApp}
         disabled={isSharing}
-        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+        className="text-green-600 hover:text-green-700 hover:bg-green-50 p-2 sm:px-3"
         title="Share on WhatsApp"
         data-testid="button-whatsapp-share"
       >
-        <SiWhatsapp className="w-5 h-5" />
+        <SiWhatsapp className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span className="sr-only sm:not-sr-only sm:ml-2 text-xs">WhatsApp</span>
       </Button>
       <Button
         variant="ghost"
         size="sm"
         onClick={shareViaSMS}
         disabled={isSharing}
-        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-2 sm:px-3"
         title="Share via SMS"
         data-testid="button-sms-share"
       >
-        <MessageSquare className="w-4 h-4" />
+        <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span className="sr-only sm:not-sr-only sm:ml-2 text-xs">SMS</span>
       </Button>
       <Button
         variant="ghost"
         size="sm"
         onClick={copyLink}
         disabled={isSharing}
-        className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+        className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 p-2 sm:px-3"
         title="Copy Link"
         data-testid="button-copy-link"
       >
-        <Link className="w-4 h-4" />
+        <Link className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span className="sr-only sm:not-sr-only sm:ml-2 text-xs">Copy</span>
       </Button>
     </div>
   );

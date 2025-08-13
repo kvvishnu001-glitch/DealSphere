@@ -172,13 +172,13 @@ export default function DealDetail() {
             </Button>
           </Link>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Deal Image */}
             <div className="space-y-4">
               <img
                 src={deal.image_url}
                 alt={deal.title}
-                className="w-full h-96 object-cover rounded-lg shadow-lg"
+                className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg shadow-lg"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = 'https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Deal+Image';
@@ -186,7 +186,7 @@ export default function DealDetail() {
               />
               
               {/* Short URL Section */}
-              <Card>
+              <Card className="lg:hidden">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <LinkIcon className="w-4 h-4" />
@@ -195,19 +195,19 @@ export default function DealDetail() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 p-2 bg-gray-50 rounded border text-sm font-mono truncate">
-                      {isGeneratingShortUrl ? "Generating short URL..." : shortUrl}
+                    <div className="flex-1 p-2 bg-gray-50 rounded border text-xs sm:text-sm font-mono truncate">
+                      {isGeneratingShortUrl ? "Generating..." : shortUrl}
                     </div>
                     <Button 
                       size="sm" 
                       onClick={copyShortUrl}
                       disabled={isGeneratingShortUrl || !shortUrl}
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    Use this short URL to share the deal with rich previews on social media
+                    Share with rich previews on social media
                   </p>
                 </CardContent>
               </Card>
@@ -227,7 +227,7 @@ export default function DealDetail() {
                     {deal.category}
                   </Badge>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{deal.title}</h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">{deal.title}</h1>
                 <p className="text-gray-600">{deal.description}</p>
               </div>
 
@@ -248,16 +248,16 @@ export default function DealDetail() {
 
               {/* Pricing */}
               <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl font-bold text-green-600">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <span className="text-2xl sm:text-3xl font-bold text-green-600">
                     ${deal.sale_price.toFixed(2)}
                   </span>
-                  <span className="text-lg text-gray-500 line-through">
+                  <span className="text-base sm:text-lg text-gray-500 line-through">
                     ${deal.original_price.toFixed(2)}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="destructive" className="text-lg px-3 py-1">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <Badge variant="destructive" className="text-sm sm:text-lg px-2 sm:px-3 py-1 w-fit">
                     {deal.discount_percentage}% OFF
                   </Badge>
                   <span className="text-sm text-gray-600">

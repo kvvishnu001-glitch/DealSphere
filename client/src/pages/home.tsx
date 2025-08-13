@@ -194,16 +194,16 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex flex-col sm:flex-row justify-between items-center py-4 sm:h-16 space-y-3 sm:space-y-0">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <Percent className="text-red-600 text-2xl mr-2" />
-                <h1 className="text-2xl font-bold text-gray-800">DealSphere</h1>
+                <Percent className="text-red-600 text-xl sm:text-2xl mr-2" />
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">DealSphere</h1>
               </div>
             </div>
             
             {/* Search Bar */}
-            <div className="flex-1 max-w-lg mx-4 sm:mx-8">
+            <div className="flex-1 max-w-lg mx-0 sm:mx-4 lg:mx-8 w-full sm:w-auto">
               <div className="relative">
                 <Input
                   type="search"
@@ -226,25 +226,25 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16">
+      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-8 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+          <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold mb-4">
             AI-Powered Deals & Coupons
           </h1>
-          <p className="text-xl md:text-2xl mb-8 text-red-100">
+          <p className="text-lg sm:text-xl lg:text-2xl mb-8 text-red-100">
             Discover verified deals curated by artificial intelligence
           </p>
-          <div className="flex justify-center items-center space-x-8 text-red-100">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-red-100 max-w-2xl mx-auto">
             <div className="text-center">
-              <div className="text-3xl font-bold">{deals?.length || 0}</div>
+              <div className="text-2xl sm:text-3xl font-bold">{deals?.length || 0}</div>
               <div className="text-sm">Active Deals</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold">$1.2M+</div>
+              <div className="text-2xl sm:text-3xl font-bold">$1.2M+</div>
               <div className="text-sm">Total Savings</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold">98%</div>
+              <div className="text-2xl sm:text-3xl font-bold">98%</div>
               <div className="text-sm">AI Verified</div>
             </div>
           </div>
@@ -256,10 +256,10 @@ export default function Home() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
-        <Card className="mb-8 shadow-sm">
-          <CardContent className="p-4 sm:p-6 lg:p-8">
-            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 lg:gap-6">
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="mb-6 sm:mb-8 shadow-sm">
+          <CardContent className="p-4 sm:p-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 block">Category</label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -316,13 +316,13 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="flex justify-center lg:justify-end">
+              <div className="flex justify-center">
                 <Button 
                   variant="outline" 
                   onClick={clearFilters}
-                  className="w-full sm:w-auto lg:w-auto text-gray-600 hover:text-gray-800 lg:px-8 lg:py-2.5"
+                  className="w-full sm:w-auto text-gray-600 hover:text-gray-800 px-6"
                 >
-                  <X className="w-4 h-4 mr-1" />
+                  <X className="w-4 h-4 mr-2" />
                   Clear Filters
                 </Button>
               </div>
