@@ -224,10 +224,17 @@ export default function Home() {
     .filter((deal: Deal) => deal.deal_type === 'hot' && deal.image_url && deal.image_url.trim() !== '')
     .slice(0, hotDealsLimit);
   
-  const latestDealsLimit = showAllLatest ? latestDealsPage * 30 : 5;
-  const latestDeals = filteredDeals
-    .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '')
-    .slice(0, latestDealsLimit);
+  // Latest Deals: show initial 5 deals OR expand to show all loaded deals via infinite scroll
+  const latestFilteredDeals = filteredDeals.filter((deal: Deal) => 
+    (deal.deal_type === 'latest' || deal.deal_type === 'regular') && 
+    deal.image_url && deal.image_url.trim() !== ''
+  );
+  
+  const latestDealsLimit = showAllLatest 
+    ? latestDealsPage * 30 
+    : Math.max(5, latestFilteredDeals.length); // Show at least 5, but grow with infinite scroll
+    
+  const latestDeals = latestFilteredDeals.slice(0, latestDealsLimit);
 
   // Infinite scroll effect for "view all" sections only
   React.useEffect(() => {
