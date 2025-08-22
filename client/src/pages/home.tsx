@@ -102,7 +102,6 @@ export default function Home() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const deals = await response.json();
-      console.log('Raw API Response:', deals);
       return deals;
     },
     getNextPageParam: (lastPage, allPages) => {
@@ -125,10 +124,12 @@ export default function Home() {
   // Scroll handler for infinite loading
   useEffect(() => {
     const handleScroll = () => {
-      if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || isFetchingNextPage || !hasNextPage) {
-        return;
+      const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+      const scrollThreshold = document.documentElement.offsetHeight - 1000; // Load when 1000px from bottom
+      
+      if (scrollPosition >= scrollThreshold && !isFetchingNextPage && hasNextPage) {
+        fetchNextPage();
       }
-      fetchNextPage();
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -150,13 +151,11 @@ export default function Home() {
   const filteredDeals = deals?.filter((deal: Deal) => {
     // Check if deal is active and approved (critical filters)
     if (!deal.is_active || deal.is_ai_approved === false) {
-      console.log(`Deal filtered out: ${deal.title} - Active: ${deal.is_active}, Approved: ${deal.is_ai_approved}`);
       return false;
     }
     
     // Basic field validation
     if (!deal.title || !deal.original_price || !deal.sale_price || !deal.store || !deal.category) {
-      console.log(`Deal missing required fields: ${deal.title}`);
       return false;
     }
     
@@ -192,29 +191,9 @@ export default function Home() {
     return true;
   }) || [];
 
-  // Debug logging with detailed filtering info
-  console.log('=== DEAL DEBUGGING ===');
-  console.log('All deals from API:', deals?.length || 0);
-  console.log('Filtered deals:', filteredDeals?.length || 0);
-  
-  if (deals && deals.length > 0) {
-    console.log('First deal sample:', deals[0]);
-    console.log('Deal types found:', [...new Set(deals.map((d: any) => d.deal_type))]);
-    
-    // Check for Beats deal specifically
-    const beatsDeals = deals.filter((d: any) => d.title && d.title.toLowerCase().includes('beats'));
-    console.log('Beats deals found:', beatsDeals.length);
-    if (beatsDeals.length > 0) {
-      beatsDeals.forEach((deal: any) => {
-        console.log('Beats deal details:', {
-          title: deal.title,
-          deal_type: deal.deal_type,
-          is_active: deal.is_active,
-          is_ai_approved: deal.is_ai_approved,
-          has_required_fields: !!(deal.title && deal.original_price && deal.sale_price && deal.store && deal.category)
-        });
-      });
-    }
+  // Debug logging (reduced for performance)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Deals loaded:', deals?.length || 0, 'Filtered:', filteredDeals?.length || 0);
   }
 
   // Load more function for infinite scroll
@@ -250,12 +229,12 @@ export default function Home() {
     .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '')
     .slice(0, latestDealsLimit);
 
-  // Infinite scroll effect
+  // Infinite scroll effect for "view all" sections only
   React.useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerHeight + document.documentElement.scrollTop < document.documentElement.offsetHeight - 1000) return;
+    const handleSectionScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop < document.documentElement.offsetHeight - 500) return;
       
-      // Check which section is currently in "view all" mode and load more
+      // Only handle section-specific scrolling when in "view all" mode
       if (showAllTop && topDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'top' && d.image_url).length) {
         loadMoreDeals('top');
       } else if (showAllHot && hotDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'hot' && d.image_url).length) {
@@ -265,25 +244,13 @@ export default function Home() {
       }
     };
 
+    // Only add listener when in "view all" mode to avoid conflicts
     if (showAllTop || showAllHot || showAllLatest) {
-      window.addEventListener('scroll', handleScroll);
-      return () => window.removeEventListener('scroll', handleScroll);
+      window.addEventListener('scroll', handleSectionScroll);
+      return () => window.removeEventListener('scroll', handleSectionScroll);
     }
   }, [showAllTop, showAllHot, showAllLatest, topDeals.length, hotDeals.length, latestDeals.length, filteredDeals, loadingMore]);
   
-  // Debug the exact filtering for latest deals
-  const debugLatestFilter = filteredDeals.filter((deal: Deal) => {
-    const isLatestType = deal.deal_type === 'latest' || deal.deal_type === 'regular';
-    const hasValidImage = deal.image_url && deal.image_url.trim() !== '';
-    console.log(`Deal "${deal.title}": type=${deal.deal_type}, isLatestType=${isLatestType}, hasValidImage=${hasValidImage}`);
-    return isLatestType && hasValidImage;
-  });
-  
-  console.log('Section counts - Top:', topDeals.length, 'Hot:', hotDeals.length, 'Latest:', latestDeals.length);
-  console.log('Hot deals found:', hotDeals.map(d => d.title));
-  console.log('Latest deals found (includes regular):', latestDeals.map(d => `${d.title} (${d.deal_type})`));
-  console.log('Debug latest filter results:', debugLatestFilter.map(d => `${d.title} (${d.deal_type})`));
-  console.log('=== END DEBUGGING ===');
 
   const clearFilters = () => {
     setSelectedCategory("all");
@@ -510,10 +477,9 @@ export default function Home() {
           </div>
           
           <div className={`grid gap-4 sm:gap-6 ${showAllTop ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
-            {topDeals.length > 0 ? topDeals.map((deal: Deal) => {
-              console.log('Rendering top deal:', deal.title, deal.id);
-              return <DealCard key={deal.id} deal={deal} variant="full" />;
-            }) : (
+            {topDeals.length > 0 ? topDeals.map((deal: Deal) => (
+              <DealCard key={deal.id} deal={deal} variant="full" />
+            )) : (
               <div className="col-span-full text-center text-gray-500 py-8 bg-red-100 p-4 rounded">
                 No top deals available (Total filtered deals: {filteredDeals.length})
               </div>
@@ -565,10 +531,9 @@ export default function Home() {
           </div>
           
           <div className={`grid gap-4 ${showAllHot ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
-            {hotDeals.length > 0 ? hotDeals.map((deal: Deal) => {
-              console.log('Rendering hot deal:', deal.title, deal.id);
-              return <DealCard key={deal.id} deal={deal} variant="compact" />;
-            }) : (
+            {hotDeals.length > 0 ? hotDeals.map((deal: Deal) => (
+              <DealCard key={deal.id} deal={deal} variant="compact" />
+            )) : (
               <div className="col-span-full text-center text-gray-500 py-8 bg-yellow-100 p-4 rounded">
                 No hot deals available (Total filtered deals: {filteredDeals.length})
               </div>
@@ -621,10 +586,9 @@ export default function Home() {
           
           {showAllLatest ? (
             <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => {
-                console.log('Rendering latest deal:', deal.title, deal.id);
-                return <DealCard key={deal.id} deal={deal} variant="full" />;
-              }) : (
+              {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
+                <DealCard key={deal.id} deal={deal} variant="full" />
+              )) : (
                 <div className="col-span-full text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
                   No latest deals available (Total filtered deals: {filteredDeals.length})
                 </div>
@@ -634,10 +598,9 @@ export default function Home() {
             <Card>
               <CardContent className="p-0">
                 <div className="divide-y divide-gray-100">
-                  {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => {
-                    console.log('Rendering latest deal:', deal.title, deal.id);
-                    return <DealCard key={deal.id} deal={deal} variant="list" />;
-                  }) : (
+                  {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
+                    <DealCard key={deal.id} deal={deal} variant="list" />
+                  )) : (
                     <div className="text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
                       No latest deals available (Total filtered deals: {filteredDeals.length})
                     </div>
@@ -670,18 +633,27 @@ export default function Home() {
           </Card>
         )}
 
-        {/* Infinite Scroll Loading Indicator */}
-        {isFetchingNextPage && (
-          <div className="flex justify-center items-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-red-600" />
-            <span className="ml-2 text-gray-600">Loading more deals...</span>
+        {/* Main infinite scroll loading indicator - only show when not in "View All" mode */}
+        {isFetchingNextPage && !showAllTop && !showAllHot && !showAllLatest && (
+          <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200 mx-4 my-8" style={{ minHeight: '120px' }}>
+            <div className="inline-flex items-center space-x-3 px-6 py-4 text-gray-600">
+              <Loader2 className="w-6 h-6 animate-spin text-red-600" />
+              <span className="text-lg font-medium">Loading more deals...</span>
+            </div>
+            <div className="text-sm text-gray-500 mt-2">
+              Discovering amazing deals for you
+            </div>
           </div>
         )}
         
-        {/* End of deals indicator */}
-        {!hasNextPage && deals.length > 0 && (
-          <div className="flex justify-center items-center py-8">
-            <span className="text-gray-500">You've reached the end of our deals!</span>
+        {/* End of deals indicator - only show when not in "View All" mode */}
+        {!hasNextPage && deals.length > 0 && !showAllTop && !showAllHot && !showAllLatest && (
+          <div className="text-center py-12 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg shadow-sm border border-gray-200 mx-4 my-8" style={{ minHeight: '120px' }}>
+            <div className="text-gray-600 flex flex-col items-center justify-center">
+              <div className="text-3xl mb-3">🎉</div>
+              <div className="text-lg font-medium mb-2">You've seen all deals!</div>
+              <div className="text-sm">Check back soon for more amazing offers</div>
+            </div>
           </div>
         )}
       </main>
