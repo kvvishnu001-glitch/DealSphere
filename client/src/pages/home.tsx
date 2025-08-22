@@ -191,9 +191,9 @@ export default function Home() {
     return true;
   }) || [];
 
-  // Debug logging (reduced for performance)
+  // Debug Latest Deals expansion
   if (process.env.NODE_ENV === 'development') {
-    console.log('Deals loaded:', deals?.length || 0, 'Filtered:', filteredDeals?.length || 0);
+    console.log('Latest Deals: available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0);
   }
 
   // Load more function for infinite scroll
@@ -224,10 +224,17 @@ export default function Home() {
     .filter((deal: Deal) => deal.deal_type === 'hot' && deal.image_url && deal.image_url.trim() !== '')
     .slice(0, hotDealsLimit);
   
-  // Latest Deals: Always show all available latest/regular deals (infinite scroll effect)
-  const latestDeals = filteredDeals
-    .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '')
-    .slice(0, showAllLatest ? latestDealsPage * 30 : Math.max(5, deals?.length ? Math.min(20, deals.length) : 5));
+  // Latest Deals: show all available latest/regular deals (auto-expansion with infinite scroll)
+  const latestFilteredDeals = filteredDeals
+    .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '');
+  
+  // Show at least 5, but expand to show all loaded deals (max 25 for performance)  
+  const latestDeals = latestFilteredDeals.slice(0, showAllLatest ? latestDealsPage * 30 : Math.min(25, latestFilteredDeals.length));
+
+  // Debug Latest Deals expansion
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Latest Deals: available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0);
+  }
 
   // Infinite scroll effect for "view all" sections only
   React.useEffect(() => {

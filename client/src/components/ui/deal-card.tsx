@@ -40,7 +40,6 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
   const [showCouponModal, setShowCouponModal] = useState(false);
   const { toast } = useToast();
   
-  console.log('DealCard rendering:', deal.title, 'variant:', variant);
 
   // Calculate discount percentage if not provided
   const calculatedPercentage = deal.discount_percentage || 
