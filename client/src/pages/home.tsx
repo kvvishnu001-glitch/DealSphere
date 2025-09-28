@@ -81,7 +81,7 @@ export default function Home() {
     refetchInterval: 30000,
   });
 
-  // Fetch deals with infinite scroll pagination
+  // Fetch deals with infinite scroll pagination (FIXED - prevent cache resets)
   const {
     data,
     isLoading,
@@ -91,7 +91,7 @@ export default function Home() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery<Deal[], Error>({
-    queryKey: ['/api/deals'],
+    queryKey: ['deals-infinite'],
     queryFn: async ({ pageParam = 0 }) => {
       const url = new URL('/api/deals', window.location.origin);
       url.searchParams.set('limit', '20');
@@ -111,12 +111,13 @@ export default function Home() {
       // Return the offset for the next page
       return allPages.length * 20;
     },
-    refetchInterval: 30000,
-    staleTime: 10000,
+    staleTime: 5 * 60 * 1000, // 5 minutes to prevent cache resets
+    gcTime: 10 * 60 * 1000, // 10 minutes to keep data in memory
+    refetchOnWindowFocus: false, // Prevent refetch on window focus
   });
 
-  // Flatten all pages into a single array of deals
-  const deals = data?.pages.flatMap(page => page) || [];
+  // Fixed infinite query data accumulation 
+  const deals = data?.pages ? data.pages.flat() : [];
 
   if (error) {
     console.error('Query error:', error);
