@@ -102,7 +102,31 @@ export default function Home() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const deals = await response.json();
-      return deals;
+      
+      // Transform camelCase fields to snake_case for frontend compatibility
+      return deals.map((deal: any) => ({
+        ...deal,
+        original_price: deal.originalPrice || deal.original_price,
+        sale_price: deal.salePrice || deal.sale_price,
+        discount_percentage: deal.discountPercentage || deal.discount_percentage,
+        image_url: deal.imageUrl || deal.image_url,
+        affiliate_url: deal.affiliateUrl || deal.affiliate_url,
+        store_logo_url: deal.storeLogoUrl || deal.store_logo_url,
+        review_count: deal.reviewCount || deal.review_count,
+        expires_at: deal.expiresAt || deal.expires_at,
+        deal_type: deal.dealType || deal.deal_type,
+        source_api: deal.sourceApi || deal.source_api,
+        coupon_code: deal.couponCode || deal.coupon_code,
+        coupon_required: deal.couponRequired || deal.coupon_required,
+        is_active: deal.isActive !== undefined ? deal.isActive : deal.is_active,
+        is_ai_approved: deal.isAiApproved !== undefined ? deal.isAiApproved : deal.is_ai_approved,
+        ai_score: deal.aiScore || deal.ai_score,
+        ai_reasons: deal.aiReasons || deal.ai_reasons,
+        click_count: deal.clickCount || deal.click_count,
+        share_count: deal.shareCount || deal.share_count,
+        created_at: deal.createdAt || deal.created_at,
+        updated_at: deal.updatedAt || deal.updated_at
+      }));
     },
     getNextPageParam: (lastPage, allPages) => {
       // If we got less than 20 deals, we've reached the end
@@ -191,10 +215,7 @@ export default function Home() {
     return true;
   }) || [];
 
-  // Debug Latest Deals expansion
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Latest Deals: available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0);
-  }
+
 
   // Load more function for infinite scroll
   const loadMoreDeals = (section: 'top' | 'hot' | 'latest') => {
@@ -231,10 +252,7 @@ export default function Home() {
   // Show at least 5, but expand to show all loaded deals (max 25 for performance)  
   const latestDeals = latestFilteredDeals.slice(0, showAllLatest ? latestDealsPage * 30 : Math.min(25, latestFilteredDeals.length));
 
-  // Debug Latest Deals expansion
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Latest Deals: available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0);
-  }
+
 
   // Infinite scroll effect for "view all" sections only
   React.useEffect(() => {
