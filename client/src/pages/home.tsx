@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,7 @@ import {
   Tag,
   Store,
   X,
-  Loader2,
-  Bot
+  Loader2
 } from "lucide-react";
 
 // Define types to match API response
@@ -70,6 +69,7 @@ export default function Home() {
   const {
     data,
     isLoading,
+    isError,
     error,
     fetchNextPage,
     hasNextPage,
@@ -79,52 +79,44 @@ export default function Home() {
     queryFn: async ({ pageParam = 0 }) => {
       const url = new URL('/api/deals', window.location.origin);
       url.searchParams.set('limit', '20');
-      url.searchParams.set('offset', String(pageParam));
+      url.searchParams.set('offset', pageParam.toString());
 
       const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return response.json();
+      const deals = await response.json();
+      return deals;
     },
-    getNextPageParam: (lastPage: any, allPages: any) => {
+    getNextPageParam: (lastPage, allPages) => {
       if (lastPage.length < 20) return undefined;
       return allPages.length * 20;
     },
     refetchInterval: 30000,
     staleTime: 10000,
-    initialPageParam: 0,
   });
 
   // Flatten all pages into a single array of deals
-  const deals: Deal[] = data?.pages.flatMap((page: any) => page) || [];
+  const deals = data?.pages.flatMap(page => page) || [];
 
   if (error) {
     console.error('Query error:', error);
   }
 
-  // State to control infinite scroll vs manual loading
-  const [autoLoadEnabled, setAutoLoadEnabled] = useState(true);
-  const [loadedPages, setLoadedPages] = useState(0);
-
-  // Modified scroll handler with limits
+  // Scroll handler for infinite loading
   useEffect(() => {
     const handleScroll = () => {
-      // Disable auto-loading after 5 pages to allow access to footer
-      if (!autoLoadEnabled || loadedPages >= 5) return;
-
       const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
       const scrollThreshold = document.documentElement.offsetHeight - 1000;
 
       if (scrollPosition >= scrollThreshold && !isFetchingNextPage && hasNextPage) {
         fetchNextPage();
-        setLoadedPages(prev => prev + 1);
       }
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [fetchNextPage, isFetchingNextPage, hasNextPage, autoLoadEnabled, loadedPages]);
+  }, [fetchNextPage, isFetchingNextPage, hasNextPage]);
 
   // Get unique filter options from actual deals data
   const availableCategories = [...new Set(deals?.map((deal: Deal) => deal.category) || [])];
@@ -436,46 +428,13 @@ export default function Home() {
           </section>
         )}
 
-        {/* Load More Section */}
-        {hasNextPage && (
-          <div className="text-center py-8">
-            {isFetchingNextPage ? (
-              <div className="flex justify-center items-center space-x-2 text-gray-600">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Loading more deals...</span>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {loadedPages >= 5 && (
-                  <div className="text-sm text-gray-500 mb-2">
-                    Infinite scroll paused to allow footer access
-                  </div>
-                )}
-                <Button
-                  onClick={() => fetchNextPage()}
-                  variant="outline"
-                  size="lg"
-                  className="px-8 py-3 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
-                >
-                  Load More Deals ({data?.pages.length || 0} pages loaded)
-                </Button>
-                {loadedPages >= 5 && (
-                  <div className="mt-3">
-                    <Button
-                      onClick={() => {
-                        setAutoLoadEnabled(!autoLoadEnabled);
-                        setLoadedPages(0);
-                      }}
-                      variant="ghost"
-                      size="sm"
-                      className="text-sm text-gray-500 hover:text-red-600"
-                    >
-                      {autoLoadEnabled ? 'Disable' : 'Enable'} Auto-Loading
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
+        {/* Loading More */}
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-8">
+            <div className="flex items-center space-x-2 text-gray-600">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Loading more deals...</span>
+            </div>
           </div>
         )}
 
@@ -489,81 +448,6 @@ export default function Home() {
           </div>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {/* Brand Section */}
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center mb-4">
-                <Percent className="text-red-500 text-2xl mr-2" />
-                <h3 className="text-xl font-bold">DealSphere</h3>
-              </div>
-              <p className="text-gray-300 mb-4">
-                AI-powered deals and coupons platform that helps you save money on your favorite products. 
-                Our artificial intelligence validates and curates the best deals from trusted retailers.
-              </p>
-              <div className="flex items-center space-x-2 text-sm text-gray-400">
-                <span>🛡️ AI Verified</span>
-                <span>•</span>
-                <span>💰 Best Prices</span>
-                <span>•</span>
-                <span>🚀 Real-time Updates</span>
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-gray-300">
-                <li><Link href="/" className="hover:text-red-400 transition-colors">Home</Link></li>
-                <li><Link href="/privacy-policy" className="hover:text-red-400 transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms-conditions" className="hover:text-red-400 transition-colors">Terms & Conditions</Link></li>
-                <li><Link href="/admin" className="hover:text-red-400 transition-colors">Admin Portal</Link></li>
-              </ul>
-            </div>
-
-            {/* Contact & Stats */}
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Platform Stats</h4>
-              <ul className="space-y-2 text-gray-300">
-                <li className="flex items-center">
-                  <Tag className="w-4 h-4 mr-2 text-red-400" />
-                  <span>{dealsCount?.count || 0}+ Active Deals</span>
-                </li>
-                <li className="flex items-center">
-                  <Store className="w-4 h-4 mr-2 text-red-400" />
-                  <span>50+ Partner Stores</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="text-red-400 mr-2">🤖</span>
-                  <span>98% AI Accuracy</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="text-red-400 mr-2">💵</span>
-                  <span>$1M+ Total Savings</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Bottom Bar */}
-          <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <div className="text-gray-400 text-sm">
-              © 2025 DealSphere. All rights reserved. Built with AI-powered technology.
-            </div>
-            <div className="flex items-center space-x-4 mt-4 md:mt-0">
-              <span className="text-gray-400 text-sm">Powered by:</span>
-              <div className="flex items-center space-x-2 text-sm">
-                <span className="bg-red-600 px-2 py-1 rounded text-white">Python</span>
-                <span className="bg-blue-600 px-2 py-1 rounded text-white">React</span>
-                <span className="bg-green-600 px-2 py-1 rounded text-white">AI</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
