@@ -1,6 +1,5 @@
-import React from "react";
 import { Button } from "@/components/ui/button";
-import { Facebook, Twitter, Share, Link } from "lucide-react";
+import { Facebook, Twitter, Link } from "lucide-react";
 
 interface Deal {
   id: string;

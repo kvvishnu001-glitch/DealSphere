@@ -1,4 +1,3 @@
-import * as React from "react"
 
 type ToastProps = {
   title?: string
@@ -7,7 +6,7 @@ type ToastProps = {
 }
 
 export const useToast = () => {
-  const toast = ({ title, description, variant = "default" }: ToastProps) => {
+  const toast = ({ title, description }: ToastProps) => {
     // Simple alert implementation
     // In a real app, this would show a proper toast notification
     const message = title ? `${title}: ${description || ''}` : description || '';
