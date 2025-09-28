@@ -15,13 +15,9 @@ def DealCard(deal, variant="full"):
     
     # Handle deal click
     def handle_deal_click():
-        try:
-            # Track click
-            requests.post(f"http://localhost:5000/api/deals/{deal['id']}/click")
-            # Note: In ReactPy, we need a different approach for opening URLs
-            print(f"Deal clicked: {deal['title']} -> {deal['affiliate_url']}")
-        except Exception as e:
-            print(f"Error tracking click: {e}")
+        # Note: In ReactPy, we need a different approach for opening URLs
+        print(f"Deal clicked: {deal['title']} -> {deal['affiliate_url']}")
+        # Click tracking would need to be handled differently in ReactPy
         
     if variant == "compact":
         return html.div(

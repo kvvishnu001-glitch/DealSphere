@@ -1,9 +1,16 @@
 from reactpy import component, html, hooks
-import requests
+import asyncio
 from ..deal_card import DealCard
 from ..ui.button import Button
 from ..ui.card import Card, CardContent
 from ..ui.input import Input
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from database import get_db
+from services.deals_service import DealsService
+from sqlalchemy import func, select
+from models import Deal
 
 @component
 def HeadContent():
@@ -33,32 +40,66 @@ def Home():
     search_query, set_search_query = hooks.use_state("")
     deals_count, set_deals_count = hooks.use_state(0)
     
-    # Fetch deals from API using absolute URLs
-    def fetch_deals():
+    # Fetch deals directly from database
+    async def fetch_deals():
         try:
-            response = requests.get('http://localhost:5000/api/deals')
-            if response.status_code == 200:
-                deals_data = response.json()
-                set_deals(deals_data)
-            set_loading(False)
+            async for db_session in get_db():
+                deals_service = DealsService(db_session)
+                deals_data = await deals_service.get_deals(
+                    limit=100, 
+                    offset=0, 
+                    only_approved=True
+                )
+                # Convert to dicts for ReactPy
+                deals_list = []
+                for deal in deals_data:
+                    deals_list.append({
+                        'id': deal.id,
+                        'title': deal.title,
+                        'description': deal.description,
+                        'store': deal.store,
+                        'category': deal.category,
+                        'deal_type': deal.deal_type,
+                        'original_price': deal.original_price,
+                        'sale_price': deal.sale_price,
+                        'discount_percentage': deal.discount_percentage,
+                        'image_url': deal.image_url,
+                        'affiliate_url': deal.affiliate_url,
+                        'is_active': deal.is_active,
+                        'is_ai_approved': deal.is_ai_approved
+                    })
+                set_deals(deals_list)
+                set_loading(False)
+                break
         except Exception as e:
             print(f"Error fetching deals: {e}")
             set_loading(False)
     
-    # Fetch deals count
-    def fetch_deals_count():
+    # Fetch deals count directly from database
+    async def fetch_deals_count():
         try:
-            response = requests.get('http://localhost:5000/api/deals/count')
-            if response.status_code == 200:
-                count_data = response.json()
-                set_deals_count(count_data.get('count', 0))
+            async for db_session in get_db():
+                result = await db_session.execute(
+                    select(func.count(Deal.id)).where(
+                        Deal.is_active == True,
+                        Deal.is_ai_approved == True
+                    )
+                )
+                count = result.scalar() or 0
+                set_deals_count(count)
+                break
         except Exception as e:
             print(f"Error fetching deals count: {e}")
     
     # Load data on component mount
     def load_data():
-        fetch_deals()
-        fetch_deals_count()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(fetch_deals())
+            loop.run_until_complete(fetch_deals_count())
+        finally:
+            loop.close()
     
     hooks.use_effect(load_data, [])
     
