@@ -797,7 +797,7 @@ export default function Home() {
                 </li>
                 <li>
                   <button 
-                    onClick={() => window.scrollTo({ bottom: 0, behavior: 'smooth' })}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     className="hover:text-white transition-colors text-left"
                   >
                     Affiliate Disclosure
