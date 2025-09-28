@@ -246,27 +246,35 @@ export default function Home() {
     .filter((deal: Deal) => deal.deal_type === 'hot' && deal.image_url && deal.image_url.trim() !== '')
     .slice(0, hotDealsLimit);
   
-  // Latest Deals: show all available latest/regular deals (auto-expansion with infinite scroll)
+  // Latest Deals: show filtered latest/regular deals with proper pagination
   const latestFilteredDeals = filteredDeals
     .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '');
   
-  // Show at least 5, but expand to show all loaded deals (max 25 for performance)  
-  const latestDeals = latestFilteredDeals.slice(0, showAllLatest ? latestDealsPage * 30 : Math.min(25, latestFilteredDeals.length));
+  // Show initial 5, then paginate with 8 per page when viewing all
+  const latestDealsLimit = showAllLatest ? 5 + (latestDealsPage - 1) * 8 : 5;
+  const latestDeals = latestFilteredDeals.slice(0, latestDealsLimit);
 
 
 
-  // Infinite scroll effect for "view all" sections only
+  // Infinite scroll effect for "view all" sections only - stops 200px before footer
   React.useEffect(() => {
     const handleSectionScroll = () => {
-      if (window.innerHeight + document.documentElement.scrollTop < document.documentElement.offsetHeight - 500) return;
+      const footer = document.querySelector('footer');
+      const footerOffset = footer ? footer.offsetTop - 200 : document.documentElement.offsetHeight - 200;
+      const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
       
-      // Only handle section-specific scrolling when in "view all" mode
-      if (showAllTop && topDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'top' && d.image_url).length) {
-        loadMoreDeals('top');
-      } else if (showAllHot && hotDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'hot' && d.image_url).length) {
-        loadMoreDeals('hot');
-      } else if (showAllLatest && latestDeals.length < filteredDeals.filter((d: Deal) => (d.deal_type === 'latest' || d.deal_type === 'regular') && d.image_url).length) {
-        loadMoreDeals('latest');
+      // Stop loading if we're too close to footer
+      if (scrollPosition >= footerOffset) return;
+      
+      // Load more when 800px from current scroll position, but respect footer boundary
+      if (scrollPosition >= document.documentElement.offsetHeight - 800) {
+        if (showAllTop && topDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'top' && d.image_url).length && !loadingMore) {
+          loadMoreDeals('top');
+        } else if (showAllHot && hotDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'hot' && d.image_url).length && !loadingMore) {
+          loadMoreDeals('hot');
+        } else if (showAllLatest && latestDeals.length < latestFilteredDeals.length && !loadingMore) {
+          loadMoreDeals('latest');
+        }
       }
     };
 
@@ -275,7 +283,7 @@ export default function Home() {
       window.addEventListener('scroll', handleSectionScroll);
       return () => window.removeEventListener('scroll', handleSectionScroll);
     }
-  }, [showAllTop, showAllHot, showAllLatest, topDeals.length, hotDeals.length, latestDeals.length, filteredDeals, loadingMore]);
+  }, [showAllTop, showAllHot, showAllLatest, topDeals.length, hotDeals.length, latestDeals.length, latestFilteredDeals.length, filteredDeals, loadingMore]);
   
 
   const clearFilters = () => {
@@ -610,31 +618,15 @@ export default function Home() {
             </div>
           </div>
           
-          {showAllLatest ? (
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
-                <DealCard key={deal.id} deal={deal} variant="full" />
-              )) : (
-                <div className="col-span-full text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
-                  No latest deals available (Total filtered deals: {filteredDeals.length})
-                </div>
-              )}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-0">
-                <div className="divide-y divide-gray-100">
-                  {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
-                    <DealCard key={deal.id} deal={deal} variant="list" />
-                  )) : (
-                    <div className="text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
-                      No latest deals available (Total filtered deals: {filteredDeals.length})
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <div className={`grid gap-4 sm:gap-6 ${showAllLatest ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'}`}>
+            {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
+              <DealCard key={deal.id} deal={deal} variant={showAllLatest ? "full" : "compact"} />
+            )) : (
+              <div className="col-span-full text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
+                No latest deals available (Total filtered deals: {filteredDeals.length})
+              </div>
+            )}
+          </div>
           
           {showAllLatest && loadingMore && (
             <div className="text-center py-8">
@@ -661,7 +653,7 @@ export default function Home() {
 
         {/* Main infinite scroll loading indicator - only show when not in "View All" mode */}
         {isFetchingNextPage && !showAllTop && !showAllHot && !showAllLatest && (
-          <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200 mx-4 my-8" style={{ minHeight: '120px' }}>
+          <div className="text-center py-8 bg-white rounded-lg shadow-sm border border-gray-200 mx-4 my-8">
             <div className="inline-flex items-center space-x-3 px-6 py-4 text-gray-600">
               <Loader2 className="w-6 h-6 animate-spin text-red-600" />
               <span className="text-lg font-medium">Loading more deals...</span>
@@ -672,9 +664,9 @@ export default function Home() {
           </div>
         )}
         
-        {/* End of deals indicator - only show when not in "View All" mode */}
+        {/* End of deals indicator - only show when not in "View All" mode and ensure footer is reachable */}
         {!hasNextPage && deals.length > 0 && !showAllTop && !showAllHot && !showAllLatest && (
-          <div className="text-center py-12 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg shadow-sm border border-gray-200 mx-4 my-8" style={{ minHeight: '120px' }}>
+          <div className="text-center py-8 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg shadow-sm border border-gray-200 mx-4 my-8 mb-16">
             <div className="text-gray-600 flex flex-col items-center justify-center">
               <div className="text-3xl mb-3">🎉</div>
               <div className="text-lg font-medium mb-2">You've seen all deals!</div>
