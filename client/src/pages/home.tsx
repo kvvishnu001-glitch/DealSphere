@@ -220,15 +220,9 @@ export default function Home() {
     .filter((deal: Deal) => deal.deal_type === 'hot' && deal.image_url && deal.image_url.trim() !== '')
     .slice(0, hotDealsLimit);
   
-  // Latest Deals: show all available latest/regular deals (auto-expansion with infinite scroll)
-  const latestFilteredDeals = filteredDeals
+  // Latest Deals: Always show ALL available latest/regular deals (AUTO-EXPANSION ENABLED)
+  const latestDeals = filteredDeals
     .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '');
-  
-  // Show at least 5, but expand to show all loaded deals (max 25 for performance)  
-  const latestDeals = latestFilteredDeals.slice(0, showAllLatest ? latestDealsPage * 30 : Math.min(25, latestFilteredDeals.length));
-
-  // URGENT DEBUG: Check if latest deals expansion is working
-  console.log('🚀 FIXED VERSION: Latest available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0, 'showAllLatest=', showAllLatest, 'TIMESTAMP=', Date.now());
 
   // Infinite scroll effect for "view all" sections only
   React.useEffect(() => {
