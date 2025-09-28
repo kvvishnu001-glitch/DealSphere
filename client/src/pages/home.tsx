@@ -579,31 +579,16 @@ export default function Home() {
             </div>
           </div>
           
-          {showAllLatest ? (
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
-                <DealCard key={deal.id} deal={deal} variant="full" />
-              )) : (
-                <div className="col-span-full text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
-                  No latest deals available (Total filtered deals: {filteredDeals.length})
-                </div>
-              )}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-0">
-                <div className="divide-y divide-gray-100">
-                  {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
-                    <DealCard key={deal.id} deal={deal} variant="list" />
-                  )) : (
-                    <div className="text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
-                      No latest deals available (Total filtered deals: {filteredDeals.length})
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Always show ALL latest deals in grid layout (auto-expansion enabled) */}
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
+              <DealCard key={deal.id} deal={deal} variant="full" />
+            )) : (
+              <div className="col-span-full text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
+                No latest deals available (Total filtered deals: {filteredDeals.length})
+              </div>
+            )}
+          </div>
           
           {showAllLatest && loadingMore && (
             <div className="text-center py-8">
