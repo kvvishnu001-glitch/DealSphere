@@ -552,30 +552,7 @@ export default function Home() {
               Latest Deals
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-sm text-gray-500">Just added</span>
-              {!showAllLatest && latestDeals.length >= 5 && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowAllLatest(true)}
-                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                >
-                  View All
-                </Button>
-              )}
-              {showAllLatest && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    setShowAllLatest(false);
-                    setLatestDealsPage(1);
-                  }}
-                  className="text-gray-600 border-gray-600 hover:bg-gray-50"
-                >
-                  Show Less
-                </Button>
-              )}
+              <span className="text-xs sm:text-sm text-gray-500">Auto-expanding ({latestDeals.length} deals)</span>
             </div>
           </div>
           
@@ -590,13 +567,6 @@ export default function Home() {
             )}
           </div>
           
-          {showAllLatest && loadingMore && (
-            <div className="text-center py-8">
-              <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
-                Loading more deals...
-              </div>
-            </div>
-          )}
         </section>
 
         {filteredDeals.length === 0 && (
