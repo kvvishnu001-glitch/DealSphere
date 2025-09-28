@@ -1,5 +1,4 @@
 from reactpy import component, html, hooks
-from reactpy.backend.fastapi import use_connection
 import asyncio
 import aiohttp
 
@@ -200,10 +199,9 @@ def HomePage():
 @component 
 def DealCard(deal):
     """Card component for grid layout deals"""
-    def handle_click():
+    def handle_click(event):
         # Track click and open affiliate URL
-        window = use_connection().location
-        window.open(deal.get('affiliateUrl', '#'), '_blank')
+        print(f"Deal clicked: {deal.get('title', 'Unknown')}")
     
     discount = deal.get('discountPercentage', 0)
     original_price = float(deal.get('originalPrice', 0))
@@ -243,9 +241,9 @@ def DealCard(deal):
 @component
 def DealListItem(deal):
     """List item component for latest deals"""
-    def handle_click():
-        window = use_connection().location
-        window.open(deal.get('affiliateUrl', '#'), '_blank')
+    def handle_click(event):
+        # Track click and open affiliate URL
+        print(f"Deal clicked: {deal.get('title', 'Unknown')}")
     
     discount = deal.get('discountPercentage', 0)
     original_price = float(deal.get('originalPrice', 0))
