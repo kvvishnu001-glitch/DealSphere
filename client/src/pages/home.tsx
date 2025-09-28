@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,8 @@ import {
   Tag,
   Store,
   X,
-  Loader2
+  Loader2,
+  Bot
 } from "lucide-react";
 
 // Define types to match API response
@@ -69,14 +69,14 @@ export default function Home() {
   const {
     data,
     isLoading,
-    isError,
     error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['/api/deals'],
-    queryFn: async ({ pageParam = 0 }) => {
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
       const url = new URL('/api/deals', window.location.origin);
       url.searchParams.set('limit', '20');
       url.searchParams.set('offset', pageParam.toString());
@@ -94,10 +94,10 @@ export default function Home() {
     },
     refetchInterval: 30000,
     staleTime: 10000,
-  });
+  }) as any;
 
   // Flatten all pages into a single array of deals
-  const deals = data?.pages.flatMap(page => page) || [];
+  const deals = data?.pages.flatMap((page: any) => page) || [];
 
   if (error) {
     console.error('Query error:', error);
@@ -119,8 +119,8 @@ export default function Home() {
   }, [fetchNextPage, isFetchingNextPage, hasNextPage]);
 
   // Get unique filter options from actual deals data
-  const availableCategories = [...new Set(deals?.map((deal: Deal) => deal.category) || [])];
-  const availableStores = [...new Set(deals?.map((deal: Deal) => deal.store) || [])];
+  const availableCategories = [...new Set(deals?.map((deal: any) => deal.category) || [])].filter(Boolean) as string[];
+  const availableStores = [...new Set(deals?.map((deal: any) => deal.store) || [])].filter(Boolean) as string[];
 
   // Filter deals properly
   const filteredDeals = deals?.filter((deal: Deal) => {
@@ -276,7 +276,7 @@ export default function Home() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">📁 All Categories</SelectItem>
-                          {availableCategories.map((category) => (
+                          {availableCategories.map((category: string) => (
                             <SelectItem key={category} value={category}>
                               {category}
                             </SelectItem>
@@ -294,7 +294,7 @@ export default function Home() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">🏪 All Stores</SelectItem>
-                          {availableStores.map((store) => (
+                          {availableStores.map((store: string) => (
                             <SelectItem key={store} value={store}>
                               {store}
                             </SelectItem>
@@ -377,7 +377,7 @@ export default function Home() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {topDeals.map((deal) => (
+              {topDeals.map((deal: any) => (
                 <DealCard key={deal.id} deal={deal} />
               ))}
             </div>
@@ -399,8 +399,8 @@ export default function Home() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {hotDeals.map((deal) => (
-                <DealCard key={deal.id} deal={deal} variant="compact" />
+              {hotDeals.map((deal: any) => (
+                <DealCard key={deal.id} deal={deal} />
               ))}
             </div>
           </section>
@@ -421,7 +421,7 @@ export default function Home() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {latestDeals.map((deal) => (
+              {latestDeals.map((deal: any) => (
                 <DealCard key={deal.id} deal={deal} />
               ))}
             </div>
