@@ -114,6 +114,7 @@ export default function Home() {
     staleTime: 5 * 60 * 1000, // 5 minutes to prevent cache resets
     gcTime: 10 * 60 * 1000, // 10 minutes to keep data in memory
     refetchOnWindowFocus: false, // Prevent refetch on window focus
+    structuralSharing: false, // CRITICAL: Prevent pages from overwriting each other
   });
 
   // Fixed infinite query data accumulation 
