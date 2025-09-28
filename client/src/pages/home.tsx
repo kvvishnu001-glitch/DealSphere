@@ -90,21 +90,22 @@ export default function Home() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<Deal[], Error>({
     queryKey: ['/api/deals'],
     queryFn: async ({ pageParam = 0 }) => {
       const url = new URL('/api/deals', window.location.origin);
       url.searchParams.set('limit', '20');
-      url.searchParams.set('offset', pageParam.toString());
+      url.searchParams.set('offset', (pageParam as number).toString());
       
       const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const deals = await response.json();
+      const deals: Deal[] = await response.json();
       return deals;
     },
-    getNextPageParam: (lastPage, allPages) => {
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: Deal[], allPages: Deal[][]) => {
       // If we got less than 20 deals, we've reached the end
       if (lastPage.length < 20) return undefined;
       // Return the offset for the next page
@@ -191,11 +192,6 @@ export default function Home() {
     return true;
   }) || [];
 
-  // Debug Latest Deals expansion
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Latest Deals: available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0);
-  }
-
   // Load more function for infinite scroll
   const loadMoreDeals = (section: 'top' | 'hot' | 'latest') => {
     if (loadingMore) return;
@@ -231,10 +227,8 @@ export default function Home() {
   // Show at least 5, but expand to show all loaded deals (max 25 for performance)  
   const latestDeals = latestFilteredDeals.slice(0, showAllLatest ? latestDealsPage * 30 : Math.min(25, latestFilteredDeals.length));
 
-  // Debug Latest Deals expansion
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Latest Deals: available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0);
-  }
+  // URGENT DEBUG: Check if latest deals expansion is working
+  console.log('🚀 FIXED VERSION: Latest available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0, 'showAllLatest=', showAllLatest, 'TIMESTAMP=', Date.now());
 
   // Infinite scroll effect for "view all" sections only
   React.useEffect(() => {
