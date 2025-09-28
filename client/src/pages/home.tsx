@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -69,7 +68,6 @@ export default function Home() {
   const {
     data,
     isLoading,
-    isError,
     error,
     fetchNextPage,
     hasNextPage,
@@ -85,7 +83,7 @@ export default function Home() {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const deals = await response.json();
+      const deals: Deal[] = await response.json();
       return deals;
     },
     getNextPageParam: (lastPage, allPages) => {

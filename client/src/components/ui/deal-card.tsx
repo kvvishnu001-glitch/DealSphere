@@ -1,13 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SocialShare } from "@/components/social-share";
-import { Star, Clock, Flame, Bot, X, Tag, ExternalLink } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Star, Clock, Flame, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { CouponCode } from "@/components/ui/coupon-code";
 
 interface Deal {
   id: string;
@@ -33,11 +31,9 @@ interface DealCardProps {
   variant?: "full" | "compact" | "list";
 }
 
-export function DealCard({ deal, variant = "full" }: DealCardProps) {
+export function DealCard({ deal }: DealCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [showCouponModal, setShowCouponModal] = useState(false);
   const { toast } = useToast();
 
   // Calculate discount percentage if not provided
@@ -51,14 +47,6 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
 
   const handleDealClick = async () => {
     if (isLoading) return;
-
-    // If deal has coupon code, show modal first
-    if (deal.coupon_code) {
-      setShowCouponModal(true);
-      return;
-    }
-
-    // Otherwise redirect directly
     await redirectToDeal();
   };
 
@@ -89,7 +77,6 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
       });
     } finally {
       setIsLoading(false);
-      setShowCouponModal(false);
     }
   };
 
@@ -131,11 +118,11 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             src={deal.image_url}
             alt={deal.title}
             className="w-full h-64 object-cover cursor-pointer"
-            onError={(e) => {
+            onError={() => {
               console.log('Image failed to load for deal:', deal.title, deal.image_url);
               setImageError(true);
             }}
-            onLoad={() => setImageLoaded(true)}
+            onLoad={() => {}}
           />
         </Link>
         <Badge className="absolute top-3 left-3 bg-red-600 text-white">
