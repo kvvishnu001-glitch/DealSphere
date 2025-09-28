@@ -59,7 +59,7 @@ export default function Home() {
   // View All states for infinite scroll
   const [showAllTop, setShowAllTop] = useState(false);
   const [showAllHot, setShowAllHot] = useState(false);
-  const [showAllLatest, setShowAllLatest] = useState(true);
+  const [showAllLatest, setShowAllLatest] = useState(false);
   const [topDealsPage, setTopDealsPage] = useState(1);
   const [hotDealsPage, setHotDealsPage] = useState(1);
   const [latestDealsPage, setLatestDealsPage] = useState(1);
@@ -81,7 +81,7 @@ export default function Home() {
     refetchInterval: 30000,
   });
 
-  // Fetch deals with infinite scroll pagination (FIXED - prevent cache resets)
+  // Fetch deals with infinite scroll pagination
   const {
     data,
     isLoading,
@@ -90,35 +90,32 @@ export default function Home() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery<Deal[], Error>({
-    queryKey: ['deals-infinite'],
+  } = useInfiniteQuery({
+    queryKey: ['/api/deals'],
     queryFn: async ({ pageParam = 0 }) => {
       const url = new URL('/api/deals', window.location.origin);
       url.searchParams.set('limit', '20');
-      url.searchParams.set('offset', (pageParam as number).toString());
+      url.searchParams.set('offset', pageParam.toString());
       
       const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const deals: Deal[] = await response.json();
+      const deals = await response.json();
       return deals;
     },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage: Deal[], allPages: Deal[][]) => {
+    getNextPageParam: (lastPage, allPages) => {
       // If we got less than 20 deals, we've reached the end
       if (lastPage.length < 20) return undefined;
       // Return the offset for the next page
       return allPages.length * 20;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes to prevent cache resets
-    gcTime: 10 * 60 * 1000, // 10 minutes to keep data in memory
-    refetchOnWindowFocus: false, // Prevent refetch on window focus
-    structuralSharing: false, // CRITICAL: Prevent pages from overwriting each other
+    refetchInterval: 30000,
+    staleTime: 10000,
   });
 
-  // Fixed infinite query data accumulation 
-  const deals = data?.pages ? data.pages.flat() : [];
+  // Flatten all pages into a single array of deals
+  const deals = data?.pages.flatMap(page => page) || [];
 
   if (error) {
     console.error('Query error:', error);
@@ -194,6 +191,11 @@ export default function Home() {
     return true;
   }) || [];
 
+  // Debug Latest Deals expansion
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Latest Deals: available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0);
+  }
+
   // Load more function for infinite scroll
   const loadMoreDeals = (section: 'top' | 'hot' | 'latest') => {
     if (loadingMore) return;
@@ -222,9 +224,17 @@ export default function Home() {
     .filter((deal: Deal) => deal.deal_type === 'hot' && deal.image_url && deal.image_url.trim() !== '')
     .slice(0, hotDealsLimit);
   
-  // Latest Deals: Always show ALL available latest/regular deals (AUTO-EXPANSION ENABLED)
-  const latestDeals = filteredDeals
+  // Latest Deals: show all available latest/regular deals (auto-expansion with infinite scroll)
+  const latestFilteredDeals = filteredDeals
     .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '');
+  
+  // Show at least 5, but expand to show all loaded deals (max 25 for performance)  
+  const latestDeals = latestFilteredDeals.slice(0, showAllLatest ? latestDealsPage * 30 : Math.min(25, latestFilteredDeals.length));
+
+  // Debug Latest Deals expansion
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Latest Deals: available=', latestFilteredDeals?.length || 0, 'showing=', latestDeals?.length || 0);
+  }
 
   // Infinite scroll effect for "view all" sections only
   React.useEffect(() => {
@@ -554,21 +564,66 @@ export default function Home() {
               Latest Deals
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-sm text-gray-500">Auto-expanding ({latestDeals.length} deals)</span>
+              <span className="text-xs sm:text-sm text-gray-500">Just added</span>
+              {!showAllLatest && latestDeals.length >= 5 && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowAllLatest(true)}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  View All
+                </Button>
+              )}
+              {showAllLatest && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setShowAllLatest(false);
+                    setLatestDealsPage(1);
+                  }}
+                  className="text-gray-600 border-gray-600 hover:bg-gray-50"
+                >
+                  Show Less
+                </Button>
+              )}
             </div>
           </div>
           
-          {/* Always show ALL latest deals in grid layout (auto-expansion enabled) */}
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
-              <DealCard key={deal.id} deal={deal} variant="full" />
-            )) : (
-              <div className="col-span-full text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
-                No latest deals available (Total filtered deals: {filteredDeals.length})
-              </div>
-            )}
-          </div>
+          {showAllLatest ? (
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
+                <DealCard key={deal.id} deal={deal} variant="full" />
+              )) : (
+                <div className="col-span-full text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
+                  No latest deals available (Total filtered deals: {filteredDeals.length})
+                </div>
+              )}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <div className="divide-y divide-gray-100">
+                  {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
+                    <DealCard key={deal.id} deal={deal} variant="list" />
+                  )) : (
+                    <div className="text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
+                      No latest deals available (Total filtered deals: {filteredDeals.length})
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
+          {showAllLatest && loadingMore && (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
+                Loading more deals...
+              </div>
+            </div>
+          )}
         </section>
 
         {filteredDeals.length === 0 && (
