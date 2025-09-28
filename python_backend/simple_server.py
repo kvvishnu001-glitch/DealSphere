@@ -105,20 +105,20 @@ async def get_deals(db: AsyncSession = Depends(get_db)):
                 "store": deal.store,
                 "storeLogoUrl": deal.store_logo_url,
                 "category": deal.category,
-                "rating": str(deal.rating) if deal.rating else None,
+                "rating": str(deal.rating) if deal.rating is not None else None,
                 "reviewCount": deal.review_count,
-                "expiresAt": deal.expires_at.isoformat() if deal.expires_at else None,
+                "expiresAt": deal.expires_at.isoformat() if deal.expires_at is not None else None,
                 "isActive": deal.is_active,
                 "isAiApproved": deal.is_ai_approved,
-                "aiScore": str(deal.ai_score) if deal.ai_score else None,
+                "aiScore": str(deal.ai_score) if deal.ai_score is not None else None,
                 "aiReasons": deal.ai_reasons,
                 "popularity": deal.popularity,
                 "clickCount": deal.click_count,
                 "shareCount": deal.share_count,
                 "dealType": deal.deal_type,
                 "sourceApi": deal.source_api,
-                "createdAt": deal.created_at.isoformat() if deal.created_at else None,
-                "updatedAt": deal.updated_at.isoformat() if deal.updated_at else None
+                "createdAt": deal.created_at.isoformat() if deal.created_at is not None else None,
+                "updatedAt": deal.updated_at.isoformat() if deal.updated_at is not None else None
             }
             deals_list.append(deal_dict)
         
@@ -137,8 +137,12 @@ async def track_deal_click(deal_id: str, db: AsyncSession = Depends(get_db)):
         if not deal:
             return {"error": "Deal not found"}
         
-        # Increment click count
-        deal.click_count = (deal.click_count or 0) + 1
+        # Increment click count using SQLAlchemy update
+        await db.execute(
+            update(DealModel)
+            .where(DealModel.id == deal_id)
+            .values(click_count=(DealModel.click_count + 1))
+        )
         await db.commit()
         
         return {"affiliateUrl": deal.affiliate_url}
@@ -214,8 +218,13 @@ if frontend_dist_path.exists():
                 
                 # Create Open Graph meta tags
                 og_title = f"{deal.title} - {deal.discount_percentage}% OFF"
-                og_description = deal.description or f"Get {deal.title} for just ${deal.sale_price} (was ${deal.original_price}). Save ${float(deal.original_price) - float(deal.sale_price):.2f}!"
-                og_image = deal.image_url or "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=630&fit=crop"
+                # Calculate savings safely
+                original_price = float(deal.original_price) if deal.original_price is not None else 0
+                sale_price = float(deal.sale_price) if deal.sale_price is not None else 0
+                savings = original_price - sale_price
+                description_text = deal.description if deal.description is not None else f"Get {deal.title} for just ${sale_price} (was ${original_price}). Save ${savings:.2f}!"
+                og_description = description_text
+                og_image = deal.image_url if deal.image_url is not None else "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=630&fit=crop"
                 og_url = f"{base_url}/deals/{deal_id}"
                 
                 # Insert Open Graph meta tags into the HTML

@@ -1,0 +1,1 @@
+{"name":"dealsphere","version":"1.0.0","scripts":{"dev":"cd python_backend && python simple_server.py","start":"cd python_backend && python simple_server.py"},"private":true}
