@@ -92,7 +92,8 @@ export default function Home() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['/api/deals'],
-    queryFn: async ({ pageParam = 0 }) => {
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }: { pageParam: number }) => {
       const url = new URL('/api/deals', window.location.origin);
       url.searchParams.set('limit', '20');
       url.searchParams.set('offset', pageParam.toString());
@@ -126,9 +127,9 @@ export default function Home() {
         share_count: deal.shareCount || deal.share_count,
         created_at: deal.createdAt || deal.created_at,
         updated_at: deal.updatedAt || deal.updated_at
-      }));
+      })) as Deal[];
     },
-    getNextPageParam: (lastPage, allPages) => {
+    getNextPageParam: (lastPage: Deal[], allPages: Deal[][]) => {
       // If we got less than 20 deals, we've reached the end
       if (lastPage.length < 20) return undefined;
       // Return the offset for the next page
@@ -139,7 +140,7 @@ export default function Home() {
   });
 
   // Flatten all pages into a single array of deals
-  const deals = data?.pages.flatMap(page => page) || [];
+  const deals: Deal[] = data?.pages.flatMap(page => page) || [];
 
   if (error) {
     console.error('Query error:', error);
@@ -161,9 +162,9 @@ export default function Home() {
   }, [fetchNextPage, isFetchingNextPage, hasNextPage]);
 
   // Get unique filter options from actual deals data
-  const availableCategories = [...new Set(deals?.map((deal: Deal) => deal.category) || [])];
-  const availableStores = [...new Set(deals?.map((deal: Deal) => deal.store) || [])];
-  const availableDiscounts = [...new Set(deals?.map((deal: Deal) => {
+  const availableCategories = [...new Set(deals.map((deal: Deal) => deal.category))];
+  const availableStores = [...new Set(deals.map((deal: Deal) => deal.store))];
+  const availableDiscounts = [...new Set(deals.map((deal: Deal) => {
     const discount = deal.discount_percentage;
     if (discount >= 50) return "50+";
     if (discount >= 30) return "30+";
