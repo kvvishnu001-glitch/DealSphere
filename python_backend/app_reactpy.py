@@ -181,6 +181,7 @@ async def serve_admin():
     <html>
     <head>
         <title>DealSphere Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body>
         <div class="min-h-screen bg-gray-100 flex items-center justify-center">
