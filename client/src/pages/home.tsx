@@ -620,7 +620,7 @@ export default function Home() {
           
           <div className={`grid gap-4 sm:gap-6 ${showAllLatest ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'}`}>
             {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
-              <DealCard key={deal.id} deal={deal} variant={showAllLatest ? "full" : "compact"} />
+              <DealCard key={deal.id} deal={deal} variant="compact" />
             )) : (
               <div className="col-span-full text-center text-gray-500 py-8 bg-blue-100 p-4 rounded">
                 No latest deals available (Total filtered deals: {filteredDeals.length})
