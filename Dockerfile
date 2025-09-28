@@ -1,18 +1,4 @@
-# Multi-stage build for production deployment
-FROM node:18-alpine as frontend-builder
-
-# Build frontend
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY client/ ./client/
-COPY vite.config.ts ./
-COPY tailwind.config.ts ./
-COPY postcss.config.js ./
-COPY tsconfig.json ./
-RUN npm run build
-
-# Python backend
+# Pure Python Dockerfile - No Node.js needed!
 FROM python:3.11-slim
 
 # Set environment variables
@@ -24,6 +10,7 @@ ENV PORT=8000
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set work directory
@@ -32,15 +19,11 @@ WORKDIR /app
 # Install Python dependencies
 COPY python_backend/ ./python_backend/
 COPY pyproject.toml ./
-COPY uv.lock ./
 RUN pip install -U pip
-RUN pip install fastapi uvicorn[standard] sqlalchemy asyncpg psycopg2-binary python-dotenv pydantic alembic
+RUN pip install fastapi uvicorn[standard] sqlalchemy asyncpg psycopg2-binary python-dotenv pydantic alembic aiohttp bcrypt requests schedule openpyxl pandas xlrd python-jose python-multipart openai reactpy jinja2
 
-# Copy built frontend from previous stage
-COPY --from=frontend-builder /app/client/dist ./client/dist
-
-# Copy shared schema
-COPY shared/ ./shared/
+# Copy shared schema (if exists)
+COPY shared/ ./shared/ 2>/dev/null || true
 
 # Change to python_backend directory
 WORKDIR /app/python_backend
@@ -52,5 +35,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Run the application
-CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the ReactPy application
+CMD ["python", "-m", "uvicorn", "app_reactpy:app", "--host", "0.0.0.0", "--port", "8000"]

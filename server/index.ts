@@ -5,7 +5,7 @@ console.log('Starting DealSphere Python Backend...');
 
 // Change to python_backend directory and start the server
 const pythonBackendPath = join(process.cwd(), 'python_backend');
-const command = `cd "${pythonBackendPath}" && PORT=5000 python simple_server.py`;
+const command = `cd "${pythonBackendPath}" && PORT=5000 python app_reactpy.py`;
 
 console.log(`Executing: ${command}`);
 
