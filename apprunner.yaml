@@ -6,15 +6,14 @@ build:
     build:
       # Install Python dependencies only - No Node.js needed!
       - pip3 install --upgrade pip
-      - pip3 install fastapi uvicorn[standard] sqlalchemy asyncpg psycopg2-binary python-dotenv pydantic alembic aiohttp bcrypt requests schedule openpyxl pandas xlrd python-jose python-multipart openai reactpy jinja2
+      - pip3 install fastapi uvicorn[standard] sqlalchemy asyncpg psycopg2-binary python-dotenv pydantic alembic aiohttp bcrypt requests schedule openpyxl pandas xlrd python-jose python-multipart openai
     post-build:
-      # Verify Python backend and ReactPy components
+      # Verify Python backend
       - ls -la python_backend/
-      - ls -la python_backend/components/
 
 run:
   runtime-version: 3.11
-  command: "cd python_backend && python -m uvicorn app_reactpy:app --host 0.0.0.0 --port 8000"
+  command: "cd python_backend && python -m uvicorn simple_server:app --host 0.0.0.0 --port 8000"
   network:
     port: 8000
     env: PORT

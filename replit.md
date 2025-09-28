@@ -1,6 +1,6 @@
 # Overview
 
-DealSphere is an AI-powered deals and coupons platform that aggregates product deals from various stores and uses artificial intelligence to validate and categorize them. The platform now features a public-facing deals browser that shows all deal types (top deals, hot deals, latest deals) without requiring authentication, and an admin dashboard for managing deal submissions, approvals, and analytics. Built as a full-stack application with React frontend and Express backend, it leverages OpenAI for deal validation. A Python backend implementation has also been developed as an alternative.
+DealSphere is an AI-powered deals and coupons platform that aggregates product deals from various stores and uses artificial intelligence to validate and categorize them. The platform features a public-facing deals browser that shows all deal types (top deals, hot deals, latest deals) without requiring authentication, and an admin dashboard for managing deal submissions, approvals, and analytics. Built as a Python-only application with FastAPI backend serving a pre-built React frontend, it leverages OpenAI for deal validation.
 
 ## Recent Changes (2025-08-13)
 - **Rich Social Media Sharing**: Complete Open Graph meta tags integration for Facebook, WhatsApp, Twitter with dynamic deal images and descriptions
@@ -29,11 +29,11 @@ Preferred communication style: Simple, everyday language.
 # System Architecture
 
 ## Frontend Architecture
-- **Framework**: React with TypeScript using Vite as the build tool
-- **Routing**: Wouter for client-side routing with public access for deals browsing
-- **UI Framework**: Shadcn/ui components built on Radix UI primitives with Tailwind CSS for styling
+- **Framework**: React (pre-built static files served by Python backend)
+- **Routing**: Client-side routing with public access for deals browsing
+- **UI Framework**: Shadcn/ui components with Tailwind CSS for styling
 - **State Management**: TanStack Query for server state management and data fetching
-- **Build**: Optimized production build served statically by Python backend
+- **Deployment**: Static HTML/CSS/JS files served directly by FastAPI
 
 ## Backend Architecture
 - **Framework**: FastAPI with Python 3.11 for high-performance async API
@@ -43,8 +43,8 @@ Preferred communication style: Simple, everyday language.
 - **Performance**: Async/await throughout for optimal concurrent request handling
 
 ## Database Design
-- **ORM**: Drizzle ORM with PostgreSQL as the primary database
-- **Connection**: Neon serverless PostgreSQL with connection pooling
+- **ORM**: SQLAlchemy async ORM with PostgreSQL as the primary database
+- **Connection**: PostgreSQL with async connection pooling
 - **Schema**: 
   - Users table for authentication (required by Replit Auth)
   - Deals table with comprehensive product information including AI scores and approval status
@@ -58,9 +58,8 @@ Preferred communication style: Simple, everyday language.
 
 ## External Dependencies
 
-- **Database**: Neon serverless PostgreSQL for data persistence
+- **Database**: PostgreSQL for data persistence
 - **Authentication**: Replit's OIDC authentication service for secure admin access
 - **AI Services**: OpenAI API for deal validation and content enhancement
-- **UI Components**: Radix UI for accessible, unstyled components with Shadcn/ui styling
-- **Development Tools**: Vite for fast development builds and hot module replacement
+- **UI Components**: Pre-built React components with Shadcn/ui styling
 - **Session Storage**: PostgreSQL-backed session storage for authentication persistence
