@@ -59,7 +59,7 @@ export default function Home() {
   // View All states for infinite scroll
   const [showAllTop, setShowAllTop] = useState(false);
   const [showAllHot, setShowAllHot] = useState(false);
-  const [showAllLatest, setShowAllLatest] = useState(false);
+  const [showAllLatest, setShowAllLatest] = useState(true);
   const [topDealsPage, setTopDealsPage] = useState(1);
   const [hotDealsPage, setHotDealsPage] = useState(1);
   const [latestDealsPage, setLatestDealsPage] = useState(1);
