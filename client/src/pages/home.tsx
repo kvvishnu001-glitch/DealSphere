@@ -611,23 +611,31 @@ export default function Home() {
             </div>
           )}
           
-          {/* Load More button when max limit reached but more deals available */}
-          {latestDeals.length >= LATEST_DEALS_MAX && hasMoreLatestDeals && (
+          {/* Load More button - shows when we've displayed all loaded deals but more exist in database */}
+          {latestDeals.length >= latestFilteredDeals.length && hasNextPage && (
             <div className="text-center py-8">
               <p className="text-gray-500 text-sm mb-4">
-                Showing {LATEST_DEALS_MAX} of {latestFilteredDeals.length} deals
+                Showing {latestDeals.length} deals
               </p>
               <Button 
-                onClick={() => setLatestDealsPage(prev => prev + 1)}
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                Load More Deals
+                {isFetchingNextPage ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Loading...
+                  </>
+                ) : (
+                  'Load More Deals'
+                )}
               </Button>
             </div>
           )}
           
-          {/* End of Latest Deals indicator - only show when all deals are displayed */}
-          {latestDeals.length >= latestFilteredDeals.length && latestDeals.length > 0 && !hasMoreLatestDeals && (
+          {/* End of Latest Deals indicator - only show when all deals from database are displayed */}
+          {latestDeals.length >= latestFilteredDeals.length && !hasNextPage && latestDeals.length > 0 && (
             <div className="text-center py-6 text-gray-500 text-sm">
               You've seen all {latestFilteredDeals.length} latest deals
             </div>
