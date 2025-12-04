@@ -246,17 +246,17 @@ export default function Home() {
     .filter((deal: Deal) => deal.deal_type === 'hot' && deal.image_url && deal.image_url.trim() !== '')
     .slice(0, hotDealsLimit);
   
-  // Latest Deals: show filtered latest/regular deals with proper pagination
+  // Latest Deals: show filtered latest/regular deals with automatic pagination
   const latestFilteredDeals = filteredDeals
     .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '');
   
-  // Show initial 5, then paginate with 8 per page when viewing all
-  const latestDealsLimit = showAllLatest ? 5 + (latestDealsPage - 1) * 8 : 5;
+  // Always use pagination for Latest Deals - start with 10, load 10 more each time
+  const latestDealsLimit = 10 + (latestDealsPage - 1) * 10;
   const latestDeals = latestFilteredDeals.slice(0, latestDealsLimit);
 
 
 
-  // Infinite scroll effect for "view all" sections only - stops 200px before footer
+  // Infinite scroll effect - always enabled for Latest Deals, optional for Top/Hot sections
   React.useEffect(() => {
     const handleSectionScroll = () => {
       const footer = document.querySelector('footer');
@@ -267,23 +267,22 @@ export default function Home() {
       if (scrollPosition >= footerOffset) return;
       
       // Load more when 800px from current scroll position, but respect footer boundary
-      if (scrollPosition >= document.documentElement.offsetHeight - 800) {
-        if (showAllTop && topDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'top' && d.image_url).length && !loadingMore) {
+      if (scrollPosition >= document.documentElement.offsetHeight - 800 && !loadingMore) {
+        if (showAllTop && topDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'top' && d.image_url).length) {
           loadMoreDeals('top');
-        } else if (showAllHot && hotDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'hot' && d.image_url).length && !loadingMore) {
+        } else if (showAllHot && hotDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'hot' && d.image_url).length) {
           loadMoreDeals('hot');
-        } else if (showAllLatest && latestDeals.length < latestFilteredDeals.length && !loadingMore) {
+        } else if (latestDeals.length < latestFilteredDeals.length) {
+          // Latest Deals always uses infinite scroll (no showAllLatest check)
           loadMoreDeals('latest');
         }
       }
     };
 
-    // Only add listener when in "view all" mode to avoid conflicts
-    if (showAllTop || showAllHot || showAllLatest) {
-      window.addEventListener('scroll', handleSectionScroll);
-      return () => window.removeEventListener('scroll', handleSectionScroll);
-    }
-  }, [showAllTop, showAllHot, showAllLatest, topDeals.length, hotDeals.length, latestDeals.length, latestFilteredDeals.length, filteredDeals, loadingMore]);
+    // Always add scroll listener for Latest Deals infinite scroll
+    window.addEventListener('scroll', handleSectionScroll);
+    return () => window.removeEventListener('scroll', handleSectionScroll);
+  }, [showAllTop, showAllHot, topDeals.length, hotDeals.length, latestDeals.length, latestFilteredDeals.length, filteredDeals, loadingMore]);
   
 
   const clearFilters = () => {
@@ -583,7 +582,7 @@ export default function Home() {
           )}
         </section>
 
-        {/* Latest Deals Section */}
+        {/* Latest Deals Section - Infinite scroll enabled by default */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
@@ -591,34 +590,13 @@ export default function Home() {
               Latest Deals
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-sm text-gray-500">Just added</span>
-              {!showAllLatest && latestDeals.length >= 5 && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowAllLatest(true)}
-                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                >
-                  View All
-                </Button>
-              )}
-              {showAllLatest && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    setShowAllLatest(false);
-                    setLatestDealsPage(1);
-                  }}
-                  className="text-gray-600 border-gray-600 hover:bg-gray-50"
-                >
-                  Show Less
-                </Button>
-              )}
+              <span className="text-xs sm:text-sm text-gray-500">
+                Showing {latestDeals.length} of {latestFilteredDeals.length} deals
+              </span>
             </div>
           </div>
           
-          <div className={`grid gap-4 sm:gap-6 ${showAllLatest ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'}`}>
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
               <DealCard key={deal.id} deal={deal} variant="compact" />
             )) : (
@@ -628,11 +606,20 @@ export default function Home() {
             )}
           </div>
           
-          {showAllLatest && loadingMore && (
+          {/* Loading indicator for Latest Deals infinite scroll */}
+          {loadingMore && latestDeals.length < latestFilteredDeals.length && (
             <div className="text-center py-8">
               <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 Loading more deals...
               </div>
+            </div>
+          )}
+          
+          {/* End of Latest Deals indicator */}
+          {latestDeals.length >= latestFilteredDeals.length && latestDeals.length > 0 && (
+            <div className="text-center py-6 text-gray-500 text-sm">
+              You've seen all {latestFilteredDeals.length} latest deals
             </div>
           )}
         </section>
