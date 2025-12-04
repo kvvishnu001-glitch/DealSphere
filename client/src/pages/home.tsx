@@ -146,20 +146,12 @@ export default function Home() {
     console.error('Query error:', error);
   }
 
-  // Scroll handler for infinite loading
+  // Scroll handler for infinite loading - disabled to prevent background fetching
+  // The Latest Deals section has its own pagination with a max limit
+  // We only fetch more from API when user explicitly clicks "Load More"
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
-      const scrollThreshold = document.documentElement.offsetHeight - 1000; // Load when 1000px from bottom
-      
-      if (scrollPosition >= scrollThreshold && !isFetchingNextPage && hasNextPage) {
-        fetchNextPage();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [fetchNextPage, isFetchingNextPage, hasNextPage]);
+    // No automatic background fetching - user controls loading via "Load More" button
+  }, []);
 
   // Get unique filter options from actual deals data
   const availableCategories = [...new Set(deals.map((deal: Deal) => deal.category))];
