@@ -250,13 +250,15 @@ export default function Home() {
   const latestFilteredDeals = filteredDeals
     .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '');
   
-  // Always use pagination for Latest Deals - start with 10, load 10 more each time
-  const latestDealsLimit = 10 + (latestDealsPage - 1) * 10;
+  // Maximum 50 deals to ensure footer is reachable, then show "Load More" button
+  const LATEST_DEALS_MAX = 50;
+  const latestDealsLimit = Math.min(10 + (latestDealsPage - 1) * 10, LATEST_DEALS_MAX);
   const latestDeals = latestFilteredDeals.slice(0, latestDealsLimit);
+  const hasMoreLatestDeals = latestFilteredDeals.length > LATEST_DEALS_MAX;
 
 
 
-  // Infinite scroll effect - always enabled for Latest Deals, optional for Top/Hot sections
+  // Infinite scroll effect - always enabled for Latest Deals (up to max limit), optional for Top/Hot sections
   React.useEffect(() => {
     const handleSectionScroll = () => {
       const footer = document.querySelector('footer');
@@ -272,8 +274,8 @@ export default function Home() {
           loadMoreDeals('top');
         } else if (showAllHot && hotDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'hot' && d.image_url).length) {
           loadMoreDeals('hot');
-        } else if (latestDeals.length < latestFilteredDeals.length) {
-          // Latest Deals always uses infinite scroll (no showAllLatest check)
+        } else if (latestDeals.length < Math.min(latestFilteredDeals.length, LATEST_DEALS_MAX)) {
+          // Latest Deals uses infinite scroll up to max limit
           loadMoreDeals('latest');
         }
       }
@@ -607,7 +609,7 @@ export default function Home() {
           </div>
           
           {/* Loading indicator for Latest Deals infinite scroll */}
-          {loadingMore && latestDeals.length < latestFilteredDeals.length && (
+          {loadingMore && latestDeals.length < Math.min(latestFilteredDeals.length, LATEST_DEALS_MAX) && (
             <div className="text-center py-8">
               <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -616,8 +618,23 @@ export default function Home() {
             </div>
           )}
           
-          {/* End of Latest Deals indicator */}
-          {latestDeals.length >= latestFilteredDeals.length && latestDeals.length > 0 && (
+          {/* Load More button when max limit reached but more deals available */}
+          {latestDeals.length >= LATEST_DEALS_MAX && hasMoreLatestDeals && (
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm mb-4">
+                Showing {LATEST_DEALS_MAX} of {latestFilteredDeals.length} deals
+              </p>
+              <Button 
+                onClick={() => setLatestDealsPage(prev => prev + 1)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Load More Deals
+              </Button>
+            </div>
+          )}
+          
+          {/* End of Latest Deals indicator - only show when all deals are displayed */}
+          {latestDeals.length >= latestFilteredDeals.length && latestDeals.length > 0 && !hasMoreLatestDeals && (
             <div className="text-center py-6 text-gray-500 text-sm">
               You've seen all {latestFilteredDeals.length} latest deals
             </div>
