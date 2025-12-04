@@ -95,8 +95,8 @@ export default function Home() {
     initialPageParam: 0,
     queryFn: async ({ pageParam }: { pageParam: number }) => {
       const url = new URL('/api/deals', window.location.origin);
-      // Load 200 deals per page to ensure all sections have enough content
-      url.searchParams.set('limit', '200');
+      // Load 100 deals per page to ensure all sections have enough content
+      url.searchParams.set('limit', '100');
       url.searchParams.set('offset', pageParam.toString());
       
       const response = await fetch(url.toString());
@@ -131,10 +131,10 @@ export default function Home() {
       })) as Deal[];
     },
     getNextPageParam: (lastPage: Deal[], allPages: Deal[][]) => {
-      // If we got less than 200 deals, we've reached the end
-      if (lastPage.length < 200) return undefined;
+      // If we got less than 100 deals, we've reached the end
+      if (lastPage.length < 100) return undefined;
       // Return the offset for the next page
-      return allPages.length * 200;
+      return allPages.length * 100;
     },
     refetchInterval: 30000,
     staleTime: 10000,
