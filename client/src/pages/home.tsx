@@ -242,8 +242,8 @@ export default function Home() {
   const latestFilteredDeals = filteredDeals
     .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '');
   
-  // Maximum 50 deals to ensure footer is reachable, then show "Load More" button
-  const LATEST_DEALS_MAX = 50;
+  // Maximum 100 deals to ensure footer is reachable, then show "Load More" button
+  const LATEST_DEALS_MAX = 100;
   const latestDealsLimit = Math.min(10 + (latestDealsPage - 1) * 10, LATEST_DEALS_MAX);
   const latestDeals = latestFilteredDeals.slice(0, latestDealsLimit);
   const hasMoreLatestDeals = latestFilteredDeals.length > LATEST_DEALS_MAX;
