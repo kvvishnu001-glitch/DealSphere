@@ -243,15 +243,18 @@ export default function Home() {
   const latestFilteredDeals = filteredDeals
     .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '');
   
-  // Maximum 100 deals to ensure footer is reachable, then show "Load More" button
-  const LATEST_DEALS_MAX = 100;
-  const latestDealsLimit = Math.min(10 + (latestDealsPage - 1) * 10, LATEST_DEALS_MAX);
+  // Show 20 deals initially, then 20 more each time "Load More" is clicked
+  const LATEST_DEALS_PER_PAGE = 20;
+  const latestDealsLimit = latestDealsPage * LATEST_DEALS_PER_PAGE;
   const latestDeals = latestFilteredDeals.slice(0, latestDealsLimit);
-  const hasMoreLatestDeals = latestFilteredDeals.length > LATEST_DEALS_MAX;
+  
+  // Check if there are more deals to show (either locally or from API)
+  const hasMoreLocalDeals = latestDeals.length < latestFilteredDeals.length;
+  const canFetchMore = hasNextPage;
 
 
 
-  // Infinite scroll effect - always enabled for Latest Deals (up to max limit), optional for Top/Hot sections
+  // Infinite scroll effect - only for Top/Hot "View All" sections, Latest Deals uses button
   React.useEffect(() => {
     const handleSectionScroll = () => {
       const footer = document.querySelector('footer');
@@ -267,17 +270,14 @@ export default function Home() {
           loadMoreDeals('top');
         } else if (showAllHot && hotDeals.length < filteredDeals.filter((d: Deal) => d.deal_type === 'hot' && d.image_url).length) {
           loadMoreDeals('hot');
-        } else if (latestDeals.length < Math.min(latestFilteredDeals.length, LATEST_DEALS_MAX)) {
-          // Latest Deals uses infinite scroll up to max limit
-          loadMoreDeals('latest');
         }
+        // Note: Latest Deals does NOT auto-scroll load - uses "Load More" button only
       }
     };
 
-    // Always add scroll listener for Latest Deals infinite scroll
     window.addEventListener('scroll', handleSectionScroll);
     return () => window.removeEventListener('scroll', handleSectionScroll);
-  }, [showAllTop, showAllHot, topDeals.length, hotDeals.length, latestDeals.length, latestFilteredDeals.length, filteredDeals, loadingMore]);
+  }, [showAllTop, showAllHot, topDeals.length, hotDeals.length, filteredDeals, loadingMore]);
   
 
   const clearFilters = () => {
@@ -601,26 +601,22 @@ export default function Home() {
             )}
           </div>
           
-          {/* Loading indicator for Latest Deals infinite scroll */}
-          {loadingMore && latestDeals.length < Math.min(latestFilteredDeals.length, LATEST_DEALS_MAX) && (
+          {/* Load More button - shows 20 more deals each click */}
+          {(hasMoreLocalDeals || canFetchMore) && latestDeals.length > 0 && (
             <div className="text-center py-8">
-              <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                Loading more deals...
-              </div>
-            </div>
-          )}
-          
-          {/* Load More button - shows when we've displayed all loaded deals but more exist in database */}
-          {latestDeals.length >= latestFilteredDeals.length && hasNextPage && (
-            <div className="text-center py-8">
-              <p className="text-gray-500 text-sm mb-4">
-                Showing {latestDeals.length} deals
-              </p>
               <Button 
-                onClick={() => fetchNextPage()}
+                onClick={() => {
+                  // If we have more local deals to show, just increment the page
+                  if (hasMoreLocalDeals) {
+                    setLatestDealsPage(prev => prev + 1);
+                  } else if (canFetchMore) {
+                    // If we've shown all local deals but API has more, fetch and increment
+                    fetchNextPage();
+                    setLatestDealsPage(prev => prev + 1);
+                  }
+                }}
                 disabled={isFetchingNextPage}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
               >
                 {isFetchingNextPage ? (
                   <>
@@ -628,16 +624,16 @@ export default function Home() {
                     Loading...
                   </>
                 ) : (
-                  'Load More Deals'
+                  `Load More Deals (${latestFilteredDeals.length - latestDeals.length} remaining)`
                 )}
               </Button>
             </div>
           )}
           
-          {/* End of Latest Deals indicator - only show when all deals from database are displayed */}
-          {latestDeals.length >= latestFilteredDeals.length && !hasNextPage && latestDeals.length > 0 && (
+          {/* End of Latest Deals indicator - only show when all deals are displayed */}
+          {!hasMoreLocalDeals && !canFetchMore && latestDeals.length > 0 && (
             <div className="text-center py-6 text-gray-500 text-sm">
-              You've seen all {latestFilteredDeals.length} latest deals
+              You've seen all {latestDeals.length} latest deals
             </div>
           )}
         </section>
