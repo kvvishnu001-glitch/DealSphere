@@ -4,12 +4,12 @@ FROM node:18-alpine as frontend-builder
 # Build frontend
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci 
 COPY client/ ./client/
-COPY vite.config.ts ./
-COPY tailwind.config.ts ./
+#COPY vite.config.ts ./
+#COPY tailwind.config.ts ./
 COPY postcss.config.js ./
-COPY tsconfig.json ./
+#COPY tsconfig.json ./
 RUN npm run build
 
 # Python backend
@@ -34,13 +34,14 @@ COPY python_backend/ ./python_backend/
 COPY pyproject.toml ./
 COPY uv.lock ./
 RUN pip install -U pip
-RUN pip install fastapi uvicorn[standard] sqlalchemy asyncpg psycopg2-binary python-dotenv pydantic alembic
+COPY python_backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy built frontend from previous stage
 COPY --from=frontend-builder /app/client/dist ./client/dist
 
 # Copy shared schema
-COPY shared/ ./shared/
+#COPY shared/ ./shared/
 
 # Change to python_backend directory
 WORKDIR /app/python_backend
@@ -53,4 +54,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/api/health || exit 1
 
 # Run the application
-CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
