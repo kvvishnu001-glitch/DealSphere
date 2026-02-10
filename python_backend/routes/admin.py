@@ -193,19 +193,21 @@ async def get_admin_metrics(
 ):
     check_permission(current_admin, "view_analytics")
     
-    total_deals_result = await db.execute(select(func.count(Deal.id)))
+    active_filter = Deal.status != "deleted"
+    
+    total_deals_result = await db.execute(select(func.count(Deal.id)).where(active_filter))
     total_deals = total_deals_result.scalar() or 0
     
-    ai_approved_result = await db.execute(select(func.count(Deal.id)).where(Deal.is_ai_approved == True))
+    ai_approved_result = await db.execute(select(func.count(Deal.id)).where(and_(active_filter, Deal.status == "approved", Deal.is_ai_approved == True)))
     ai_approved_deals = ai_approved_result.scalar() or 0
     
-    pending_result = await db.execute(select(func.count(Deal.id)).where(Deal.is_ai_approved == False))
+    pending_result = await db.execute(select(func.count(Deal.id)).where(and_(active_filter, Deal.status == "pending")))
     pending_deals = pending_result.scalar() or 0
     
-    clicks_result = await db.execute(select(func.sum(Deal.click_count)))
+    clicks_result = await db.execute(select(func.sum(Deal.click_count)).where(active_filter))
     total_clicks = clicks_result.scalar() or 0
     
-    shares_result = await db.execute(select(func.sum(Deal.share_count)))
+    shares_result = await db.execute(select(func.sum(Deal.share_count)).where(active_filter))
     total_shares = shares_result.scalar() or 0
     
     revenue_estimate = float(total_clicks) * 0.05
@@ -215,7 +217,7 @@ async def get_admin_metrics(
             Deal.category,
             func.count(Deal.id).label('count'),
             func.sum(Deal.click_count).label('clicks')
-        ).group_by(Deal.category).order_by(desc('count')).limit(5)
+        ).where(active_filter).group_by(Deal.category).order_by(desc('count')).limit(5)
     )
     top_categories = top_categories_result.all()
     
@@ -229,7 +231,7 @@ async def get_admin_metrics(
             Deal.store,
             func.count(Deal.id).label('count'),
             func.sum(Deal.click_count).label('clicks')
-        ).group_by(Deal.store).order_by(desc('count')).limit(5)
+        ).where(active_filter).group_by(Deal.store).order_by(desc('count')).limit(5)
     )
     top_stores = top_stores_result.all()
     
@@ -238,7 +240,7 @@ async def get_admin_metrics(
         for store in top_stores
     ]
     
-    recent_deals_result = await db.execute(select(Deal).order_by(desc(Deal.created_at)).limit(10))
+    recent_deals_result = await db.execute(select(Deal).where(active_filter).order_by(desc(Deal.created_at)).limit(10))
     recent_deals = recent_deals_result.scalars().all()
     
     recent_activity = [
