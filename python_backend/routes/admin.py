@@ -258,16 +258,54 @@ async def get_admin_metrics(
         recent_activity=recent_activity
     )
 
-@router.get("/deals", response_model=List[DealResponse])
+@router.get("/deals")
 async def get_all_deals(
-    skip: int = 0, limit: int = 50,
+    page: int = 1, per_page: int = 25,
+    search: str = "", category: str = "", deal_status: str = "",
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
     check_permission(current_admin, "manage_deals")
-    result = await db.execute(select(Deal).order_by(desc(Deal.created_at)).offset(skip).limit(limit))
+    page = max(1, page)
+    per_page = max(1, min(per_page, 100))
+    query = select(Deal)
+    count_query = select(func.count(Deal.id))
+
+    if search:
+        search_term = f"%{search}%"
+        search_filter = Deal.title.ilike(search_term) | Deal.store.ilike(search_term) | Deal.category.ilike(search_term)
+        query = query.where(search_filter)
+        count_query = count_query.where(search_filter)
+    if category:
+        query = query.where(Deal.category == category)
+        count_query = count_query.where(Deal.category == category)
+    if deal_status:
+        if deal_status == "approved":
+            status_filter = Deal.is_ai_approved == True
+        elif deal_status == "pending":
+            status_filter = (Deal.is_ai_approved == False) & (Deal.status != "rejected")
+        elif deal_status == "rejected":
+            status_filter = Deal.status == "rejected"
+        else:
+            status_filter = Deal.status == deal_status
+        query = query.where(status_filter)
+        count_query = count_query.where(status_filter)
+
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+
+    offset = (page - 1) * per_page
+    query = query.order_by(desc(Deal.created_at)).offset(offset).limit(per_page)
+    result = await db.execute(query)
     deals = result.scalars().all()
-    return deals
+
+    return {
+        "deals": [DealResponse.model_validate(d) for d in deals],
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total + per_page - 1) // per_page if total > 0 else 1
+    }
 
 @router.post("/deals", response_model=DealResponse)
 async def create_deal(

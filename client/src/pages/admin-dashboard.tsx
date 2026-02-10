@@ -9,6 +9,7 @@ export default function AdminDashboard() {
   const [filteredDeals, setFilteredDeals] = useState<any[]>([]);
   const [currentAdmin, setCurrentAdmin] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddDeal, setShowAddDeal] = useState(false);
@@ -21,6 +22,10 @@ export default function AdminDashboard() {
   const [urlCheckStatus, setUrlCheckStatus] = useState("");
   const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalDeals, setTotalDeals] = useState(0);
+  const [dealsPerPage] = useState(25);
   const [newDeal, setNewDeal] = useState({
     title: "",
     description: "",
@@ -91,9 +96,18 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   useEffect(() => {
-    filterDeals();
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, selectedCategory, statusFilter]);
+
+  useEffect(() => {
+    fetchDeals();
     setSelectedDeals(new Set());
-  }, [deals, searchTerm, selectedCategory, statusFilter]);
+  }, [currentPage, debouncedSearch, selectedCategory, statusFilter]);
 
   const fetchData = async () => {
     await Promise.all([fetchMetrics(), fetchDeals()]);
@@ -117,14 +131,23 @@ export default function AdminDashboard() {
   const fetchDeals = async () => {
     try {
       const token = localStorage.getItem("admin_token");
-      const response = await fetch("/api/admin/deals", {
+      const params = new URLSearchParams();
+      params.set("page", String(currentPage));
+      params.set("per_page", String(dealsPerPage));
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (selectedCategory !== "all") params.set("category", selectedCategory);
+      if (statusFilter !== "all") params.set("deal_status", statusFilter);
+
+      const response = await fetch(`/api/admin/deals?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
-        setDeals(data);
-        // Analyze deals for issues after fetching
-        analyzeDealIssues(data);
+        setDeals(data.deals || []);
+        setTotalPages(data.total_pages || 1);
+        setTotalDeals(data.total || 0);
+        setFilteredDeals(data.deals || []);
+        analyzeDealIssues(data.deals || []);
       }
     } catch (error) {
       console.error("Error fetching deals:", error);
@@ -203,35 +226,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const filterDeals = () => {
-    let filtered = deals;
-
-    if (searchTerm) {
-      filtered = filtered.filter(deal =>
-        deal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        deal.store.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        deal.category.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter(deal => deal.category === selectedCategory);
-    }
-
-    if (statusFilter !== "all") {
-      if (statusFilter === "approved") {
-        filtered = filtered.filter(deal => deal.is_ai_approved === true);
-      } else if (statusFilter === "pending") {
-        filtered = filtered.filter(deal => deal.is_ai_approved === false && deal.status !== "rejected");
-      } else if (statusFilter === "rejected") {
-        filtered = filtered.filter(deal => deal.status === "rejected");
-      } else if (statusFilter === "needs_review") {
-        filtered = filtered.filter(deal => dealIssues[deal.id] && dealIssues[deal.id].length > 0);
-      }
-    }
-
-    setFilteredDeals(filtered);
-  };
 
   const handleCreateDeal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1626,6 +1620,69 @@ export default function AdminDashboard() {
             ) : (
               <div style={{ backgroundColor: "white", padding: "40px", textAlign: "center", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
                 <p style={{ color: "#666", margin: 0 }}>No deals found matching your criteria.</p>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 0 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px", padding: "12px 16px", backgroundColor: "white", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", flexWrap: "wrap", gap: "12px" }}>
+                <div style={{ fontSize: "14px", color: "#666" }}>
+                  Showing {filteredDeals.length > 0 ? ((currentPage - 1) * dealsPerPage + 1) : 0}–{Math.min(currentPage * dealsPerPage, totalDeals)} of {totalDeals} deals
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    style={{ padding: "6px 10px", border: "1px solid #dee2e6", borderRadius: "4px", backgroundColor: currentPage === 1 ? "#f8f9fa" : "white", cursor: currentPage === 1 ? "not-allowed" : "pointer", fontSize: "13px", color: currentPage === 1 ? "#adb5bd" : "#333" }}
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    style={{ padding: "6px 10px", border: "1px solid #dee2e6", borderRadius: "4px", backgroundColor: currentPage === 1 ? "#f8f9fa" : "white", cursor: currentPage === 1 ? "not-allowed" : "pointer", fontSize: "13px", color: currentPage === 1 ? "#adb5bd" : "#333" }}
+                  >
+                    Prev
+                  </button>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        style={{ padding: "6px 12px", border: "1px solid #dee2e6", borderRadius: "4px", backgroundColor: currentPage === pageNum ? "#007bff" : "white", color: currentPage === pageNum ? "white" : "#333", cursor: "pointer", fontSize: "13px", fontWeight: currentPage === pageNum ? "bold" : "normal" }}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    style={{ padding: "6px 10px", border: "1px solid #dee2e6", borderRadius: "4px", backgroundColor: currentPage === totalPages ? "#f8f9fa" : "white", cursor: currentPage === totalPages ? "not-allowed" : "pointer", fontSize: "13px", color: currentPage === totalPages ? "#adb5bd" : "#333" }}
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    style={{ padding: "6px 10px", border: "1px solid #dee2e6", borderRadius: "4px", backgroundColor: currentPage === totalPages ? "#f8f9fa" : "white", cursor: currentPage === totalPages ? "not-allowed" : "pointer", fontSize: "13px", color: currentPage === totalPages ? "#adb5bd" : "#333" }}
+                  >
+                    Last
+                  </button>
+                </div>
+                <div style={{ fontSize: "14px", color: "#666" }}>
+                  Page {currentPage} of {totalPages}
+                </div>
               </div>
             )}
           </div>
