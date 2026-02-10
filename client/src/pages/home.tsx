@@ -81,6 +81,19 @@ export default function Home() {
     refetchInterval: 30000,
   });
 
+  // Fetch total latest deals count from database (not affected by pagination)
+  const { data: latestDealsTotal } = useQuery({
+    queryKey: ['/api/deals/latest-count'],
+    queryFn: async () => {
+      const response = await fetch('/api/deals/latest-count');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    refetchInterval: 30000,
+  });
+
   // Fetch deals with infinite scroll pagination
   const {
     data,
@@ -241,7 +254,7 @@ export default function Home() {
   
   // Latest Deals: show filtered latest/regular deals with automatic pagination
   const latestFilteredDeals = filteredDeals
-    .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular') && deal.image_url && deal.image_url.trim() !== '');
+    .filter((deal: Deal) => (deal.deal_type === 'latest' || deal.deal_type === 'regular' || !deal.deal_type || deal.deal_type === '') && deal.image_url && deal.image_url.trim() !== '');
   
   // Show 20 deals initially, then 20 more each time "Load More" is clicked
   const LATEST_DEALS_PER_PAGE = 20;
@@ -586,7 +599,7 @@ export default function Home() {
             </h2>
             <div className="flex items-center gap-3">
               <span className="text-xs sm:text-sm text-gray-500">
-                Showing {latestDeals.length} of {latestFilteredDeals.length} deals
+                Showing {latestDeals.length.toLocaleString()} of {(latestDealsTotal?.count || latestFilteredDeals.length).toLocaleString()} deals
               </span>
             </div>
           </div>
@@ -624,7 +637,7 @@ export default function Home() {
                     Loading...
                   </>
                 ) : (
-                  `Load More Deals (${latestFilteredDeals.length - latestDeals.length} remaining)`
+                  `Load More Deals (${((latestDealsTotal?.count || latestFilteredDeals.length) - latestDeals.length).toLocaleString()} remaining)`
                 )}
               </Button>
             </div>
@@ -633,7 +646,7 @@ export default function Home() {
           {/* End of Latest Deals indicator - only show when all deals are displayed */}
           {!hasMoreLocalDeals && !canFetchMore && latestDeals.length > 0 && (
             <div className="text-center py-6 text-gray-500 text-sm">
-              You've seen all {latestDeals.length} latest deals
+              You've seen all {(latestDealsTotal?.count || latestDeals.length).toLocaleString()} latest deals
             </div>
           )}
         </section>

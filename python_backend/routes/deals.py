@@ -46,6 +46,27 @@ async def get_deals_count(db: AsyncSession = Depends(get_db)):
     count = active_approved_result.scalar() or 0
     return {"count": count}
 
+@router.get("/deals/latest-count")
+async def get_latest_deals_count(db: AsyncSession = Depends(get_db)):
+    """Get total count of latest/regular deals - publicly accessible"""
+    from sqlalchemy import or_
+    result = await db.execute(
+        select(func.count(Deal.id)).where(
+            Deal.is_active == True,
+            Deal.is_ai_approved == True,
+            or_(Deal.deal_type == 'latest', Deal.deal_type == 'regular', Deal.deal_type.is_(None), Deal.deal_type == ''),
+            Deal.title.isnot(None),
+            Deal.original_price.isnot(None),
+            Deal.sale_price.isnot(None),
+            Deal.store.isnot(None),
+            Deal.category.isnot(None),
+            Deal.image_url.isnot(None),
+            Deal.image_url != ''
+        )
+    )
+    count = result.scalar() or 0
+    return {"count": count}
+
 @router.get("/deals/{deal_id}", response_model=DealResponse)
 async def get_deal(deal_id: str, db: AsyncSession = Depends(get_db)):
     """Get a specific deal by ID - publicly accessible"""
