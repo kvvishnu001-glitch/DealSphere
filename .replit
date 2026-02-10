@@ -46,3 +46,8 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_openai:1.0.0", "javascript_object_storage:1.0.0", "javascript_database:1.0.0", "javascript_auth_all_persistance:1.0.0"]
+
+[userenv]
+
+[userenv.shared]
+JWT_SECRET_KEY = "da67922319772b77849e450b78edab3fa52937eba0c503040c0d0df341eee55a"

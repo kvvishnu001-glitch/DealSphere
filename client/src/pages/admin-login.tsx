@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,16 +21,11 @@ export default function AdminLogin() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    console.log('AdminLogin render - isLoggedIn:', !!localStorage.getItem('admin_token'));
-    // Check if already logged in
     const token = localStorage.getItem('admin_token');
     if (token) {
       setLocation('/admin/dashboard');
       return;
     }
-    
-    console.log('AdminLogin mounted - clearing localStorage');
-    // Clear any old tokens on mount
     localStorage.removeItem('admin_token');
   }, [setLocation]);
 
@@ -118,11 +113,6 @@ export default function AdminLogin() {
               </Button>
             </form>
 
-            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <h4 className="font-semibold text-sm text-blue-800 dark:text-blue-200">Demo Credentials:</h4>
-              <p className="text-sm text-blue-600 dark:text-blue-300">Username: admin</p>
-              <p className="text-sm text-blue-600 dark:text-blue-300">Password: admin123</p>
-            </div>
           </CardContent>
         </Card>
 

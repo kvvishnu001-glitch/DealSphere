@@ -6,19 +6,82 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import os
+import time
+from collections import defaultdict
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-# Simple imports without relative paths
 from database import get_db, init_database
 from models import Deal as DealModel
 from routes.admin import router as admin_router
 
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        if request.url.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        return response
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, login_limit: int = 5, login_window: int = 300,
+                 api_limit: int = 100, api_window: int = 60):
+        super().__init__(app)
+        self.login_limit = login_limit
+        self.login_window = login_window
+        self.api_limit = api_limit
+        self.api_window = api_window
+        self.login_attempts = defaultdict(list)
+        self.api_requests = defaultdict(list)
+
+    def _get_client_ip(self, request: Request) -> str:
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+        return request.client.host if request.client else "unknown"
+
+    def _clean_old_entries(self, entries: list, window: int):
+        now = time.time()
+        while entries and entries[0] < now - window:
+            entries.pop(0)
+
+    async def dispatch(self, request: Request, call_next):
+        client_ip = self._get_client_ip(request)
+        now = time.time()
+
+        if request.url.path == "/api/admin/login" and request.method == "POST":
+            self._clean_old_entries(self.login_attempts[client_ip], self.login_window)
+            if len(self.login_attempts[client_ip]) >= self.login_limit:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Too many login attempts. Please try again later."}
+                )
+            self.login_attempts[client_ip].append(now)
+
+        elif request.url.path.startswith("/api/") and request.url.path != "/api/health":
+            self._clean_old_entries(self.api_requests[client_ip], self.api_window)
+            if len(self.api_requests[client_ip]) >= self.api_limit:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Rate limit exceeded. Please slow down."}
+                )
+            self.api_requests[client_ip].append(now)
+
+        response = await call_next(request)
+        return response
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database
     await init_database()
     yield
 
@@ -26,16 +89,24 @@ app = FastAPI(
     title="DealSphere API",
     description="AI-powered deals and coupons platform",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
 )
 
-# CORS middleware
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware)
+
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "").split(",")
+ALLOWED_ORIGINS = [o.strip() for o in ALLOWED_ORIGINS if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS else ["*"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Include routers
@@ -252,13 +323,17 @@ if frontend_dist_path.exists():
     async def serve_admin():
         return FileResponse("../client/dist/index.html")
     
+    @app.get("/docs")
+    @app.get("/redoc")
+    @app.get("/openapi.json")
+    async def block_docs():
+        raise HTTPException(status_code=404, detail="Not found")
+
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
-        # API routes should not be caught here
         if full_path.startswith("api/") or full_path.startswith("s/"):
             raise HTTPException(status_code=404, detail="Not found")
         
-        # Serve index.html for all frontend routes
         return FileResponse("../client/dist/index.html")
 else:
     @app.get("/")

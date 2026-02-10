@@ -10,8 +10,11 @@ from sqlalchemy import select
 from models import AdminUser
 from database import get_db
 
-# Security
-SECRET_KEY = "your-secret-key-here-change-in-production"  # Change this in production
+import os
+
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY environment variable must be set")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
