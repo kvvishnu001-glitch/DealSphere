@@ -3,7 +3,7 @@ Affiliate Network Management API Routes
 Admin endpoints for configuring and managing affiliate networks
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert, update, delete
 from typing import List, Dict, Any
@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 
 from database import get_db
-from admin_auth import get_current_admin
+from admin_auth import get_current_admin, check_permission, log_audit
 from models import (
     AdminUser, AffiliateNetwork, AffiliateConfig, ComplianceLog,
     AffiliateNetworkCreate, AffiliateConfigCreate, AffiliateConfigResponse
@@ -26,6 +26,7 @@ async def get_all_networks(
     db: AsyncSession = Depends(get_db)
 ) -> List[Dict[str, Any]]:
     """Get all available affiliate networks with their configurations"""
+    check_permission(current_admin, "manage_affiliates")
     
     # Get network configurations
     result = await db.execute(select(AffiliateConfig))
@@ -61,6 +62,7 @@ async def get_network_config(
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """Get configuration for a specific network"""
+    check_permission(current_admin, "manage_affiliates")
     
     result = await db.execute(
         select(AffiliateConfig).where(AffiliateConfig.network_id == network_id)
@@ -89,10 +91,12 @@ async def get_network_config(
 async def configure_network(
     network_id: str,
     config_data: Dict[str, Any],
+    request: Request,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, str]:
     """Configure or update an affiliate network"""
+    check_permission(current_admin, "manage_affiliates")
     
     try:
         async with AffiliateNetworkManager() as manager:
@@ -114,6 +118,7 @@ async def configure_network(
             # Save configuration
             await manager.save_network_config(network_id, config_data, db)
             
+        await log_audit(db, current_admin, "configure_network", "affiliate_network", network_id, {"network": network_id}, ip_address=request.client.host if request.client else None)
         return {"status": "success", "message": f"{network_info['name']} configured successfully"}
     
     except HTTPException:
@@ -125,10 +130,12 @@ async def configure_network(
 @router.post("/networks/{network_id}/test")
 async def test_network_connection(
     network_id: str,
+    request: Request,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """Test connection to an affiliate network"""
+    check_permission(current_admin, "manage_affiliates")
     
     try:
         async with AffiliateNetworkManager() as manager:
@@ -183,10 +190,12 @@ async def test_network_connection(
 async def toggle_network_status(
     network_id: str,
     enable: bool,
+    request: Request,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, str]:
     """Enable or disable an affiliate network"""
+    check_permission(current_admin, "manage_affiliates")
     
     result = await db.execute(
         select(AffiliateConfig).where(AffiliateConfig.network_id == network_id)
@@ -204,21 +213,25 @@ async def toggle_network_status(
     await db.commit()
     
     status = "enabled" if enable else "disabled"
+    await log_audit(db, current_admin, "toggle_network", "affiliate_network", network_id, {"enable": enable}, ip_address=request.client.host if request.client else None)
     return {"status": "success", "message": f"Network {status} successfully"}
 
 @router.delete("/networks/{network_id}")
 async def delete_network_config(
     network_id: str,
+    request: Request,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, str]:
     """Delete network configuration"""
+    check_permission(current_admin, "manage_affiliates")
     
     await db.execute(
         delete(AffiliateConfig).where(AffiliateConfig.network_id == network_id)
     )
     await db.commit()
     
+    await log_audit(db, current_admin, "delete_network_config", "affiliate_network", network_id, ip_address=request.client.host if request.client else None)
     return {"status": "success", "message": "Network configuration deleted"}
 
 @router.get("/compliance/{network_id}")
@@ -227,6 +240,7 @@ async def get_compliance_info(
     current_admin: AdminUser = Depends(get_current_admin)
 ) -> Dict[str, Any]:
     """Get compliance information for a network"""
+    check_permission(current_admin, "manage_affiliates")
     
     async with AffiliateNetworkManager() as manager:
         if network_id not in manager.networks:
@@ -250,6 +264,7 @@ async def get_compliance_logs(
     db: AsyncSession = Depends(get_db)
 ) -> List[Dict[str, Any]]:
     """Get recent compliance check logs"""
+    check_permission(current_admin, "manage_affiliates")
     
     result = await db.execute(
         select(ComplianceLog)
@@ -273,9 +288,12 @@ async def get_compliance_logs(
 @router.post("/bulk-configure")
 async def bulk_configure_networks(
     configurations: Dict[str, Dict[str, Any]],
-    current_admin: AdminUser = Depends(get_current_admin)
+    request: Request,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """Configure multiple networks at once"""
+    check_permission(current_admin, "manage_affiliates")
     
     results = {}
     async with AffiliateNetworkManager() as manager:
@@ -289,6 +307,7 @@ async def bulk_configure_networks(
             except Exception as e:
                 results[network_id] = {"status": "error", "message": str(e)}
     
+    await log_audit(db, current_admin, "bulk_configure_networks", "affiliate_network", details={"networks": list(configurations.keys())}, ip_address=request.client.host if request.client else None)
     return {
         "overall_status": "completed",
         "results": results,

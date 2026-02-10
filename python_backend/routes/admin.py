@@ -1,41 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, desc, select
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 import uuid
 
 from database import get_db
 from models import (
-    Deal, AdminUser, DealClick, SocialShare,
+    Deal, AdminUser, DealClick, SocialShare, AuditLog,
     AdminUserCreate, AdminUserLogin, AdminUserResponse, AdminMetrics,
-    DealCreate, DealResponse
+    AdminUserUpdate, AuditLogResponse,
+    DealCreate, DealResponse, AVAILABLE_PERMISSIONS
 )
 from admin_auth import (
     authenticate_admin, create_access_token, get_current_admin,
-    create_admin_user
+    create_admin_user, check_permission, log_audit, hash_password
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-@router.post("/register", response_model=AdminUserResponse)
-async def register_admin(
-    admin_data: AdminUserCreate,
-    current_admin: AdminUser = Depends(get_current_admin),
-    db: AsyncSession = Depends(get_db)
-):
-    """Register a new admin user - requires existing admin authentication"""
-    try:
-        admin = await create_admin_user(admin_data.username, admin_data.email, admin_data.password, db)
-        return admin
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Registration failed")
-
 @router.post("/login")
-async def login_admin(login_data: AdminUserLogin, db: AsyncSession = Depends(get_db)):
-    """Admin login endpoint"""
+async def login_admin(request: Request, login_data: AdminUserLogin, db: AsyncSession = Depends(get_db)):
     admin = await authenticate_admin(login_data.username, login_data.password, db)
     if not admin:
         raise HTTPException(
@@ -44,6 +29,7 @@ async def login_admin(login_data: AdminUserLogin, db: AsyncSession = Depends(get
         )
     
     access_token = create_access_token(data={"sub": admin.id})
+    await log_audit(db, admin, "login", "auth", ip_address=request.client.host if request.client else None)
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -52,15 +38,159 @@ async def login_admin(login_data: AdminUserLogin, db: AsyncSession = Depends(get
 
 @router.get("/me", response_model=AdminUserResponse)
 async def get_current_admin_info(current_admin: AdminUser = Depends(get_current_admin)):
-    """Get current admin user information"""
     return current_admin
+
+@router.get("/permissions")
+async def get_available_permissions(current_admin: AdminUser = Depends(get_current_admin)):
+    return {"permissions": AVAILABLE_PERMISSIONS}
+
+@router.get("/users", response_model=List[AdminUserResponse])
+async def list_users(
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_users")
+    result = await db.execute(select(AdminUser).order_by(desc(AdminUser.created_at)))
+    users = result.scalars().all()
+    return users
+
+@router.post("/users", response_model=AdminUserResponse)
+async def create_user(
+    request: Request,
+    user_data: AdminUserCreate,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_users")
+    
+    valid_perms = [p for p in user_data.permissions if p in AVAILABLE_PERMISSIONS]
+    
+    admin = await create_admin_user(
+        username=user_data.username,
+        email=user_data.email,
+        password=user_data.password,
+        db=db,
+        role=user_data.role,
+        permissions=valid_perms,
+        created_by=current_admin.id
+    )
+    
+    await log_audit(
+        db, current_admin, "create_user", "user", admin.id,
+        {"username": admin.username, "role": admin.role, "permissions": valid_perms},
+        ip_address=request.client.host if request.client else None
+    )
+    
+    return admin
+
+@router.put("/users/{user_id}", response_model=AdminUserResponse)
+async def update_user(
+    user_id: str,
+    request: Request,
+    user_data: AdminUserUpdate,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_users")
+    
+    result = await db.execute(select(AdminUser).where(AdminUser.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.role == 'super_admin' and current_admin.role != 'super_admin':
+        raise HTTPException(status_code=403, detail="Cannot modify super admin")
+    
+    changes = {}
+    if user_data.email is not None:
+        user.email = user_data.email
+        changes["email"] = user_data.email
+    if user_data.role is not None:
+        if user_data.role == 'super_admin' and current_admin.role != 'super_admin':
+            raise HTTPException(status_code=403, detail="Only super admins can grant super admin role")
+        user.role = user_data.role
+        changes["role"] = user_data.role
+    if user_data.permissions is not None:
+        valid_perms = [p for p in user_data.permissions if p in AVAILABLE_PERMISSIONS]
+        user.permissions = valid_perms
+        changes["permissions"] = valid_perms
+    if user_data.is_active is not None:
+        user.is_active = user_data.is_active
+        changes["is_active"] = user_data.is_active
+    
+    user.updated_at = datetime.utcnow()
+    await db.commit()
+    await db.refresh(user)
+    
+    await log_audit(
+        db, current_admin, "update_user", "user", user_id,
+        {"username": user.username, "changes": changes},
+        ip_address=request.client.host if request.client else None
+    )
+    
+    return user
+
+@router.patch("/users/{user_id}/toggle-active")
+async def toggle_user_active(
+    user_id: str,
+    request: Request,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_users")
+    
+    if user_id == current_admin.id:
+        raise HTTPException(status_code=400, detail="Cannot disable your own account")
+    
+    result = await db.execute(select(AdminUser).where(AdminUser.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.role == 'super_admin' and current_admin.role != 'super_admin':
+        raise HTTPException(status_code=403, detail="Cannot modify super admin")
+    
+    user.is_active = not user.is_active
+    user.updated_at = datetime.utcnow()
+    await db.commit()
+    
+    action = "enable_user" if user.is_active else "disable_user"
+    await log_audit(
+        db, current_admin, action, "user", user_id,
+        {"username": user.username, "is_active": user.is_active},
+        ip_address=request.client.host if request.client else None
+    )
+    
+    return {"message": f"User {'enabled' if user.is_active else 'disabled'}", "is_active": user.is_active}
+
+@router.get("/audit-logs", response_model=List[AuditLogResponse])
+async def get_audit_logs(
+    skip: int = 0,
+    limit: int = 50,
+    admin_id: Optional[str] = None,
+    action: Optional[str] = None,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_users")
+    
+    query = select(AuditLog)
+    if admin_id:
+        query = query.where(AuditLog.admin_id == admin_id)
+    if action:
+        query = query.where(AuditLog.action == action)
+    
+    query = query.order_by(desc(AuditLog.created_at)).offset(skip).limit(limit)
+    result = await db.execute(query)
+    logs = result.scalars().all()
+    return logs
 
 @router.get("/metrics", response_model=AdminMetrics)
 async def get_admin_metrics(
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get admin dashboard metrics"""
+    check_permission(current_admin, "view_analytics")
     
     total_deals_result = await db.execute(select(func.count(Deal.id)))
     total_deals = total_deals_result.scalar() or 0
@@ -89,11 +219,7 @@ async def get_admin_metrics(
     top_categories = top_categories_result.all()
     
     top_categories_list = [
-        {
-            "category": cat.category,
-            "deals_count": cat.count,
-            "clicks": cat.clicks or 0
-        }
+        {"category": cat.category, "deals_count": cat.count, "clicks": cat.clicks or 0}
         for cat in top_categories
     ]
     
@@ -107,11 +233,7 @@ async def get_admin_metrics(
     top_stores = top_stores_result.all()
     
     top_stores_list = [
-        {
-            "store": store.store,
-            "deals_count": store.count,
-            "clicks": store.clicks or 0
-        }
+        {"store": store.store, "deals_count": store.count, "clicks": store.clicks or 0}
         for store in top_stores
     ]
     
@@ -120,66 +242,58 @@ async def get_admin_metrics(
     
     recent_activity = [
         {
-            "id": deal.id,
-            "title": deal.title,
-            "store": deal.store,
-            "category": deal.category,
-            "created_at": deal.created_at.isoformat(),
-            "clicks": deal.click_count,
-            "ai_approved": deal.is_ai_approved
+            "id": deal.id, "title": deal.title, "store": deal.store,
+            "category": deal.category, "created_at": deal.created_at.isoformat(),
+            "clicks": deal.click_count, "ai_approved": deal.is_ai_approved
         }
         for deal in recent_deals
     ]
     
     return AdminMetrics(
-        total_deals=total_deals,
-        ai_approved_deals=ai_approved_deals,
-        pending_deals=pending_deals,
-        total_clicks=total_clicks,
-        total_shares=total_shares,
-        revenue_estimate=revenue_estimate,
-        top_categories=top_categories_list,
-        top_stores=top_stores_list,
+        total_deals=total_deals, ai_approved_deals=ai_approved_deals,
+        pending_deals=pending_deals, total_clicks=total_clicks,
+        total_shares=total_shares, revenue_estimate=revenue_estimate,
+        top_categories=top_categories_list, top_stores=top_stores_list,
         recent_activity=recent_activity
     )
 
 @router.get("/deals", response_model=List[DealResponse])
 async def get_all_deals(
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = 0, limit: int = 50,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get all deals for admin management"""
+    check_permission(current_admin, "manage_deals")
     result = await db.execute(select(Deal).order_by(desc(Deal.created_at)).offset(skip).limit(limit))
     deals = result.scalars().all()
     return deals
 
 @router.post("/deals", response_model=DealResponse)
 async def create_deal(
-    deal_data: DealCreate,
+    request: Request, deal_data: DealCreate,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Create a new deal"""
-    deal = Deal(
-        id=str(uuid.uuid4()),
-        **deal_data.model_dump()
-    )
-    
+    check_permission(current_admin, "manage_deals")
+    deal = Deal(id=str(uuid.uuid4()), **deal_data.model_dump())
     db.add(deal)
     await db.commit()
     await db.refresh(deal)
+    
+    await log_audit(
+        db, current_admin, "create_deal", "deal", deal.id,
+        {"title": deal.title, "store": deal.store},
+        ip_address=request.client.host if request.client else None
+    )
     return deal
 
 @router.put("/deals/{deal_id}", response_model=DealResponse)
 async def update_deal(
-    deal_id: str,
-    deal_data: DealCreate,
+    deal_id: str, request: Request, deal_data: DealCreate,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Update an existing deal"""
+    check_permission(current_admin, "manage_deals")
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
@@ -187,19 +301,24 @@ async def update_deal(
     
     for field, value in deal_data.model_dump().items():
         setattr(deal, field, value)
-    
     deal.updated_at = datetime.utcnow()
     await db.commit()
     await db.refresh(deal)
+    
+    await log_audit(
+        db, current_admin, "update_deal", "deal", deal_id,
+        {"title": deal.title},
+        ip_address=request.client.host if request.client else None
+    )
     return deal
 
 @router.delete("/deals/{deal_id}")
 async def delete_deal(
-    deal_id: str,
+    deal_id: str, request: Request,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Delete a deal - soft delete, removes from public immediately"""
+    check_permission(current_admin, "manage_deals")
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
@@ -209,17 +328,22 @@ async def delete_deal(
     deal.is_active = False
     deal.deleted_at = datetime.utcnow()
     deal.updated_at = datetime.utcnow()
-    
     await db.commit()
+    
+    await log_audit(
+        db, current_admin, "delete_deal", "deal", deal_id,
+        {"title": deal.title},
+        ip_address=request.client.host if request.client else None
+    )
     return {"message": "Deal deleted and removed from website"}
 
 @router.patch("/deals/{deal_id}/approve")
 async def approve_deal(
-    deal_id: str,
+    deal_id: str, request: Request,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Approve a deal - makes it live on public website"""
+    check_permission(current_admin, "approve_deals")
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
@@ -229,17 +353,22 @@ async def approve_deal(
     deal.status = 'approved'
     deal.is_active = True
     deal.updated_at = datetime.utcnow()
-    
     await db.commit()
+    
+    await log_audit(
+        db, current_admin, "approve_deal", "deal", deal_id,
+        {"title": deal.title},
+        ip_address=request.client.host if request.client else None
+    )
     return {"message": "Deal approved and is now live on website"}
 
 @router.patch("/deals/{deal_id}/reject")
 async def reject_deal(
-    deal_id: str,
+    deal_id: str, request: Request,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Reject a deal - removes from public immediately"""
+    check_permission(current_admin, "approve_deals")
     result = await db.execute(select(Deal).where(Deal.id == deal_id))
     deal = result.scalar_one_or_none()
     if not deal:
@@ -250,24 +379,24 @@ async def reject_deal(
     deal.is_active = False
     deal.rejected_at = datetime.utcnow()
     deal.updated_at = datetime.utcnow()
-    
     await db.commit()
+    
+    await log_audit(
+        db, current_admin, "reject_deal", "deal", deal_id,
+        {"title": deal.title},
+        ip_address=request.client.host if request.client else None
+    )
     return {"message": "Deal rejected and removed from website"}
 
 @router.get("/deals/search")
 async def search_admin_deals(
-    q: str = "",
-    category: str = "",
-    store: str = "",
-    deal_status: str = "",
-    skip: int = 0,
-    limit: int = 50,
+    q: str = "", category: str = "", store: str = "", deal_status: str = "",
+    skip: int = 0, limit: int = 50,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Search and filter deals with advanced options"""
+    check_permission(current_admin, "manage_deals")
     query = select(Deal)
-    
     if q:
         search_term = f"%{q}%"
         query = query.where(Deal.title.ilike(search_term))
@@ -279,10 +408,8 @@ async def search_admin_deals(
         query = query.where(Deal.status == deal_status)
     
     query = query.order_by(desc(Deal.created_at)).offset(skip).limit(limit)
-    
     result = await db.execute(query)
     deals = result.scalars().all()
-    
     return deals
 
 @router.get("/deals/categories")
@@ -290,7 +417,6 @@ async def get_categories(
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get all unique categories"""
     result = await db.execute(select(Deal.category).distinct())
     categories = [row[0] for row in result.all()]
     return {"categories": categories}
@@ -300,30 +426,30 @@ async def get_stores(
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get all unique stores"""
     result = await db.execute(select(Deal.store).distinct())
     stores = [row[0] for row in result.all()]
     return {"stores": stores}
 
 @router.post("/cleanup/rejected-deals")
 async def cleanup_rejected_deals(
+    request: Request,
     current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """Delete rejected deals older than 1 day"""
+    check_permission(current_admin, "manage_deals")
     cutoff_date = datetime.utcnow() - timedelta(days=1)
-    
     result = await db.execute(
-        select(Deal).where(
-            Deal.status == 'rejected',
-            Deal.rejected_at < cutoff_date
-        )
+        select(Deal).where(Deal.status == 'rejected', Deal.rejected_at < cutoff_date)
     )
     old_rejected_deals = result.scalars().all()
     
     for deal in old_rejected_deals:
         await db.delete(deal)
-    
     await db.commit()
     
+    await log_audit(
+        db, current_admin, "cleanup_rejected_deals", "deal", None,
+        {"count": len(old_rejected_deals)},
+        ip_address=request.client.host if request.client else None
+    )
     return {"message": f"Cleaned up {len(old_rejected_deals)} old rejected deals"}

@@ -5,23 +5,27 @@ import json
 import io
 import uuid
 from datetime import datetime
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from database import get_db
-from models import Deal
+from admin_auth import get_current_admin, check_permission, log_audit
+from models import Deal, AdminUser
 
 router = APIRouter()
 
 @router.post("/upload-deals")
 async def upload_deal_file(
+    request: Request,
     file: UploadFile = File(...),
     network: str = Form(...),
     description: str = Form(""),
+    current_admin: AdminUser = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Simple file upload endpoint"""
+    check_permission(current_admin, "upload_deals")
     
     try:
         # Read file content
@@ -79,6 +83,7 @@ async def upload_deal_file(
         # Commit all deals to database
         await db.commit()
         
+        await log_audit(db, current_admin, "upload_deals", "deals", details={"filename": file.filename, "network": network, "processed": processed_count, "valid": len(saved_deals)}, ip_address=request.client.host if request.client else None)
         return {
             'success': True,
             'message': f'Successfully uploaded {len(saved_deals)} deals from {file.filename}',

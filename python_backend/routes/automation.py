@@ -3,12 +3,12 @@ Automation API Routes
 Admin endpoints for managing automated deal fetching and AI validation
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any
 
 from database import get_db
-from admin_auth import get_current_admin
+from admin_auth import get_current_admin, check_permission, log_audit
 from models import AdminUser
 from services.scheduler import scheduler
 from services.deal_fetcher import run_deal_fetching_cycle
@@ -20,6 +20,7 @@ async def get_automation_status(
     current_admin: AdminUser = Depends(get_current_admin)
 ) -> Dict[str, Any]:
     """Get current automation status and recent activity"""
+    check_permission(current_admin, "manage_automation")
     try:
         status = await scheduler.get_scheduler_status()
         
@@ -43,11 +44,15 @@ async def get_automation_status(
 
 @router.post("/fetch-deals")
 async def trigger_manual_fetch(
-    current_admin: AdminUser = Depends(get_current_admin)
+    request: Request,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """Manually trigger deal fetching from all sources"""
+    check_permission(current_admin, "manage_automation")
     try:
         result = await scheduler.manual_fetch_deals()
+        await log_audit(db, current_admin, "trigger_manual_fetch", "automation", details={"result": str(result)}, ip_address=request.client.host if request.client else None)
         return {
             "status": "success",
             "message": "Deal fetching completed",
@@ -58,33 +63,45 @@ async def trigger_manual_fetch(
 
 @router.post("/start-scheduler")
 async def start_automation(
-    current_admin: AdminUser = Depends(get_current_admin)
+    request: Request,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
 ) -> Dict[str, str]:
     """Start the automated deal fetching scheduler"""
+    check_permission(current_admin, "manage_automation")
     try:
         await scheduler.start_scheduler()
+        await log_audit(db, current_admin, "start_scheduler", "automation", ip_address=request.client.host if request.client else None)
         return {"status": "success", "message": "Automation scheduler started"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error starting scheduler: {str(e)}")
 
 @router.post("/stop-scheduler")
 async def stop_automation(
-    current_admin: AdminUser = Depends(get_current_admin)
+    request: Request,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
 ) -> Dict[str, str]:
     """Stop the automated deal fetching scheduler"""
+    check_permission(current_admin, "manage_automation")
     try:
         scheduler.stop_scheduler()
+        await log_audit(db, current_admin, "stop_scheduler", "automation", ip_address=request.client.host if request.client else None)
         return {"status": "success", "message": "Automation scheduler stopped"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error stopping scheduler: {str(e)}")
 
 @router.post("/cleanup-rejected")
 async def trigger_cleanup(
-    current_admin: AdminUser = Depends(get_current_admin)
+    request: Request,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
 ) -> Dict[str, str]:
     """Manually trigger cleanup of rejected deals"""
+    check_permission(current_admin, "manage_automation")
     try:
         await scheduler.cleanup_rejected_deals()
+        await log_audit(db, current_admin, "cleanup_rejected", "automation", ip_address=request.client.host if request.client else None)
         return {"status": "success", "message": "Rejected deals cleanup completed"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during cleanup: {str(e)}")
@@ -94,6 +111,7 @@ async def get_configuration_help(
     current_admin: AdminUser = Depends(get_current_admin)
 ) -> Dict[str, Any]:
     """Get help information for configuring affiliate APIs"""
+    check_permission(current_admin, "manage_automation")
     return {
         "amazon_associate": {
             "description": "Amazon Product Advertising API for fetching Amazon deals",

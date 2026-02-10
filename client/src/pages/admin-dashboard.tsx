@@ -41,6 +41,17 @@ export default function AdminDashboard() {
   
   // Deal issues tracking for "Needs Review" functionality
   const [dealIssues, setDealIssues] = useState<Record<string, string[]>>({});
+  
+  // User management state
+  const [users, setUsers] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [availablePermissions, setAvailablePermissions] = useState<string[]>([]);
+  const [newUser, setNewUser] = useState({
+    username: "", email: "", password: "", role: "admin", permissions: [] as string[]
+  });
+  const [auditFilter, setAuditFilter] = useState({ admin_id: "", action: "" });
 
   // Enable real-time updates
   useRealTimeUpdates();
@@ -59,6 +70,10 @@ export default function AdminDashboard() {
       fetchAutomationStatus();
     } else if (activeTab === "affiliates") {
       fetchAffiliateNetworks();
+    } else if (activeTab === "users") {
+      fetchUsers();
+      fetchAuditLogs();
+      fetchPermissions();
     }
     
     // Set up auto-refresh for deals and metrics every 30 seconds
@@ -578,6 +593,137 @@ export default function AdminDashboard() {
     setShowConfigModal(true);
   };
 
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/admin/users", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setUsers(await response.json());
+      }
+    } catch (error) { /* ignore */ }
+  };
+
+  const fetchAuditLogs = async () => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      let url = "/api/admin/audit-logs?limit=100";
+      if (auditFilter.admin_id) url += `&admin_id=${auditFilter.admin_id}`;
+      if (auditFilter.action) url += `&action=${auditFilter.action}`;
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setAuditLogs(await response.json());
+      }
+    } catch (error) { /* ignore */ }
+  };
+
+  const fetchPermissions = async () => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/admin/permissions", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAvailablePermissions(data.permissions);
+      }
+    } catch (error) { /* ignore */ }
+  };
+
+  const handleCreateUser = async (e: any) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(newUser)
+      });
+      if (response.ok) {
+        setShowCreateUser(false);
+        setNewUser({ username: "", email: "", password: "", role: "admin", permissions: [] });
+        fetchUsers();
+        fetchAuditLogs();
+        alert("User created successfully!");
+      } else {
+        const err = await response.json();
+        alert(err.detail || "Failed to create user");
+      }
+    } catch (error) {
+      alert("Error creating user");
+    }
+  };
+
+  const handleToggleUserActive = async (userId: string) => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(`/api/admin/users/${userId}/toggle-active`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        fetchUsers();
+        fetchAuditLogs();
+      } else {
+        const err = await response.json();
+        alert(err.detail || "Failed to toggle user");
+      }
+    } catch (error) {
+      alert("Error toggling user");
+    }
+  };
+
+  const handleUpdateUserPermissions = async (userId: string, permissions: string[]) => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ permissions })
+      });
+      if (response.ok) {
+        fetchUsers();
+        fetchAuditLogs();
+      } else {
+        const err = await response.json();
+        alert(err.detail || "Failed to update permissions");
+      }
+    } catch (error) {
+      alert("Error updating permissions");
+    }
+  };
+
+  const togglePermission = (perms: string[], perm: string) => {
+    return perms.includes(perm) ? perms.filter(p => p !== perm) : [...perms, perm];
+  };
+
+  const permissionLabels: Record<string, string> = {
+    manage_deals: "Manage Deals",
+    approve_deals: "Approve/Reject Deals",
+    manage_users: "Manage Users",
+    view_analytics: "View Analytics",
+    manage_affiliates: "Manage Affiliates",
+    manage_automation: "Manage Automation",
+    upload_deals: "Upload Deals"
+  };
+
+  const actionLabels: Record<string, string> = {
+    login: "Logged In",
+    create_user: "Created User",
+    update_user: "Updated User",
+    enable_user: "Enabled User",
+    disable_user: "Disabled User",
+    create_deal: "Created Deal",
+    update_deal: "Updated Deal",
+    delete_deal: "Deleted Deal",
+    approve_deal: "Approved Deal",
+    reject_deal: "Rejected Deal",
+    cleanup_rejected_deals: "Cleaned Up Deals"
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
     window.location.href = "/admin";
@@ -642,6 +788,19 @@ export default function AdminDashboard() {
                 }}
               >
                 Affiliate Networks
+              </button>
+              <button
+                onClick={() => setActiveTab("users")}
+                style={{ 
+                  padding: "8px 15px", 
+                  backgroundColor: activeTab === "users" ? "#007bff" : "transparent", 
+                  color: activeTab === "users" ? "white" : "#333",
+                  border: "1px solid #007bff",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Users
               </button>
             </nav>
           </div>
@@ -1508,6 +1667,298 @@ export default function AdminDashboard() {
                   Make sure to review their terms before enabling automated deal fetching.
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "users" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h2 style={{ color: "#333" }}>User Management</h2>
+              <button
+                onClick={() => setShowCreateUser(true)}
+                style={{ padding: "10px 20px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "14px" }}
+              >
+                + Create User
+              </button>
+            </div>
+
+            <div style={{ backgroundColor: "white", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", overflow: "hidden", marginBottom: "30px" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "#f8f9fa" }}>
+                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "13px", color: "#666" }}>Username</th>
+                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "13px", color: "#666" }}>Email</th>
+                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "13px", color: "#666" }}>Role</th>
+                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "13px", color: "#666" }}>Permissions</th>
+                    <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #dee2e6", fontSize: "13px", color: "#666" }}>Status</th>
+                    <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #dee2e6", fontSize: "13px", color: "#666" }}>Created</th>
+                    <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #dee2e6", fontSize: "13px", color: "#666" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user: any) => (
+                    <tr key={user.id} style={{ borderBottom: "1px solid #eee" }}>
+                      <td style={{ padding: "12px", fontWeight: "bold", color: "#333" }}>
+                        {user.username}
+                        {user.role === 'super_admin' && <span style={{ fontSize: "10px", color: "#007bff", marginLeft: "6px", padding: "2px 6px", backgroundColor: "#e7f1ff", borderRadius: "3px" }}>SUPER</span>}
+                      </td>
+                      <td style={{ padding: "12px", color: "#666", fontSize: "13px" }}>{user.email}</td>
+                      <td style={{ padding: "12px", color: "#333", fontSize: "13px", textTransform: "capitalize" }}>{user.role?.replace('_', ' ')}</td>
+                      <td style={{ padding: "12px", maxWidth: "250px" }}>
+                        {user.role === 'super_admin' ? (
+                          <span style={{ fontSize: "12px", color: "#28a745", fontStyle: "italic" }}>All permissions</span>
+                        ) : (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                            {(user.permissions || []).map((p: string) => (
+                              <span key={p} style={{ fontSize: "11px", padding: "2px 6px", backgroundColor: "#e9ecef", borderRadius: "3px", color: "#495057" }}>
+                                {permissionLabels[p] || p}
+                              </span>
+                            ))}
+                            {(!user.permissions || user.permissions.length === 0) && (
+                              <span style={{ fontSize: "12px", color: "#dc3545", fontStyle: "italic" }}>No permissions</span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: "12px", textAlign: "center" }}>
+                        <span style={{
+                          padding: "4px 10px", borderRadius: "12px", fontSize: "12px",
+                          backgroundColor: user.is_active ? "#d4edda" : "#f8d7da",
+                          color: user.is_active ? "#155724" : "#721c24"
+                        }}>
+                          {user.is_active ? "Active" : "Disabled"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px", textAlign: "center", fontSize: "12px", color: "#666" }}>
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: "12px", textAlign: "center" }}>
+                        <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                          {user.role !== 'super_admin' && (
+                            <>
+                              <button
+                                onClick={() => setEditingUser(editingUser?.id === user.id ? null : user)}
+                                style={{ padding: "4px 10px", fontSize: "12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "3px", cursor: "pointer" }}
+                              >
+                                Permissions
+                              </button>
+                              <button
+                                onClick={() => handleToggleUserActive(user.id)}
+                                style={{ padding: "4px 10px", fontSize: "12px", backgroundColor: user.is_active ? "#dc3545" : "#28a745", color: "white", border: "none", borderRadius: "3px", cursor: "pointer" }}
+                              >
+                                {user.is_active ? "Disable" : "Enable"}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {users.length === 0 && (
+                <div style={{ padding: "40px", textAlign: "center", color: "#999" }}>No users found</div>
+              )}
+            </div>
+
+            {editingUser && editingUser.role !== 'super_admin' && (
+              <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", marginBottom: "30px" }}>
+                <h3 style={{ margin: "0 0 15px 0", color: "#333" }}>Edit Permissions: {editingUser.username}</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px", marginBottom: "15px" }}>
+                  {availablePermissions.map((perm: string) => {
+                    const userPerms = editingUser.permissions || [];
+                    const isChecked = userPerms.includes(perm);
+                    return (
+                      <label key={perm} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", backgroundColor: isChecked ? "#e7f1ff" : "#f8f9fa", borderRadius: "6px", cursor: "pointer", border: isChecked ? "1px solid #007bff" : "1px solid #dee2e6" }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            const newPerms = togglePermission(userPerms, perm);
+                            setEditingUser({ ...editingUser, permissions: newPerms });
+                          }}
+                        />
+                        <span style={{ fontSize: "13px", color: "#333" }}>{permissionLabels[perm] || perm}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    onClick={() => { handleUpdateUserPermissions(editingUser.id, editingUser.permissions || []); setEditingUser(null); }}
+                    style={{ padding: "8px 20px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                  >
+                    Save Permissions
+                  </button>
+                  <button
+                    onClick={() => setEditingUser(null)}
+                    style={{ padding: "8px 20px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ backgroundColor: "white", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", overflow: "hidden" }}>
+              <div style={{ padding: "15px 20px", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ margin: 0, color: "#333" }}>Audit Log</h3>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <select
+                    value={auditFilter.admin_id}
+                    onChange={(e) => { setAuditFilter({ ...auditFilter, admin_id: e.target.value }); }}
+                    style={{ padding: "6px 10px", borderRadius: "4px", border: "1px solid #ddd", fontSize: "13px" }}
+                  >
+                    <option value="">All Users</option>
+                    {users.map((u: any) => (
+                      <option key={u.id} value={u.id}>{u.username}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={auditFilter.action}
+                    onChange={(e) => { setAuditFilter({ ...auditFilter, action: e.target.value }); }}
+                    style={{ padding: "6px 10px", borderRadius: "4px", border: "1px solid #ddd", fontSize: "13px" }}
+                  >
+                    <option value="">All Actions</option>
+                    <option value="login">Login</option>
+                    <option value="create_user">Create User</option>
+                    <option value="update_user">Update User</option>
+                    <option value="enable_user">Enable User</option>
+                    <option value="disable_user">Disable User</option>
+                    <option value="create_deal">Create Deal</option>
+                    <option value="update_deal">Update Deal</option>
+                    <option value="delete_deal">Delete Deal</option>
+                    <option value="approve_deal">Approve Deal</option>
+                    <option value="reject_deal">Reject Deal</option>
+                  </select>
+                  <button
+                    onClick={fetchAuditLogs}
+                    style={{ padding: "6px 15px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "13px" }}
+                  >
+                    Filter
+                  </button>
+                </div>
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "#f8f9fa" }}>
+                    <th style={{ padding: "10px 12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "12px", color: "#666" }}>Time</th>
+                    <th style={{ padding: "10px 12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "12px", color: "#666" }}>User</th>
+                    <th style={{ padding: "10px 12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "12px", color: "#666" }}>Action</th>
+                    <th style={{ padding: "10px 12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "12px", color: "#666" }}>Resource</th>
+                    <th style={{ padding: "10px 12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "12px", color: "#666" }}>Details</th>
+                    <th style={{ padding: "10px 12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "12px", color: "#666" }}>IP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.map((log: any) => (
+                    <tr key={log.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
+                      <td style={{ padding: "10px 12px", fontSize: "12px", color: "#666", whiteSpace: "nowrap" }}>
+                        {new Date(log.created_at).toLocaleString()}
+                      </td>
+                      <td style={{ padding: "10px 12px", fontSize: "13px", fontWeight: "500", color: "#333" }}>{log.admin_username}</td>
+                      <td style={{ padding: "10px 12px" }}>
+                        <span style={{
+                          padding: "3px 8px", borderRadius: "3px", fontSize: "12px",
+                          backgroundColor:
+                            log.action.includes("delete") || log.action.includes("reject") || log.action.includes("disable") ? "#f8d7da" :
+                            log.action.includes("create") || log.action.includes("approve") || log.action.includes("enable") ? "#d4edda" :
+                            log.action === "login" ? "#cce5ff" : "#e9ecef",
+                          color:
+                            log.action.includes("delete") || log.action.includes("reject") || log.action.includes("disable") ? "#721c24" :
+                            log.action.includes("create") || log.action.includes("approve") || log.action.includes("enable") ? "#155724" :
+                            log.action === "login" ? "#004085" : "#495057"
+                        }}>
+                          {actionLabels[log.action] || log.action}
+                        </span>
+                      </td>
+                      <td style={{ padding: "10px 12px", fontSize: "12px", color: "#666" }}>
+                        {log.resource_type}{log.resource_id ? ` #${log.resource_id.substring(0, 8)}` : ""}
+                      </td>
+                      <td style={{ padding: "10px 12px", fontSize: "12px", color: "#666", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {log.details ? (log.details.username || log.details.title || log.details.count || JSON.stringify(log.details).substring(0, 50)) : "-"}
+                      </td>
+                      <td style={{ padding: "10px 12px", fontSize: "12px", color: "#999" }}>{log.ip_address || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {auditLogs.length === 0 && (
+                <div style={{ padding: "40px", textAlign: "center", color: "#999" }}>No audit logs found</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {showCreateUser && (
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+            <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "8px", width: "90%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <h3 style={{ margin: 0, color: "#333" }}>Create New User</h3>
+                <button onClick={() => setShowCreateUser(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#999" }}>x</button>
+              </div>
+              <form onSubmit={handleCreateUser}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "#333", fontSize: "14px" }}>Username *</label>
+                  <input
+                    type="text" required value={newUser.username}
+                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                    style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "#333", fontSize: "14px" }}>Email *</label>
+                  <input
+                    type="email" required value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "#333", fontSize: "14px" }}>Password *</label>
+                  <input
+                    type="password" required value={newUser.password} minLength={6}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div style={{ marginBottom: "15px" }}>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", color: "#333", fontSize: "14px" }}>Role</label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                    style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }}
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="editor">Editor</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                </div>
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold", color: "#333", fontSize: "14px" }}>Permissions</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                    {availablePermissions.map((perm: string) => (
+                      <label key={perm} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", backgroundColor: newUser.permissions.includes(perm) ? "#e7f1ff" : "#f8f9fa", borderRadius: "6px", cursor: "pointer", border: newUser.permissions.includes(perm) ? "1px solid #007bff" : "1px solid #dee2e6" }}>
+                        <input
+                          type="checkbox"
+                          checked={newUser.permissions.includes(perm)}
+                          onChange={() => setNewUser({ ...newUser, permissions: togglePermission(newUser.permissions, perm) })}
+                        />
+                        <span style={{ fontSize: "12px", color: "#333" }}>{permissionLabels[perm] || perm}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button type="submit" style={{ flex: 1, padding: "10px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "14px" }}>
+                    Create User
+                  </button>
+                  <button type="button" onClick={() => setShowCreateUser(false)} style={{ flex: 1, padding: "10px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "14px" }}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

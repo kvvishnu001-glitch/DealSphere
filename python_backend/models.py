@@ -103,8 +103,24 @@ class AdminUser(Base):
     email = Column(String, unique=True, nullable=False, index=True)
     password_hash = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
+    role = Column(String, default='admin')
+    permissions = Column(JSON, default=list)
+    created_by = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    
+    id = Column(String, primary_key=True)
+    admin_id = Column(String, ForeignKey("admin_users.id"), nullable=False)
+    admin_username = Column(String, nullable=False)
+    action = Column(String, nullable=False)
+    resource_type = Column(String, nullable=False)
+    resource_id = Column(String, nullable=True)
+    details = Column(JSON, nullable=True)
+    ip_address = Column(String, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
 
 class Session(Base):
     __tablename__ = "sessions"
@@ -263,20 +279,55 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+AVAILABLE_PERMISSIONS = [
+    "manage_deals",
+    "approve_deals",
+    "manage_users",
+    "view_analytics",
+    "manage_affiliates",
+    "manage_automation",
+    "upload_deals",
+]
+
 class AdminUserCreate(BaseModel):
     username: str
     email: str
     password: str
+    role: str = "admin"
+    permissions: List[str] = []
 
 class AdminUserLogin(BaseModel):
     username: str
     password: str
+
+class AdminUserUpdate(BaseModel):
+    email: Optional[str] = None
+    role: Optional[str] = None
+    permissions: Optional[List[str]] = None
+    is_active: Optional[bool] = None
 
 class AdminUserResponse(BaseModel):
     id: str
     username: str
     email: str
     is_active: bool
+    role: str = "admin"
+    permissions: List[str] = []
+    created_by: Optional[str] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class AuditLogResponse(BaseModel):
+    id: str
+    admin_id: str
+    admin_username: str
+    action: str
+    resource_type: str
+    resource_id: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+    ip_address: Optional[str] = None
     created_at: datetime
     
     class Config:
