@@ -414,73 +414,75 @@ export default function Home() {
 
 
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="sticky top-14 sm:top-16 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm mb-6 sm:mb-8 -mx-4 sm:mx-0 px-4 sm:px-0">
-          <div className="py-3 sm:py-4">
-            <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="h-9 sm:h-10 min-w-[120px] sm:min-w-[140px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm">
-                  <Tag className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {availableCategories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Sticky Filter Bar - outside main so it sticks properly */}
+      <div className="sticky top-14 sm:top-16 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-3">
+          <div className="flex gap-2 sm:gap-3 items-center overflow-x-auto no-scrollbar">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="h-8 sm:h-10 min-w-[110px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm flex-shrink-0">
+                <Tag className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 mr-1 flex-shrink-0" />
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {availableCategories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              <Select value={selectedStore} onValueChange={setSelectedStore}>
-                <SelectTrigger className="h-9 sm:h-10 min-w-[100px] sm:min-w-[120px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm">
-                  <Store className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
-                  <SelectValue placeholder="Store" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Stores</SelectItem>
-                  {availableStores.map((store) => (
-                    <SelectItem key={store} value={store}>
-                      {store}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Select value={selectedStore} onValueChange={setSelectedStore}>
+              <SelectTrigger className="h-8 sm:h-10 min-w-[90px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm flex-shrink-0">
+                <Store className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 mr-1 flex-shrink-0" />
+                <SelectValue placeholder="Store" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Stores</SelectItem>
+                {availableStores.map((store) => (
+                  <SelectItem key={store} value={store}>
+                    {store}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
-                <SelectTrigger className="h-9 sm:h-10 min-w-[110px] sm:min-w-[130px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm">
-                  <SelectValue placeholder="Discount" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Any Discount</SelectItem>
-                  {availableDiscounts.includes("50+") && (
-                    <SelectItem value="50+">50%+ Off</SelectItem>
-                  )}
-                  {availableDiscounts.includes("30+") && (
-                    <SelectItem value="30+">30%+ Off</SelectItem>
-                  )}
-                  {availableDiscounts.includes("10+") && (
-                    <SelectItem value="10+">10%+ Off</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+            <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
+              <SelectTrigger className="h-8 sm:h-10 min-w-[100px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm flex-shrink-0">
+                <SelectValue placeholder="Discount" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any Discount</SelectItem>
+                {availableDiscounts.includes("50+") && (
+                  <SelectItem value="50+">50%+ Off</SelectItem>
+                )}
+                {availableDiscounts.includes("30+") && (
+                  <SelectItem value="30+">30%+ Off</SelectItem>
+                )}
+                {availableDiscounts.includes("10+") && (
+                  <SelectItem value="10+">10%+ Off</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
 
-              {(selectedCategory !== "all" || selectedStore !== "all" || selectedDiscount !== "all" || searchQuery) && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={clearFilters}
-                  className="h-9 sm:h-10 px-3 text-gray-600 hover:text-gray-800 border-gray-300 rounded-full hover:bg-gray-50 text-xs sm:text-sm"
-                >
-                  <X className="w-3.5 h-3.5 mr-1" />
-                  Clear
-                </Button>
-              )}
-            </div>
+            {(selectedCategory !== "all" || selectedStore !== "all" || selectedDiscount !== "all" || searchQuery) && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={clearFilters}
+                className="h-8 sm:h-10 px-2.5 text-gray-600 hover:text-gray-800 border-gray-300 rounded-full hover:bg-gray-50 text-xs sm:text-sm flex-shrink-0"
+              >
+                <X className="w-3 h-3 mr-0.5" />
+                Clear
+              </Button>
+            )}
           </div>
         </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
         {/* Search Results Section - shown when user searches */}
         {isSearchActive && (

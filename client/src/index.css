@@ -139,3 +139,11 @@ div[data-radix-popper-content-wrapper] * {
 .text-popover-foreground {
   color: #111827 !important;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
