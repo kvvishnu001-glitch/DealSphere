@@ -70,6 +70,58 @@ async def get_deals_count(db: AsyncSession = Depends(get_db)):
     count = active_approved_result.scalar() or 0
     return {"count": count}
 
+@router.get("/deals/stats")
+async def get_deals_stats(db: AsyncSession = Depends(get_db)):
+    """Get real-time hero stats - publicly accessible"""
+    from sqlalchemy import and_
+
+    active_filter = and_(Deal.is_active == True, Deal.status != "deleted")
+
+    count_result = await db.execute(
+        select(func.count(Deal.id)).where(and_(active_filter, Deal.is_ai_approved == True))
+    )
+    active_count = count_result.scalar() or 0
+
+    savings_result = await db.execute(
+        select(func.sum(Deal.original_price - Deal.sale_price)).where(
+            and_(
+                active_filter,
+                Deal.is_ai_approved == True,
+                Deal.original_price.isnot(None),
+                Deal.sale_price.isnot(None),
+                Deal.original_price > 0,
+                Deal.sale_price > 0,
+                Deal.sale_price < Deal.original_price
+            )
+        )
+    )
+    total_savings = float(savings_result.scalar() or 0)
+
+    total_result = await db.execute(
+        select(func.count(Deal.id)).where(active_filter)
+    )
+    total_count = total_result.scalar() or 1
+
+    ai_verified_result = await db.execute(
+        select(func.count(Deal.id)).where(and_(active_filter, Deal.is_ai_approved == True))
+    )
+    ai_verified = ai_verified_result.scalar() or 0
+    ai_pct = round((ai_verified / total_count) * 100) if total_count > 0 else 0
+
+    if total_savings >= 1_000_000:
+        savings_str = f"${total_savings / 1_000_000:.1f}M+"
+    elif total_savings >= 1_000:
+        savings_str = f"${total_savings / 1_000:.0f}K+"
+    else:
+        savings_str = f"${total_savings:.0f}"
+
+    return {
+        "active_deals": active_count,
+        "total_savings": savings_str,
+        "total_savings_raw": total_savings,
+        "ai_verified_pct": ai_pct
+    }
+
 @router.get("/deals/latest-count")
 async def get_latest_deals_count(db: AsyncSession = Depends(get_db)):
     """Get total count of latest/regular deals - publicly accessible"""

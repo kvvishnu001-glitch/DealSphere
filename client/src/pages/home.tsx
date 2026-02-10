@@ -74,11 +74,11 @@ export default function Home() {
   // Enable real-time updates
   useRealTimeUpdates();
 
-  // Fetch deals count for the hero section
-  const { data: dealsCount } = useQuery({
-    queryKey: ['/api/deals/count'],
+  // Fetch real-time stats for the hero section
+  const { data: heroStats } = useQuery({
+    queryKey: ['/api/deals/stats'],
     queryFn: async () => {
-      const response = await fetch('/api/deals/count');
+      const response = await fetch('/api/deals/stats');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -397,15 +397,15 @@ export default function Home() {
           </p>
           <div className="grid grid-cols-3 gap-4 sm:gap-8 text-red-100 max-w-md sm:max-w-2xl mx-auto">
             <div className="text-center">
-              <div className="text-lg sm:text-3xl font-bold">{dealsCount?.count || 0}</div>
+              <div className="text-lg sm:text-3xl font-bold">{heroStats?.active_deals?.toLocaleString() || '...'}</div>
               <div className="text-[10px] sm:text-sm">Active Deals</div>
             </div>
             <div className="text-center">
-              <div className="text-lg sm:text-3xl font-bold">$1.2M+</div>
+              <div className="text-lg sm:text-3xl font-bold">{heroStats?.total_savings || '...'}</div>
               <div className="text-[10px] sm:text-sm">Total Savings</div>
             </div>
             <div className="text-center">
-              <div className="text-lg sm:text-3xl font-bold">98%</div>
+              <div className="text-lg sm:text-3xl font-bold">{heroStats ? `${heroStats.ai_verified_pct}%` : '...'}</div>
               <div className="text-[10px] sm:text-sm">AI Verified</div>
             </div>
           </div>
