@@ -520,12 +520,6 @@ export default function Home() {
                       </div>
                     )}
                     
-                    {/* Filter Count */}
-                    <div className="flex items-center space-x-1 text-sm text-gray-500 ml-auto">
-                      <span className="hidden sm:inline">Showing</span>
-                      <span className="font-semibold text-red-600">{filteredDeals.length}</span>
-                      <span className="hidden sm:inline">deals</span>
-                    </div>
                   </div>
                 </div>
               </CardContent>
