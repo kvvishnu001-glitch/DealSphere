@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { CouponCode } from "@/components/ui/coupon-code";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import { 
   Star, 
   Clock, 
@@ -21,7 +23,6 @@ import {
   Link as LinkIcon,
   X,
   ChevronRight,
-  Percent,
   HelpCircle
 } from "lucide-react";
 
@@ -215,22 +216,7 @@ export default function DealDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center space-x-2">
-              <Percent className="text-red-600 w-6 h-6" />
-              <span className="text-xl font-bold text-gray-900">DealSphere</span>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-6 text-sm">
-              <Link href="/" className="text-gray-600 hover:text-red-600 transition-colors">Home</Link>
-              <Link href="/about" className="text-gray-600 hover:text-red-600 transition-colors">About</Link>
-              <Link href="/blog" className="text-gray-600 hover:text-red-600 transition-colors">Blog</Link>
-              <Link href="/contact" className="text-gray-600 hover:text-red-600 transition-colors">Contact</Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {deal && (
         <nav aria-label="Breadcrumb" className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-3">
@@ -562,6 +548,8 @@ export default function DealDetail() {
           </div>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 }

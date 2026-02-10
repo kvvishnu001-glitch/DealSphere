@@ -1,6 +1,5 @@
 import { Link } from "wouter";
 import {
-  Percent,
   ChevronRight,
   Shield,
   Zap,
@@ -9,26 +8,13 @@ import {
   Users,
   Target,
 } from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 export default function About() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center space-x-2">
-              <Percent className="text-red-600 w-6 h-6" />
-              <span className="text-xl font-bold text-gray-900">DealSphere</span>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-6 text-sm">
-              <Link href="/" className="text-gray-600 hover:text-red-600 transition-colors">Home</Link>
-              <Link href="/about" className="text-red-600 font-medium">About</Link>
-              <Link href="/blog" className="text-gray-600 hover:text-red-600 transition-colors">Blog</Link>
-              <Link href="/contact" className="text-gray-600 hover:text-red-600 transition-colors">Contact</Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <nav aria-label="Breadcrumb" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <ol className="flex items-center space-x-2 text-sm text-gray-500">
@@ -137,32 +123,7 @@ export default function About() {
         </section>
       </main>
 
-      <footer className="bg-gray-800 text-white py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center">
-                <Percent className="text-red-600 text-xl mr-2" />
-                <h3 className="text-lg font-bold">DealSphere</h3>
-              </div>
-              <p className="text-gray-400 text-xs max-w-xs">AI-verified deals and coupons updated daily.</p>
-            </div>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-4 text-xs text-gray-400">
-                <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
-                <Link href="/about" className="hover:text-white transition-colors">About</Link>
-                <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
-                <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2 text-right">
-              <div className="text-gray-400 text-xs">© {new Date().getFullYear()} DealSphere. All rights reserved.</div>
-              <p className="text-[10px] text-gray-500 max-w-[200px]">As an Amazon Associate, we earn from qualifying purchases.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

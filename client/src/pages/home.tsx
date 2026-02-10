@@ -10,16 +10,16 @@ import { DealCard } from "@/components/ui/deal-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { 
-  Percent, 
   Search, 
   Flame, 
   Clock, 
   Tag, 
   Store, 
   X,
-  LogOut,
   Loader2
 } from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 // Define types to match API response
 interface Deal {
   id: string;
@@ -369,43 +369,22 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center py-4 sm:h-16 space-y-3 sm:space-y-0">
-            <Link href="/" className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <Percent className="text-red-600 text-xl sm:text-2xl mr-2" />
-                <span className="text-xl sm:text-2xl font-bold text-gray-800">DealSphere</span>
-              </div>
-            </Link>
-            
-            {/* Search Bar */}
-            <div className="flex-1 max-w-lg mx-0 sm:mx-4 lg:mx-8 w-full sm:w-auto">
-              <div className="relative">
-                <Input
-                  type="search"
-                  placeholder="Search deals, stores..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 bg-gray-100 border-gray-300 focus:border-red-600 focus:ring-red-600"
-                  aria-label="Search deals"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                  <Search className="text-gray-400 w-4 h-4" />
-                </div>
-              </div>
-            </div>
-            
-            <nav className="hidden md:flex items-center space-x-4 text-sm">
-              <Link href="/about" className="text-gray-600 hover:text-red-600 transition-colors">About</Link>
-              <Link href="/blog" className="text-gray-600 hover:text-red-600 transition-colors">Blog</Link>
-              <Link href="/contact" className="text-gray-600 hover:text-red-600 transition-colors">Contact</Link>
-            </nav>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header>
+        <div className="relative">
+          <Input
+            type="search"
+            placeholder="Search deals, stores..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 bg-gray-100 border-gray-300 focus:border-red-600 focus:ring-red-600"
+            aria-label="Search deals"
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+            <Search className="text-gray-400 w-4 h-4" />
           </div>
         </div>
-      </header>
+      </Header>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-8 sm:py-12 lg:py-16">
@@ -437,92 +416,69 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Enhanced Floating Filters */}
-        <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-lg mb-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <Card className="border-0 shadow-md">
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  {/* Filter Pills */}
-                  <div className="flex flex-wrap gap-3 items-center">
-                    {/* Category Filter */}
-                    <div className="flex items-center space-x-2">
-                      <Tag className="w-4 h-4 text-gray-500" />
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger className="h-10 min-w-[140px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500">
-                          <SelectValue placeholder="📁 All Categories" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">📁 All Categories</SelectItem>
-                          {availableCategories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {/* Store Filter */}
-                    <div className="flex items-center space-x-2">
-                      <Store className="w-4 h-4 text-gray-500" />
-                      <Select value={selectedStore} onValueChange={setSelectedStore}>
-                        <SelectTrigger className="h-10 min-w-[120px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500">
-                          <SelectValue placeholder="🏪 All Stores" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">🏪 All Stores</SelectItem>
-                          {availableStores.map((store) => (
-                            <SelectItem key={store} value={store}>
-                              {store}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {/* Discount Filter */}
-                    <div className="flex items-center space-x-2">
-                      <Percent className="w-4 h-4 text-gray-500" />
-                      <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
-                        <SelectTrigger className="h-10 min-w-[130px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500">
-                          <SelectValue placeholder="💰 Any Discount" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">💰 Any Discount</SelectItem>
-                          {availableDiscounts.includes("50+") && (
-                            <SelectItem value="50+">🔥 50%+ Off</SelectItem>
-                          )}
-                          {availableDiscounts.includes("30+") && (
-                            <SelectItem value="30+">⚡ 30%+ Off</SelectItem>
-                          )}
-                          {availableDiscounts.includes("10+") && (
-                            <SelectItem value="10+">✨ 10%+ Off</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {/* Active Filters Indicator */}
-                    {(selectedCategory !== "all" || selectedStore !== "all" || selectedDiscount !== "all" || searchQuery) && (
-                      <div className="flex items-center space-x-2">
-                        <div className="h-6 w-px bg-gray-300"></div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={clearFilters}
-                          className="h-10 px-4 text-gray-600 hover:text-gray-800 border-gray-300 rounded-full hover:bg-gray-50"
-                        >
-                          <X className="w-4 h-4 mr-1" />
-                          Clear All
-                        </Button>
-                      </div>
-                    )}
-                    
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="sticky top-14 sm:top-16 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm mb-6 sm:mb-8 -mx-4 sm:mx-0 px-4 sm:px-0">
+          <div className="py-3 sm:py-4">
+            <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="h-9 sm:h-10 min-w-[120px] sm:min-w-[140px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm">
+                  <Tag className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {availableCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStore} onValueChange={setSelectedStore}>
+                <SelectTrigger className="h-9 sm:h-10 min-w-[100px] sm:min-w-[120px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm">
+                  <Store className="w-3.5 h-3.5 text-gray-400 mr-1.5 flex-shrink-0" />
+                  <SelectValue placeholder="Store" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Stores</SelectItem>
+                  {availableStores.map((store) => (
+                    <SelectItem key={store} value={store}>
+                      {store}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
+                <SelectTrigger className="h-9 sm:h-10 min-w-[110px] sm:min-w-[130px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm">
+                  <SelectValue placeholder="Discount" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Discount</SelectItem>
+                  {availableDiscounts.includes("50+") && (
+                    <SelectItem value="50+">50%+ Off</SelectItem>
+                  )}
+                  {availableDiscounts.includes("30+") && (
+                    <SelectItem value="30+">30%+ Off</SelectItem>
+                  )}
+                  {availableDiscounts.includes("10+") && (
+                    <SelectItem value="10+">10%+ Off</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+
+              {(selectedCategory !== "all" || selectedStore !== "all" || selectedDiscount !== "all" || searchQuery) && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-9 sm:h-10 px-3 text-gray-600 hover:text-gray-800 border-gray-300 rounded-full hover:bg-gray-50 text-xs sm:text-sm"
+                >
+                  <X className="w-3.5 h-3.5 mr-1" />
+                  Clear
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -801,42 +757,7 @@ export default function Home() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white py-6 sticky bottom-0 z-50 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center">
-                <Percent className="text-red-600 text-xl mr-2" />
-                <h3 className="text-lg font-bold">DealSphere</h3>
-              </div>
-              <p className="text-gray-400 text-xs max-w-xs">
-                AI-verified deals and coupons updated daily to help you save more.
-              </p>
-            </div>
-            
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
-                <Link href="/about" className="hover:text-white transition-colors">About</Link>
-                <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
-                <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
-                <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
-                <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-end gap-2 text-right">
-              <div className="text-gray-400 text-xs">
-                © {new Date().getFullYear()} DealSphere. All rights reserved.
-              </div>
-              <p className="text-[10px] text-gray-500 max-w-[200px]">
-                As an Amazon Associate, we earn from qualifying purchases.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

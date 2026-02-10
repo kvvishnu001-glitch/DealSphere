@@ -126,7 +126,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             <img 
               src={deal.image_url}
               alt={`${deal.title} - ${deal.discount_percentage || calculatedPercentage}% off at ${deal.store}`}
-              className="w-full h-48 object-cover cursor-pointer"
+              className="w-full h-40 sm:h-48 object-cover cursor-pointer"
               loading="lazy"
               onError={(e) => {
                 console.log('Image failed to load for deal:', deal.title, deal.image_url);
@@ -236,7 +236,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
           <img 
             src={deal.image_url}
             alt={`${deal.title} - ${deal.discount_percentage || calculatedPercentage}% off at ${deal.store}`}
-            className="w-full h-64 object-cover cursor-pointer"
+            className="w-full h-48 sm:h-64 object-cover cursor-pointer"
             loading="lazy"
             onError={(e) => {
               console.log('Image failed to load for deal:', deal.title, deal.image_url);
@@ -268,10 +268,10 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
         )}
       </div>
       
-      <CardContent className="p-6 flex flex-col flex-grow">
+      <CardContent className="p-4 sm:p-6 flex flex-col flex-grow">
         <div className="mb-3">
           <Link href={`/deals/${deal.id}`}>
-            <h3 className="text-lg font-semibold text-gray-900 hover:text-red-600 transition-colors line-clamp-2 mb-2 cursor-pointer">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 hover:text-red-600 transition-colors line-clamp-2 mb-2 cursor-pointer">
               {deal.title}
             </h3>
           </Link>
@@ -279,25 +279,21 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             <Clock className="w-3 h-3 mr-1" />
             {formatDate(deal.created_at)}
           </p>
-          <p className="text-sm text-gray-600 line-clamp-2">
+          <p className="text-sm text-gray-600 line-clamp-2 hidden sm:block">
             {deal.description}
           </p>
         </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-red-600">
-              {formatPrice(deal.sale_price)}
-            </span>
-            <span className="text-lg text-gray-500 line-through">
-              {formatPrice(deal.original_price)}
-            </span>
-          </div>
-          <div className="text-right">
-            <span className="text-sm text-green-600 font-medium">
-              Potential savings: {formatSavings()}
-            </span>
-          </div>
+        <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
+          <span className="text-xl sm:text-2xl font-bold text-red-600">
+            {formatPrice(deal.sale_price)}
+          </span>
+          <span className="text-sm sm:text-lg text-gray-500 line-through">
+            {formatPrice(deal.original_price)}
+          </span>
+          <span className="text-xs sm:text-sm text-green-600 font-medium ml-auto">
+            Save {formatSavings()}
+          </span>
         </div>
         <p className="text-[10px] text-gray-400 mt-1">Prices may vary. Check retailer for current pricing.</p>
         
@@ -332,11 +328,11 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
           )}
         </div>
 
-        <div className="mt-auto space-y-4">
+        <div className="mt-auto space-y-3 sm:space-y-4">
           <Button
             onClick={handleDealClick}
             disabled={isLoading}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 font-semibold"
+            className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white py-2.5 sm:py-3 font-semibold text-sm sm:text-base"
             data-testid={`button-get-deal-${deal.id}`}
           >
             {isLoading ? "Loading..." : (deal.coupon_code ? "Get Deal & Copy Code" : "Get Deal")}
