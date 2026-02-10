@@ -387,26 +387,26 @@ export default function Home() {
       </Header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-8 sm:py-12 lg:py-16">
+      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-5 sm:py-10 lg:py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold mb-4">
-            AI-Powered Deals, Coupons & Discounts
+          <h1 className="text-xl sm:text-3xl lg:text-5xl font-bold mb-2 sm:mb-4">
+            AI-Powered Deals & Coupons
           </h1>
-          <p className="text-lg sm:text-xl lg:text-2xl mb-8 text-red-100">
-            Discover verified deals curated by artificial intelligence
+          <p className="text-sm sm:text-lg lg:text-xl mb-4 sm:mb-8 text-red-100">
+            Verified deals curated by artificial intelligence
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-red-100 max-w-2xl mx-auto">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 text-red-100 max-w-md sm:max-w-2xl mx-auto">
             <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold">{dealsCount?.count || 0}</div>
-              <div className="text-sm">Active Deals</div>
+              <div className="text-lg sm:text-3xl font-bold">{dealsCount?.count || 0}</div>
+              <div className="text-[10px] sm:text-sm">Active Deals</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold">$1.2M+</div>
-              <div className="text-sm">Total Savings</div>
+              <div className="text-lg sm:text-3xl font-bold">$1.2M+</div>
+              <div className="text-[10px] sm:text-sm">Total Savings</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold">98%</div>
-              <div className="text-sm">AI Verified</div>
+              <div className="text-lg sm:text-3xl font-bold">98%</div>
+              <div className="text-[10px] sm:text-sm">AI Verified</div>
             </div>
           </div>
         </div>
