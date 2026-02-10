@@ -30,6 +30,25 @@ SAFE_HEADERS = {
 
 BLOCKED_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", "metadata.google.internal", "169.254.169.254"}
 
+SOFT_404_PATTERNS = [
+    "page not found",
+    "product not available",
+    "currently unavailable",
+    "this item is no longer available",
+    "we couldn't find that page",
+    "this page doesn't exist",
+    "no longer exists",
+    "item not found",
+    "deal has expired",
+    "offer has ended",
+    "this deal is no longer available",
+    "sorry, this product is unavailable",
+    "this product is currently unavailable",
+    "looking for something?",
+    '"message":"page not found"',
+    '"message":"not found"',
+]
+
 
 def _is_safe_url(url: str) -> bool:
     try:
@@ -59,31 +78,39 @@ def _is_safe_url(url: str) -> bool:
         return False
 
 
+def _check_soft_404(body_text: str) -> bool:
+    lower = body_text.lower()
+    for pattern in SOFT_404_PATTERNS:
+        if pattern in lower:
+            return True
+    return False
+
+
 async def check_single_url(session: aiohttp.ClientSession, url: str) -> Dict[str, Any]:
     if not _is_safe_url(url):
         return {"url": url, "status": 0, "accessible": False, "error": "blocked_url"}
     try:
-        async with session.head(
+        async with session.get(
             url,
             timeout=aiohttp.ClientTimeout(total=REQUEST_TIMEOUT),
             allow_redirects=True,
             headers=SAFE_HEADERS,
         ) as response:
-            if response.status < 400:
-                return {"url": url, "status": response.status, "accessible": True}
-            if response.status == 405:
-                async with session.get(
-                    url,
-                    timeout=aiohttp.ClientTimeout(total=REQUEST_TIMEOUT),
-                    allow_redirects=True,
-                    headers=SAFE_HEADERS,
-                ) as get_resp:
-                    return {
-                        "url": url,
-                        "status": get_resp.status,
-                        "accessible": get_resp.status < 400,
-                    }
-            return {"url": url, "status": response.status, "accessible": False}
+            if response.status >= 400:
+                return {"url": url, "status": response.status, "accessible": False}
+
+            body = await response.text(encoding="utf-8", errors="replace")
+            snippet = body[:5000]
+
+            if _check_soft_404(snippet):
+                return {
+                    "url": url,
+                    "status": response.status,
+                    "accessible": False,
+                    "error": "soft_404_detected",
+                }
+
+            return {"url": url, "status": response.status, "accessible": True}
     except asyncio.TimeoutError:
         return {"url": url, "status": 0, "accessible": False, "error": "timeout"}
     except aiohttp.ClientError as e:
