@@ -107,7 +107,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchDeals();
     setSelectedDeals(new Set());
-  }, [currentPage, debouncedSearch, selectedCategory, statusFilter]);
+  }, [currentPage, dealsPerPage, debouncedSearch, selectedCategory, statusFilter]);
 
   const fetchData = async () => {
     await Promise.all([fetchMetrics(), fetchDeals()]);

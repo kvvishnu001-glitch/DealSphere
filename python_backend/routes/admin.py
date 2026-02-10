@@ -298,7 +298,7 @@ async def get_all_deals(
 ):
     check_permission(current_admin, "manage_deals")
     page = max(1, page)
-    per_page = max(1, min(per_page, 100))
+    per_page = max(1, min(per_page, 1000))
     base_filter = Deal.status != "deleted"
     query = select(Deal).where(base_filter)
     count_query = select(func.count(Deal.id)).where(base_filter)
