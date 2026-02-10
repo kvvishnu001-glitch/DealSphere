@@ -9,10 +9,6 @@ import {
   Mail,
   MessageSquare,
   HelpCircle,
-  Facebook,
-  Twitter,
-  Instagram,
-  Youtube
 } from "lucide-react";
 
 export default function Contact() {
@@ -170,12 +166,6 @@ export default function Contact() {
               <p className="text-gray-400 text-xs max-w-xs">AI-verified deals and coupons updated daily.</p>
             </div>
             <div className="flex flex-col gap-3">
-              <div className="flex space-x-6">
-                <Facebook className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-                <Twitter className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-                <Instagram className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-                <Youtube className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-              </div>
               <div className="flex items-center gap-4 text-xs text-gray-400">
                 <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
                 <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
@@ -184,7 +174,7 @@ export default function Contact() {
               </div>
             </div>
             <div className="flex flex-col items-end gap-2 text-right">
-              <div className="text-gray-400 text-xs">© 2025 DealSphere. All rights reserved.</div>
+              <div className="text-gray-400 text-xs">© {new Date().getFullYear()} DealSphere. All rights reserved.</div>
               <p className="text-[10px] text-gray-500 max-w-[200px]">We may earn a commission on qualifying purchases.</p>
             </div>
           </div>

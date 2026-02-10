@@ -7,6 +7,7 @@ import CategoryPage from "@/pages/category";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
 import Blog from "@/pages/blog";
+import BlogArticle from "@/pages/blog-article";
 import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import PrivacyPolicy from "@/pages/privacy-policy";
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/category/:slug" component={CategoryPage} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
+      <Route path="/blog/:articleId" component={BlogArticle} />
       <Route path="/blog" component={Blog} />
       <Route path="/admin" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />

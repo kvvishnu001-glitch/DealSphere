@@ -10,9 +10,14 @@ from datetime import datetime
 router = APIRouter(tags=["seo"])
 
 
+def _get_base_url(request: Request) -> str:
+    forwarded_proto = request.headers.get("x-forwarded-proto", "https")
+    host = request.headers.get("host", request.base_url.hostname)
+    return f"{forwarded_proto}://{host}"
+
 @router.get("/sitemap.xml")
 async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)):
-    base_url = str(request.base_url).rstrip("/")
+    base_url = _get_base_url(request)
     today = datetime.utcnow().strftime("%Y-%m-%d")
 
     result = await db.execute(
@@ -47,9 +52,12 @@ async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)):
     static_pages = [
         ("/about", "0.5"),
         ("/contact", "0.5"),
-        ("/blog", "0.5"),
-        ("/privacy-policy", "0.3"),
-        ("/terms-conditions", "0.3"),
+        ("/blog", "0.6"),
+        ("/blog/how-to-find-best-deals", "0.5"),
+        ("/blog/ai-deal-verification", "0.5"),
+        ("/blog/coupon-strategies", "0.5"),
+        ("/blog/online-shopping-safety", "0.5"),
+        ("/blog/best-deal-categories", "0.5"),
     ]
     for path, priority in static_pages:
         urls.append(
@@ -95,7 +103,7 @@ async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.get("/robots.txt")
 async def robots_txt(request: Request):
-    base_url = str(request.base_url).rstrip("/")
+    base_url = _get_base_url(request)
     content = (
         "User-agent: *\n"
         "Allow: /\n"

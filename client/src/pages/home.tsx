@@ -16,10 +16,6 @@ import {
   Clock, 
   Tag, 
   Store, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Youtube, 
   X,
   LogOut,
   Loader2
@@ -820,12 +816,6 @@ export default function Home() {
             </div>
             
             <div className="flex flex-col gap-3">
-              <div className="flex space-x-6">
-                <Facebook className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-                <Twitter className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-                <Instagram className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-                <Youtube className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-              </div>
               <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
                 <Link href="/about" className="hover:text-white transition-colors">About</Link>
                 <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
@@ -837,7 +827,7 @@ export default function Home() {
 
             <div className="flex flex-col items-end gap-2 text-right">
               <div className="text-gray-400 text-xs">
-                © 2025 DealSphere. All rights reserved.
+                © {new Date().getFullYear()} DealSphere. All rights reserved.
               </div>
               <p className="text-[10px] text-gray-500 max-w-[200px]">
                 We may earn a commission on qualifying purchases.

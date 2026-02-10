@@ -19,7 +19,9 @@ from models import Deal as DealModel
 from routes.admin import router as admin_router
 from seo_helper import (
     generate_deal_seo, generate_home_seo, generate_category_seo,
+    generate_category_seo_with_deals,
     generate_about_seo, generate_contact_seo, generate_blog_seo,
+    generate_blog_article_seo,
     generate_generic_seo, inject_seo_into_html
 )
 from routes.seo import router as seo_router
@@ -340,7 +342,16 @@ if frontend_dist_path.exists():
             if not category_name:
                 category_name = category_slug.replace('-', ' ').title()
             
-            result = await db.execute(
+            deals_result = await db.execute(
+                select(DealModel).where(
+                    DealModel.is_active == True,
+                    DealModel.is_ai_approved == True,
+                    DealModel.status == 'approved',
+                    func.lower(DealModel.category) == category_name.lower()
+                ).limit(10)
+            )
+            cat_deals = deals_result.scalars().all()
+            deal_count_result = await db.execute(
                 select(func.count()).select_from(DealModel).where(
                     DealModel.is_active == True,
                     DealModel.is_ai_approved == True,
@@ -348,11 +359,12 @@ if frontend_dist_path.exists():
                     func.lower(DealModel.category) == category_name.lower()
                 )
             )
-            deal_count = result.scalar() or 0
+            deal_count = deal_count_result.scalar() or 0
         except Exception:
             category_name = category_slug.replace('-', ' ').title()
             deal_count = 0
-        seo_tags = generate_category_seo(category_name, category_slug, base_url, deal_count)
+            cat_deals = []
+        seo_tags = generate_category_seo_with_deals(category_name, category_slug, base_url, deal_count, cat_deals)
         return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
 
     @app.get("/about")
@@ -367,6 +379,57 @@ if frontend_dist_path.exists():
         base_url = _get_base_url(request)
         html_content = _read_html()
         seo_tags = generate_contact_seo(base_url)
+        return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
+
+    BLOG_ARTICLES = {
+        "how-to-find-best-deals": {
+            "title": "How to Find the Best Online Deals in 2025",
+            "excerpt": "Learn proven strategies for finding genuine discounts, comparing prices across retailers, and using AI-powered tools to maximize your savings on every purchase.",
+            "category": "Shopping Tips",
+            "date": "2025-01-15",
+        },
+        "ai-deal-verification": {
+            "title": "How AI Verifies Deals: Behind the Technology",
+            "excerpt": "Discover how artificial intelligence analyzes, scores, and validates online deals to ensure they offer genuine savings. Understanding the technology behind smart shopping.",
+            "category": "Technology",
+            "date": "2025-01-10",
+        },
+        "coupon-strategies": {
+            "title": "Coupon Strategies That Actually Work",
+            "excerpt": "Master the art of couponing with modern digital strategies. From browser extensions to loyalty programs, learn how to save 20-50% on everyday purchases.",
+            "category": "Money Saving",
+            "date": "2025-01-05",
+        },
+        "online-shopping-safety": {
+            "title": "Online Shopping Safety: Avoiding Scams and Fake Deals",
+            "excerpt": "Protect yourself from online shopping scams with these essential safety tips. Learn to identify legitimate deals, secure payment practices, and red flags to watch for.",
+            "category": "Safety",
+            "date": "2024-12-28",
+        },
+        "best-deal-categories": {
+            "title": "Top Deal Categories: Where to Find the Biggest Discounts",
+            "excerpt": "A comprehensive guide to the best deal categories including electronics, fashion, home goods, and more. Learn which categories offer the deepest discounts throughout the year.",
+            "category": "Shopping Guide",
+            "date": "2024-12-20",
+        },
+    }
+
+    @app.get("/blog/{article_id}")
+    async def serve_blog_article(article_id: str, request: Request):
+        base_url = _get_base_url(request)
+        html_content = _read_html()
+        article = BLOG_ARTICLES.get(article_id)
+        if article:
+            seo_tags = generate_blog_article_seo(
+                article_id, article["title"], article["excerpt"],
+                article["date"], article["category"], base_url
+            )
+        else:
+            seo_tags = generate_generic_seo(
+                "Article Not Found | DealSphere Blog",
+                "The article you're looking for could not be found.",
+                f"{base_url}/blog/{article_id}", base_url
+            )
         return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
 
     @app.get("/blog")

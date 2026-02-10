@@ -69,8 +69,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
       const response = await apiRequest('POST', `/api/deals/${deal.id}/click`);
       const data = await response.json();
       
-      // Open affiliate URL in new tab
-      window.open(data.affiliate_url || deal.affiliate_url, '_blank');
+      window.open(data.affiliate_url || deal.affiliate_url, '_blank', 'noopener,noreferrer');
       
       toast({
         title: "Deal Opened",
@@ -78,8 +77,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
       });
     } catch (error) {
       console.error('Failed to track deal click:', error);
-      // Fallback: open affiliate URL directly
-      window.open(deal.affiliate_url, '_blank');
+      window.open(deal.affiliate_url, '_blank', 'noopener,noreferrer');
       
       toast({
         title: "Deal Opened", 

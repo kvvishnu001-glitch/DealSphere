@@ -202,7 +202,7 @@ export default function PrivacyPolicy() {
       <Separator className="my-8" />
       
       <div className="text-center text-sm text-gray-500">
-        <p>© 2025 DealSphere. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} DealSphere. All rights reserved.</p>
       </div>
     </div>
   );
