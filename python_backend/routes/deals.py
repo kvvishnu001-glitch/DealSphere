@@ -18,6 +18,7 @@ async def get_deals(
     deal_type: Optional[str] = Query(None, description="Filter by deal type (top, hot, latest)"),
     category: Optional[str] = Query(None, description="Filter by category"),
     store: Optional[str] = Query(None, description="Filter by store"),
+    search: Optional[str] = Query(None, description="Search across title, description, store, category"),
     limit: int = Query(20, ge=1, le=100, description="Number of deals to return"),
     offset: int = Query(0, ge=0, description="Number of deals to skip"),
     db: AsyncSession = Depends(get_db)
@@ -28,11 +29,34 @@ async def get_deals(
         deal_type=deal_type,
         category=category,
         store=store,
+        search=search,
         limit=limit,
         offset=offset,
         only_approved=True  # Only show approved deals to public
     )
     return deals
+
+@router.get("/deals/search")
+async def search_deals(
+    q: str = Query(..., min_length=1, description="Search query"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    store: Optional[str] = Query(None, description="Filter by store"),
+    limit: int = Query(50, ge=1, le=500, description="Number of results"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    db: AsyncSession = Depends(get_db)
+):
+    """Search deals across all deal types in the database - publicly accessible"""
+    deals_service = DealsService(db)
+    deals = await deals_service.get_deals(
+        search=q,
+        category=category,
+        store=store,
+        limit=limit,
+        offset=offset,
+        only_approved=True
+    )
+    total = await deals_service.count_search_results(q, category=category, store=store)
+    return {"deals": deals, "total": total, "query": q}
 
 @router.get("/deals/count")
 async def get_deals_count(db: AsyncSession = Depends(get_db)):

@@ -55,6 +55,7 @@ export default function Home() {
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [selectedDiscount, setSelectedDiscount] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   
   // View All states for infinite scroll
   const [showAllTop, setShowAllTop] = useState(false);
@@ -64,6 +65,15 @@ export default function Home() {
   const [hotDealsPage, setHotDealsPage] = useState(1);
   const [latestDealsPage, setLatestDealsPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchLimit, setSearchLimit] = useState(20);
+
+  // Debounce search query - wait 400ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Enable real-time updates
   useRealTimeUpdates();
@@ -93,6 +103,54 @@ export default function Home() {
     },
     refetchInterval: 30000,
   });
+
+  // Reset search limit when search query changes
+  useEffect(() => {
+    setSearchLimit(20);
+  }, [debouncedSearch]);
+
+  // Search deals from backend when user types a search query
+  const { data: searchResults, isLoading: isSearching } = useQuery({
+    queryKey: ['/api/deals/search', debouncedSearch, searchLimit, selectedCategory, selectedStore],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.set('q', debouncedSearch);
+      params.set('limit', searchLimit.toString());
+      if (selectedCategory !== 'all') params.set('category', selectedCategory);
+      if (selectedStore !== 'all') params.set('store', selectedStore);
+      const response = await fetch(`/api/deals/search?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return {
+        deals: data.deals.map((deal: any) => ({
+          ...deal,
+          original_price: deal.originalPrice || deal.original_price,
+          sale_price: deal.salePrice || deal.sale_price,
+          discount_percentage: deal.discountPercentage || deal.discount_percentage,
+          image_url: deal.imageUrl || deal.image_url,
+          affiliate_url: deal.affiliateUrl || deal.affiliate_url,
+          store_logo_url: deal.storeLogoUrl || deal.store_logo_url,
+          review_count: deal.reviewCount || deal.review_count,
+          expires_at: deal.expiresAt || deal.expires_at,
+          deal_type: deal.dealType || deal.deal_type,
+          coupon_code: deal.couponCode || deal.coupon_code,
+          coupon_required: deal.couponRequired || deal.coupon_required,
+          is_active: deal.isActive !== undefined ? deal.isActive : deal.is_active,
+          is_ai_approved: deal.isAiApproved !== undefined ? deal.isAiApproved : deal.is_ai_approved,
+          ai_score: deal.aiScore || deal.ai_score,
+          click_count: deal.clickCount || deal.click_count,
+          created_at: deal.createdAt || deal.created_at,
+        })) as Deal[],
+        total: data.total,
+        query: data.query
+      };
+    },
+    enabled: debouncedSearch.length > 0,
+  });
+
+  const isSearchActive = debouncedSearch.length > 0;
 
   // Fetch deals with infinite scroll pagination
   const {
@@ -188,13 +246,6 @@ export default function Home() {
     // Basic field validation
     if (!deal.title || !deal.original_price || !deal.sale_price || !deal.store || !deal.category) {
       return false;
-    }
-    
-    // Search filter
-    if (searchQuery.trim() !== "") {
-      const query = searchQuery.toLowerCase();
-      const searchable = `${deal.title} ${deal.description} ${deal.store} ${deal.category}`.toLowerCase();
-      if (!searchable.includes(query)) return false;
     }
     
     // Category filter
@@ -482,6 +533,71 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Search Results Section - shown when user searches */}
+        {isSearchActive && (
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                <Search className="text-red-600 mr-2 w-5 h-5 sm:w-6 sm:h-6" />
+                Search Results
+              </h2>
+              <span className="text-xs sm:text-sm text-gray-500">
+                {isSearching ? 'Searching...' : `${searchResults?.total?.toLocaleString() || 0} results for "${debouncedSearch}"`}
+              </span>
+            </div>
+            
+            {isSearching && (
+              <div className="text-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-red-600 mb-4" />
+                <p className="text-gray-500">Searching all deals...</p>
+              </div>
+            )}
+
+            {!isSearching && searchResults && searchResults.deals.length > 0 && (
+              <>
+                <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {searchResults.deals.map((deal: Deal) => (
+                    <DealCard key={deal.id} deal={deal} variant="compact" />
+                  ))}
+                </div>
+                {searchResults.deals.length < searchResults.total && (
+                  <div className="text-center mt-6">
+                    <Button
+                      onClick={() => setSearchLimit(prev => prev + 20)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+                    >
+                      Load More Results ({(searchResults.total - searchResults.deals.length).toLocaleString()} remaining)
+                    </Button>
+                  </div>
+                )}
+                {searchResults.deals.length >= searchResults.total && (
+                  <div className="text-center py-6 text-gray-500 text-sm">
+                    Showing all {searchResults.total.toLocaleString()} results for "{debouncedSearch}"
+                  </div>
+                )}
+              </>
+            )}
+
+            {!isSearching && searchResults && searchResults.deals.length === 0 && (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <div className="text-4xl mb-4">🔍</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No deals found</h3>
+                  <p className="text-gray-600 mb-4">
+                    We couldn't find any deals matching "{debouncedSearch}". Try a different search term.
+                  </p>
+                  <Button onClick={() => setSearchQuery("")} className="bg-red-600 hover:bg-red-700">
+                    Clear Search
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </section>
+        )}
+
+        {/* Regular deal sections - hidden when search is active */}
+        {!isSearchActive && (
+        <>
         {/* Top Deals Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
@@ -687,6 +803,8 @@ export default function Home() {
               <div className="text-sm">Check back soon for more amazing offers</div>
             </div>
           </div>
+        )}
+        </>
         )}
       </main>
 

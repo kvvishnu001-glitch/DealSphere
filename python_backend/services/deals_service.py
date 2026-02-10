@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, desc, asc
+from sqlalchemy import select, func, and_, or_, desc, asc
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
 import uuid
@@ -18,36 +18,61 @@ class DealsService:
         self.db = db
         self.validator = DealValidator()
 
+    def _base_filters(self):
+        return and_(
+            DealModel.is_active == True,
+            DealModel.title.isnot(None),
+            DealModel.title != '',
+            DealModel.description.isnot(None), 
+            DealModel.description != '',
+            DealModel.original_price.isnot(None),
+            DealModel.sale_price.isnot(None),
+            DealModel.store.isnot(None),
+            DealModel.store != '',
+            DealModel.category.isnot(None),
+            DealModel.category != '',
+            DealModel.affiliate_url.isnot(None),
+            DealModel.affiliate_url != '',
+            DealModel.image_url.isnot(None),
+            DealModel.image_url != ''
+        )
+
+    def _search_filter(self, search: str):
+        search_term = f"%{search.lower()}%"
+        return or_(
+            func.lower(DealModel.title).like(search_term),
+            func.lower(DealModel.description).like(search_term),
+            func.lower(DealModel.store).like(search_term),
+            func.lower(DealModel.category).like(search_term)
+        )
+
+    async def count_search_results(self, search: str, category: Optional[str] = None, store: Optional[str] = None) -> int:
+        query = select(func.count(DealModel.id)).where(
+            self._base_filters()
+        ).where(
+            DealModel.is_ai_approved == True
+        ).where(
+            self._search_filter(search)
+        )
+        if category:
+            query = query.where(DealModel.category == category)
+        if store:
+            query = query.where(DealModel.store == store)
+        result = await self.db.execute(query)
+        return result.scalar() or 0
+
     async def get_deals(
         self, 
         deal_type: Optional[str] = None,
         category: Optional[str] = None,
         store: Optional[str] = None,
+        search: Optional[str] = None,
         limit: int = 50,
         offset: int = 0,
         only_approved: bool = True
     ) -> List[DealResponse]:
         """Get deals with optional filtering"""
-        query = select(DealModel).where(
-            and_(
-                DealModel.is_active == True,
-                # Apply mandatory field validation at database level
-                DealModel.title.isnot(None),
-                DealModel.title != '',
-                DealModel.description.isnot(None), 
-                DealModel.description != '',
-                DealModel.original_price.isnot(None),
-                DealModel.sale_price.isnot(None),
-                DealModel.store.isnot(None),
-                DealModel.store != '',
-                DealModel.category.isnot(None),
-                DealModel.category != '',
-                DealModel.affiliate_url.isnot(None),
-                DealModel.affiliate_url != '',
-                DealModel.image_url.isnot(None),
-                DealModel.image_url != ''
-            )
-        )
+        query = select(DealModel).where(self._base_filters())
         
         if only_approved:
             query = query.where(DealModel.is_ai_approved == True)
@@ -60,6 +85,9 @@ class DealsService:
             
         if store:
             query = query.where(DealModel.store == store)
+
+        if search:
+            query = query.where(self._search_filter(search))
         
         # Order by popularity for 'top', created_at for others
         if deal_type == 'top':
