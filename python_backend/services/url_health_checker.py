@@ -19,9 +19,13 @@ from models import Deal as DealModel
 logger = logging.getLogger(__name__)
 
 CONCURRENT_CHECKS = 10
+BATCH_SIZE = 50
 REQUEST_TIMEOUT = 15
 MAX_FAILURES_BEFORE_FLAG = 2
 TTL_HOURS = 24
+
+_check_progress = {"running": False, "checked": 0, "total": 0, "status": "idle"}
+_check_lock = asyncio.Lock()
 
 SAFE_HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; DealSphere URL Checker/1.0)",
@@ -126,131 +130,162 @@ async def check_single_url(session: aiohttp.ClientSession, url: str) -> Dict[str
         return {"url": url, "status": 0, "accessible": False, "error": str(e)}
 
 
+def get_check_progress() -> Dict[str, Any]:
+    return dict(_check_progress)
+
+
 async def run_url_health_check(check_all: bool = False) -> Dict[str, Any]:
-    logger.info("Starting URL health check for active deals")
-    now = datetime.utcnow()
-    stats = {
-        "total_checked": 0,
-        "healthy": 0,
-        "broken": 0,
-        "flagged_pending_review": 0,
-        "removed": 0,
-        "errors": 0,
-        "started_at": now.isoformat(),
-    }
+    global _check_progress
+    if _check_lock.locked():
+        return {"error": "A URL health check is already running", "total_checked": 0}
 
-    try:
-        async with async_session() as db:
-            query = select(DealModel).where(
-                and_(
-                    DealModel.is_active == True,
-                    DealModel.status.in_(["approved", "pending"]),
-                )
-            )
-            if not check_all:
-                query = query.where(
-                    or_(
-                        DealModel.url_last_checked.is_(None),
-                        DealModel.url_last_checked < now - timedelta(hours=2),
+    async with _check_lock:
+        logger.info("Starting URL health check for active deals")
+        now = datetime.utcnow()
+        stats = {
+            "total_checked": 0,
+            "healthy": 0,
+            "broken": 0,
+            "flagged_pending_review": 0,
+            "removed": 0,
+            "errors": 0,
+            "started_at": now.isoformat(),
+        }
+
+        try:
+            deal_ids = []
+            async with async_session() as db:
+                query = select(DealModel.id).where(
+                    and_(
+                        DealModel.is_active == True,
+                        DealModel.status.in_(["approved", "pending"]),
                     )
-                ).limit(200)
-            result = await db.execute(
-                query.order_by(DealModel.url_last_checked.asc().nullsfirst())
-            )
-            deals = result.scalars().all()
+                )
+                if not check_all:
+                    query = query.where(
+                        or_(
+                            DealModel.url_last_checked.is_(None),
+                            DealModel.url_last_checked < now - timedelta(hours=2),
+                        )
+                    ).limit(200)
+                query = query.order_by(DealModel.url_last_checked.asc().nullsfirst())
+                result = await db.execute(query)
+                deal_ids = [row[0] for row in result.all()]
 
-            if not deals:
+            if not deal_ids:
                 logger.info("No deals need URL checking right now")
+                _check_progress = {"running": False, "checked": 0, "total": 0, "status": "idle"}
                 stats["message"] = "No deals needed checking"
                 return stats
 
-            logger.info(f"Checking URLs for {len(deals)} deals")
+            total_deals = len(deal_ids)
+            logger.info(f"Checking URLs for {total_deals} deals in batches of {BATCH_SIZE}")
+            _check_progress = {"running": True, "checked": 0, "total": total_deals, "status": "running"}
 
-            semaphore = asyncio.Semaphore(CONCURRENT_CHECKS)
+            for batch_start in range(0, total_deals, BATCH_SIZE):
+                batch_ids = deal_ids[batch_start:batch_start + BATCH_SIZE]
 
-            async def check_with_semaphore(
-                http_session: aiohttp.ClientSession, deal: DealModel
-            ):
-                async with semaphore:
-                    return deal, await check_single_url(http_session, deal.affiliate_url)
-
-            connector = aiohttp.TCPConnector(limit=CONCURRENT_CHECKS, ssl=False)
-            async with aiohttp.ClientSession(connector=connector) as http_session:
-                tasks = [check_with_semaphore(http_session, deal) for deal in deals]
-                results = await asyncio.gather(*tasks, return_exceptions=True)
-
-            for item in results:
-                stats["total_checked"] += 1
-
-                if isinstance(item, Exception):
-                    stats["errors"] += 1
-                    logger.error(f"URL check exception: {item}")
-                    continue
-
-                deal, check_result = item
-
-                deal.url_last_checked = now
-
-                if check_result["accessible"]:
-                    deal.url_check_failures = 0
-                    deal.url_status = "healthy"
-                    stats["healthy"] += 1
-                else:
-                    error_type = check_result.get("error", "")
-                    http_status = check_result.get("status", 0)
-                    is_definite_dead = (
-                        error_type == "soft_404_detected"
-                        or http_status == 404
-                        or http_status == 410
+                async with async_session() as db:
+                    result = await db.execute(
+                        select(DealModel).where(DealModel.id.in_(batch_ids))
                     )
+                    batch_deals = result.scalars().all()
 
-                    if is_definite_dead:
-                        deal.url_status = "broken"
-                        deal.status = "deleted"
-                        deal.is_active = False
-                        deal.url_flagged_at = now
-                        deal.url_check_failures = (deal.url_check_failures or 0) + 1
-                        stats["removed"] += 1
-                        logger.info(
-                            f"Deal {deal.id} removed - URL is dead "
-                            f"(status={http_status}, error={error_type}): {deal.affiliate_url}"
-                        )
-                    else:
-                        deal.url_check_failures = (deal.url_check_failures or 0) + 1
-                        logger.warning(
-                            f"Deal {deal.id} URL failed check #{deal.url_check_failures}: "
-                            f"{deal.affiliate_url} - status {http_status} "
-                            f"error: {error_type or 'N/A'}"
-                        )
+                    semaphore = asyncio.Semaphore(CONCURRENT_CHECKS)
 
-                        if deal.url_check_failures >= MAX_FAILURES_BEFORE_FLAG:
-                            deal.url_status = "broken"
-                            deal.status = "pending"
-                            deal.is_ai_approved = False
-                            deal.url_flagged_at = now
-                            stats["flagged_pending_review"] += 1
-                            logger.info(
-                                f"Deal {deal.id} flagged as pending review - "
-                                f"URL broken after {deal.url_check_failures} failures"
-                            )
+                    async def check_with_semaphore(
+                        http_session: aiohttp.ClientSession, deal: DealModel
+                    ):
+                        async with semaphore:
+                            return deal, await check_single_url(http_session, deal.affiliate_url)
+
+                    connector = aiohttp.TCPConnector(limit=CONCURRENT_CHECKS, ssl=False)
+                    async with aiohttp.ClientSession(connector=connector) as http_session:
+                        tasks = [check_with_semaphore(http_session, deal) for deal in batch_deals]
+                        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                    for item in results:
+                        stats["total_checked"] += 1
+
+                        if isinstance(item, Exception):
+                            stats["errors"] += 1
+                            logger.error(f"URL check exception: {item}")
+                            continue
+
+                        deal, check_result = item
+                        deal.url_last_checked = now
+
+                        if check_result["accessible"]:
+                            deal.url_check_failures = 0
+                            deal.url_status = "healthy"
+                            stats["healthy"] += 1
                         else:
-                            deal.url_status = "broken"
-                            stats["broken"] += 1
+                            error_type = check_result.get("error", "")
+                            http_status = check_result.get("status", 0)
+                            is_definite_dead = (
+                                error_type == "soft_404_detected"
+                                or http_status == 404
+                                or http_status == 410
+                            )
 
-            await db.commit()
+                            if is_definite_dead:
+                                deal.url_status = "broken"
+                                deal.status = "deleted"
+                                deal.is_active = False
+                                deal.url_flagged_at = now
+                                deal.url_check_failures = (deal.url_check_failures or 0) + 1
+                                stats["removed"] += 1
+                                logger.info(
+                                    f"Deal {deal.id} removed - URL is dead "
+                                    f"(status={http_status}, error={error_type}): {deal.affiliate_url}"
+                                )
+                            else:
+                                deal.url_check_failures = (deal.url_check_failures or 0) + 1
+                                logger.warning(
+                                    f"Deal {deal.id} URL failed check #{deal.url_check_failures}: "
+                                    f"{deal.affiliate_url} - status {http_status} "
+                                    f"error: {error_type or 'N/A'}"
+                                )
 
-        stats["completed_at"] = datetime.utcnow().isoformat()
-        logger.info(
-            f"URL health check completed: {stats['total_checked']} checked, "
-            f"{stats['healthy']} healthy, {stats['broken']} broken, "
-            f"{stats['flagged_pending_review']} flagged for review"
-        )
-        return stats
+                                if deal.url_check_failures >= MAX_FAILURES_BEFORE_FLAG:
+                                    deal.url_status = "broken"
+                                    deal.status = "pending"
+                                    deal.is_ai_approved = False
+                                    deal.url_flagged_at = now
+                                    stats["flagged_pending_review"] += 1
+                                    logger.info(
+                                        f"Deal {deal.id} flagged as pending review - "
+                                        f"URL broken after {deal.url_check_failures} failures"
+                                    )
+                                else:
+                                    deal.url_status = "broken"
+                                    stats["broken"] += 1
 
-    except Exception as e:
-        logger.error(f"Error in URL health check: {e}")
-        stats["error"] = str(e)
-        return stats
+                    await db.commit()
+
+                _check_progress = {
+                    "running": True,
+                    "checked": stats["total_checked"],
+                    "total": total_deals,
+                    "status": "running",
+                }
+                logger.info(f"Batch complete: {stats['total_checked']}/{total_deals} checked")
+
+            _check_progress = {"running": False, "checked": total_deals, "total": total_deals, "status": "done"}
+
+            stats["completed_at"] = datetime.utcnow().isoformat()
+            logger.info(
+                f"URL health check completed: {stats['total_checked']} checked, "
+                f"{stats['healthy']} healthy, {stats['broken']} broken, "
+                f"{stats['flagged_pending_review']} flagged for review"
+            )
+            return stats
+
+        except Exception as e:
+            logger.error(f"Error in URL health check: {e}")
+            _check_progress = {"running": False, "checked": 0, "total": 0, "status": "error"}
+            stats["error"] = str(e)
+            return stats
 
 
 async def cleanup_stale_flagged_deals() -> Dict[str, Any]:

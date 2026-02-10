@@ -362,17 +362,9 @@ export default function AdminDashboard() {
     setUrlCheckRunning(true);
     setUrlCheckResult(null);
     setUrlCheckProgress(0);
-    setUrlCheckStatus("Getting deal count...");
+    setUrlCheckStatus("Starting URL check...");
     try {
       const token = localStorage.getItem("admin_token");
-      const statsRes = await fetch("/api/admin/url-health", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const initialStats = await statsRes.json();
-      const totalDeals = initialStats.total_active || 1;
-      const initialUnchecked = initialStats.unchecked || 0;
-
-      setUrlCheckStatus(`Checking ${totalDeals} deal URLs...`);
 
       let polling = true;
       const pollInterval = setInterval(async () => {
@@ -382,13 +374,14 @@ export default function AdminDashboard() {
             headers: { Authorization: `Bearer ${token}` }
           });
           const pollStats = await pollRes.json();
-          const currentUnchecked = pollStats.unchecked || 0;
-          const checked = Math.max(0, initialUnchecked - currentUnchecked);
-          const pct = initialUnchecked > 0 ? Math.min(95, Math.round((checked / initialUnchecked) * 100)) : 50;
-          setUrlCheckProgress(pct);
-          setUrlCheckStatus(`Checking URLs... ${checked} of ${initialUnchecked} done`);
+          const progress = pollStats.check_progress;
+          if (progress && progress.running && progress.total > 0) {
+            const pct = Math.min(95, Math.round((progress.checked / progress.total) * 100));
+            setUrlCheckProgress(pct);
+            setUrlCheckStatus(`Checking URLs... ${progress.checked} of ${progress.total} done`);
+          }
         } catch {}
-      }, 2000);
+      }, 1500);
 
       const checkResponse = await fetch("/api/admin/url-health/check", {
         method: "POST",

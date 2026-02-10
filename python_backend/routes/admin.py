@@ -499,8 +499,10 @@ async def get_url_health_stats_endpoint(
     db: AsyncSession = Depends(get_db)
 ):
     check_permission(current_admin, "manage_deals")
-    from services.url_health_checker import get_url_health_stats
+    from services.url_health_checker import get_url_health_stats, get_check_progress
     stats = await get_url_health_stats()
+    progress = get_check_progress()
+    stats["check_progress"] = progress
     return stats
 
 @router.post("/url-health/check")
