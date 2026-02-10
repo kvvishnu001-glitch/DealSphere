@@ -678,144 +678,25 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12 sticky bottom-0 z-50 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
+      <footer className="bg-gray-800 text-white py-4 sticky bottom-0 z-50 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center mb-4">
-                <Percent className="text-red-600 text-2xl mr-2" />
-                <h3 className="text-xl font-bold">DealSphere</h3>
-              </div>
-              <p className="text-gray-300 mb-4">
-                AI-powered deals and coupons platform helping you save money on your favorite products.
-              </p>
-              <div className="flex space-x-4">
-                <Facebook className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-                <Twitter className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-                <Instagram className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-                <Youtube className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-              </div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center">
+              <Percent className="text-red-600 text-xl mr-2" />
+              <h3 className="text-lg font-bold">DealSphere</h3>
             </div>
             
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Popular Categories</h4>
-              <ul className="space-y-2 text-gray-300">
-                {availableCategories.slice(0, 6).map((category) => (
-                  <li key={category}>
-                    <button 
-                      onClick={() => {
-                        setSelectedCategory(category);
-                        window.scrollTo({ top: 200, behavior: 'smooth' });
-                      }}
-                      className="hover:text-white transition-colors text-left"
-                    >
-                      {category}
-                    </button>
-                  </li>
-                ))}
-                {availableCategories.length === 0 && (
-                  <>
-                    <li><span className="text-gray-400">Electronics</span></li>
-                    <li><span className="text-gray-400">Fashion</span></li>
-                    <li><span className="text-gray-400">Home & Garden</span></li>
-                    <li><span className="text-gray-400">Sports</span></li>
-                    <li><span className="text-gray-400">Beauty</span></li>
-                    <li><span className="text-gray-400">Books</span></li>
-                  </>
-                )}
-              </ul>
+            <div className="flex space-x-6">
+              <Facebook className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
+              <Twitter className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
+              <Instagram className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
+              <Youtube className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
             </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Top Stores</h4>
-              <ul className="space-y-2 text-gray-300">
-                {availableStores.slice(0, 6).map((store) => (
-                  <li key={store}>
-                    <button 
-                      onClick={() => {
-                        setSelectedStore(store);
-                        window.scrollTo({ top: 200, behavior: 'smooth' });
-                      }}
-                      className="hover:text-white transition-colors text-left"
-                    >
-                      {store}
-                    </button>
-                  </li>
-                ))}
-                {availableStores.length === 0 && (
-                  <>
-                    <li><span className="text-gray-400">Amazon</span></li>
-                    <li><span className="text-gray-400">Target</span></li>
-                    <li><span className="text-gray-400">Best Buy</span></li>
-                    <li><span className="text-gray-400">Walmart</span></li>
-                    <li><span className="text-gray-400">eBay</span></li>
-                    <li><span className="text-gray-400">Macy's</span></li>
-                  </>
-                )}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-300">
-                <li>
-                  <button 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="hover:text-white transition-colors text-left"
-                  >
-                    About DealSphere
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => {
-                      const email = 'support@dealsphere.com';
-                      window.location.href = `mailto:${email}?subject=DealSphere Inquiry`;
-                    }}
-                    className="hover:text-white transition-colors text-left"
-                  >
-                    Contact Support
-                  </button>
-                </li>
 
-                <li>
-                  <Link href="/terms-conditions" className="hover:text-white transition-colors">
-                    Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/privacy-policy" className="hover:text-white transition-colors">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="hover:text-white transition-colors text-left"
-                  >
-                    Affiliate Disclosure
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-600 mt-8 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="flex flex-col sm:flex-row items-center gap-4 text-gray-300 text-sm mb-4 md:mb-0">
-                <p>© 2025 DealSphere. All rights reserved.</p>
-                <div className="flex gap-4">
-                  <Link href="/privacy-policy" className="hover:text-white transition-colors" data-testid="link-privacy-policy">
-                    Privacy Policy
-                  </Link>
-                  <Link href="/terms-conditions" className="hover:text-white transition-colors" data-testid="link-terms-conditions">
-                    Terms & Conditions
-                  </Link>
-                </div>
-              </div>
-              <div className="text-sm text-gray-300 max-w-md">
-                <strong>Affiliate Disclosure:</strong> DealSphere is a participant in various affiliate programs and may earn commissions from qualifying purchases made through our links.
-              </div>
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+              <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms</Link>
+              <span>© 2025 DealSphere</span>
             </div>
           </div>
         </div>
