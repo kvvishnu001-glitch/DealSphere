@@ -19,6 +19,8 @@ export default function AdminDashboard() {
   const [urlCheckResult, setUrlCheckResult] = useState<any>(null);
   const [urlCheckProgress, setUrlCheckProgress] = useState(0);
   const [urlCheckStatus, setUrlCheckStatus] = useState("");
+  const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [newDeal, setNewDeal] = useState({
     title: "",
     description: "",
@@ -90,6 +92,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     filterDeals();
+    setSelectedDeals(new Set());
   }, [deals, searchTerm, selectedCategory, statusFilter]);
 
   const fetchData = async () => {
@@ -426,6 +429,53 @@ export default function AdminDashboard() {
       alert("Error running URL health check: " + error);
     } finally {
       setUrlCheckRunning(false);
+    }
+  };
+
+  const toggleDealSelection = (dealId: string) => {
+    setSelectedDeals(prev => {
+      const next = new Set(prev);
+      if (next.has(dealId)) next.delete(dealId);
+      else next.add(dealId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedDeals.size === filteredDeals.length) {
+      setSelectedDeals(new Set());
+    } else {
+      setSelectedDeals(new Set(filteredDeals.map((d: any) => d.id)));
+    }
+  };
+
+  const runBulkAction = async (action: string) => {
+    const count = selectedDeals.size;
+    const label = action === "delete" ? "permanently delete" : action;
+    if (!confirm(`Are you sure you want to ${label} ${count} selected deal${count > 1 ? 's' : ''}?`)) return;
+    setBulkActionLoading(true);
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/admin/deals/bulk", {
+        method: "POST",
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ deal_ids: Array.from(selectedDeals), action })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message);
+        setSelectedDeals(new Set());
+        fetchData();
+      } else {
+        alert("Error: " + (data.detail || "Something went wrong"));
+      }
+    } catch (error) {
+      alert("Error performing bulk action: " + error);
+    } finally {
+      setBulkActionLoading(false);
     }
   };
 
@@ -1202,6 +1252,89 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            {selectedDeals.size > 0 && (
+              <div style={{ 
+                backgroundColor: "#e3f2fd", 
+                border: "1px solid #90caf9", 
+                borderRadius: "8px", 
+                padding: "12px 20px", 
+                marginBottom: "15px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "10px"
+              }}>
+                <span style={{ fontWeight: "bold", fontSize: "14px", color: "#1565c0" }}>
+                  {selectedDeals.size} deal{selectedDeals.size > 1 ? 's' : ''} selected
+                </span>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => runBulkAction("approve")}
+                    disabled={bulkActionLoading}
+                    style={{ 
+                      padding: "6px 16px", 
+                      backgroundColor: "#28a745", 
+                      color: "white", 
+                      border: "none", 
+                      borderRadius: "4px", 
+                      cursor: bulkActionLoading ? "not-allowed" : "pointer",
+                      fontSize: "13px",
+                      opacity: bulkActionLoading ? 0.6 : 1
+                    }}
+                  >
+                    ✓ Approve Selected
+                  </button>
+                  <button
+                    onClick={() => runBulkAction("reject")}
+                    disabled={bulkActionLoading}
+                    style={{ 
+                      padding: "6px 16px", 
+                      backgroundColor: "#ffc107", 
+                      color: "black", 
+                      border: "none", 
+                      borderRadius: "4px", 
+                      cursor: bulkActionLoading ? "not-allowed" : "pointer",
+                      fontSize: "13px",
+                      opacity: bulkActionLoading ? 0.6 : 1
+                    }}
+                  >
+                    ✗ Reject Selected
+                  </button>
+                  <button
+                    onClick={() => runBulkAction("delete")}
+                    disabled={bulkActionLoading}
+                    style={{ 
+                      padding: "6px 16px", 
+                      backgroundColor: "#dc3545", 
+                      color: "white", 
+                      border: "none", 
+                      borderRadius: "4px", 
+                      cursor: bulkActionLoading ? "not-allowed" : "pointer",
+                      fontSize: "13px",
+                      opacity: bulkActionLoading ? 0.6 : 1
+                    }}
+                  >
+                    🗑 Delete Selected
+                  </button>
+                  <button
+                    onClick={() => setSelectedDeals(new Set())}
+                    style={{ 
+                      padding: "6px 16px", 
+                      backgroundColor: "transparent", 
+                      color: "#666", 
+                      border: "1px solid #ccc", 
+                      borderRadius: "4px", 
+                      cursor: "pointer",
+                      fontSize: "13px"
+                    }}
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Deals Table */}
             {filteredDeals.length > 0 ? (
               <div style={{ backgroundColor: "white", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", overflow: "hidden" }}>
@@ -1209,6 +1342,15 @@ export default function AdminDashboard() {
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead style={{ backgroundColor: "#f8f9fa" }}>
                       <tr>
+                        <th style={{ padding: "12px", textAlign: "center", borderBottom: "1px solid #dee2e6", width: "40px" }}>
+                          <input 
+                            type="checkbox" 
+                            checked={filteredDeals.length > 0 && selectedDeals.size === filteredDeals.length}
+                            onChange={toggleSelectAll}
+                            style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                            title="Select all"
+                          />
+                        </th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Deal</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Store</th>
                         <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6" }}>Category</th>
@@ -1223,7 +1365,15 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {filteredDeals.map((deal) => (
-                        <tr key={deal.id} style={{ borderBottom: "1px solid #dee2e6" }}>
+                        <tr key={deal.id} style={{ borderBottom: "1px solid #dee2e6", backgroundColor: selectedDeals.has(deal.id) ? "#e3f2fd" : "transparent" }}>
+                          <td style={{ padding: "12px", textAlign: "center" }}>
+                            <input 
+                              type="checkbox" 
+                              checked={selectedDeals.has(deal.id)}
+                              onChange={() => toggleDealSelection(deal.id)}
+                              style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                            />
+                          </td>
                           <td style={{ padding: "12px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                               <img 

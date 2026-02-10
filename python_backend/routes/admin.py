@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, desc, select
+from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import List, Optional
 import uuid
@@ -495,3 +496,62 @@ async def trigger_stale_cleanup(
         ip_address=request.client.host if request.client else None
     )
     return result
+
+
+class BulkActionRequest(BaseModel):
+    deal_ids: List[str]
+    action: str
+
+
+@router.post("/deals/bulk")
+async def bulk_deal_action(
+    request: Request,
+    body: BulkActionRequest,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    if body.action not in ("approve", "reject", "delete"):
+        raise HTTPException(status_code=400, detail="Invalid action. Must be approve, reject, or delete.")
+    if not body.deal_ids:
+        raise HTTPException(status_code=400, detail="No deal IDs provided.")
+
+    if body.action in ("approve", "reject"):
+        check_permission(current_admin, "approve_deals")
+    else:
+        check_permission(current_admin, "manage_deals")
+
+    now = datetime.utcnow()
+    result = await db.execute(
+        select(Deal).where(Deal.id.in_(body.deal_ids))
+    )
+    deals = result.scalars().all()
+    affected = 0
+
+    for deal in deals:
+        if body.action == "approve":
+            deal.status = "approved"
+            deal.is_ai_approved = True
+            deal.is_active = True
+            deal.updated_at = now
+            affected += 1
+        elif body.action == "reject":
+            deal.status = "rejected"
+            deal.is_ai_approved = False
+            deal.is_active = False
+            deal.rejected_at = now
+            deal.updated_at = now
+            affected += 1
+        elif body.action == "delete":
+            deal.status = "deleted"
+            deal.is_active = False
+            deal.deleted_at = now
+            deal.updated_at = now
+            affected += 1
+
+    await db.commit()
+    await log_audit(
+        db, current_admin, f"bulk_{body.action}", "deal", None,
+        {"deal_ids": body.deal_ids, "affected": affected},
+        ip_address=request.client.host if request.client else None
+    )
+    return {"message": f"Successfully {body.action}d {affected} deals", "affected": affected}
