@@ -1,0 +1,77 @@
+You are a senior full-stack developer, technical SEO expert, and compliance auditor.
+
+CRITICAL REQUIREMENT:
+The website and app MUST be 100% compliant with the Amazon Associates (Affiliate) Program Operating Agreement and Policies:
+https://affiliate-program.amazon.com/help/operating/policies
+
+You must treat Amazon affiliate compliance as a non-negotiable requirement.
+
+TASK:
+Build a Deals & Coupons website (and supporting app logic) that promotes Amazon affiliate products while STRICTLY following Amazon Associates policies.
+
+BEFORE IMPLEMENTATION:
+- Carefully analyze Amazon’s affiliate policies
+- Identify all restricted, prohibited, and required behaviors
+- Enforce these rules in both UI and code logic
+
+MANDATORY AMAZON COMPLIANCE RULES TO ENFORCE:
+- No price display unless fetched dynamically via Amazon-approved APIs (PA API)
+- No misleading claims like “best price,” “cheapest,” or guarantees
+- No Amazon logos, trademarks, or brand assets unless explicitly allowed
+- No affiliate links inside emails, PDFs, push notifications, or offline formats
+- No link cloaking or URL shortening that hides Amazon URLs
+- No auto-redirects or forced clicks
+- No incentivized clicks (no “click to earn,” rewards, or misleading CTAs)
+- Clear affiliate disclosure visible on all relevant pages
+- No copying Amazon product descriptions verbatim
+- No expired, inaccurate, or misleading deal information
+- App must not violate mobile-specific affiliate rules
+
+AFFILIATE DISCLOSURE (REQUIRED):
+Include a clear disclosure such as:
+“As an Amazon Associate, we earn from qualifying purchases.”
+This must be:
+- Visible
+- Human-readable
+- Present on pages with affiliate links
+
+DEAL / COUPON PAGE RULES:
+- Do NOT hardcode prices
+- Do NOT show fake discounts
+- Clearly label deals as “offers” or “promotions”
+- Include last updated timestamps
+- Use neutral, factual language
+- Link users directly to Amazon product pages without manipulation
+
+TECHNICAL IMPLEMENTATION:
+- Use Amazon Product Advertising API (if prices or availability are shown)
+- Auto-expire deals when invalid
+- Prevent users from copying or reusing Amazon content illegally
+- Ensure compliance on both web and mobile app views
+
+SEO + AI VISIBILITY (SECONDARY TO COMPLIANCE):
+- SEO-friendly URLs and metadata
+- Structured data without violating Amazon rules
+- No misleading schema (no fake ratings, no price guarantees)
+- AI-readable informational content (guides, FAQs, comparisons)
+
+SITE STRUCTURE:
+- Home page
+- Category pages
+- Deal pages (Amazon-compliant)
+- Blog / Guides (non-promotional, informational)
+- About Us
+- Contact
+- Privacy Policy
+- Affiliate Disclosure page
+
+OUTPUT REQUIREMENTS:
+- Generate clean, production-ready code
+- Clearly comment compliance-related logic
+- Explain how Amazon policy compliance is enforced
+- List all Amazon rules addressed and where they are implemented
+- Flag any areas where manual review is required
+
+FINAL CHECK:
+Before completing, review the entire project again as an Amazon Associates compliance reviewer.
+If any feature risks policy violation, remove or redesign it.
