@@ -58,6 +58,9 @@ async def sitemap_xml(request: Request, db: AsyncSession = Depends(get_db)):
         ("/blog/coupon-strategies", "0.5"),
         ("/blog/online-shopping-safety", "0.5"),
         ("/blog/best-deal-categories", "0.5"),
+        ("/affiliate-disclosure", "0.4"),
+        ("/privacy-policy", "0.3"),
+        ("/terms-conditions", "0.3"),
     ]
     for path, priority in static_pages:
         urls.append(

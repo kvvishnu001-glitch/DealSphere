@@ -3,6 +3,7 @@
 DealSphere is an AI-powered deals and coupons platform that aggregates product deals from various stores and uses artificial intelligence to validate and categorize them. The platform now features a public-facing deals browser that shows all deal types (top deals, hot deals, latest deals) without requiring authentication, and an admin dashboard for managing deal submissions, approvals, and analytics. Built as a full-stack application with React frontend and Express backend, it leverages OpenAI for deal validation. A Python backend implementation has also been developed as an alternative.
 
 ## Recent Changes (2026-02-10)
+- **Amazon Associates Compliance**: Full compliance with Amazon Operating Agreement - affiliate disclosure page, "As an Amazon Associate" statement on all pages, pricing disclaimers ("Prices subject to change"), removed price guarantees/superlatives, sanitized social shares (no prices), compliant short URLs (no link cloaking), privacy policy updated with Amazon-specific disclosure
 - **User Management System**: Full admin user management in the admin portal - create users, assign roles (super_admin/admin/editor/viewer), select granular permissions per user
 - **Permission-Based Access Control**: 7 permission types (manage_deals, approve_deals, manage_users, view_analytics, manage_affiliates, manage_automation, upload_deals) enforced on all admin routes
 - **Audit Trail System**: Complete audit logging table tracking all admin actions (login, CRUD operations, user changes) with timestamps, IP addresses, and action details

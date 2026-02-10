@@ -363,9 +363,9 @@ export default function AdminDashboard() {
     switch (networkType) {
       case 'amazon':
         csvContent = `title,description,original_price,sale_price,store,category,affiliate_url,image_url,deal_type,coupon_code,coupon_required,needs_ai_review
-"Amazon Echo Dot (5th Gen)","Smart speaker with Alexa - Charcoal",49.99,29.99,"Amazon","Electronics","https://amazon.com/dp/B09B8V1LZ3?tag=yourstore-20","https://m.media-amazon.com/images/I/714Rq4k05UL.jpg","hot","SAVE20",false,false
-"Wireless Bluetooth Headphones","Premium sound quality with noise cancellation",199.99,99.99,"Amazon","Electronics","https://amazon.com/dp/B08PZHYWJS?tag=yourstore-20","https://m.media-amazon.com/images/I/61a45+UbLYL.jpg","regular","",false,false
-"Kitchen Stand Mixer","Professional 6-quart stand mixer with attachments",399.99,249.99,"Amazon","Home & Garden","https://amazon.com/dp/B00005UP2P?tag=yourstore-20","https://m.media-amazon.com/images/I/81VjYXa6NFL.jpg","top","KITCHEN15",true,false`;
+"Amazon Echo Dot (5th Gen)","Smart speaker with Alexa - Charcoal",49.99,29.99,"Amazon","Electronics","https://amazon.com/dp/B09B8V1LZ3?tag=YOURTAG-20","https://m.media-amazon.com/images/I/714Rq4k05UL.jpg","hot","SAVE20",false,false
+"Wireless Bluetooth Headphones","Premium sound quality with noise cancellation",199.99,99.99,"Amazon","Electronics","https://amazon.com/dp/B08PZHYWJS?tag=YOURTAG-20","https://m.media-amazon.com/images/I/61a45+UbLYL.jpg","regular","",false,false
+"Kitchen Stand Mixer","Professional 6-quart stand mixer with attachments",399.99,249.99,"Amazon","Home & Garden","https://amazon.com/dp/B00005UP2P?tag=YOURTAG-20","https://m.media-amazon.com/images/I/81VjYXa6NFL.jpg","top","KITCHEN15",true,false`;
         filename = 'amazon_sample_deals.csv';
         break;
       case 'cj':
@@ -407,7 +407,7 @@ export default function AdminDashboard() {
     const calculatedDiscount = deal.original_price > 0 && deal.sale_price < deal.original_price 
       ? Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100 * 10) / 10
       : deal.discount_percentage || 0;
-    const text = `🔥 Amazing Deal Alert! ${deal.title} - Save ${calculatedDiscount}% at ${deal.store}! Only $${deal.sale_price} (was $${deal.original_price})`;
+    const text = `🔥 Amazing Deal Alert! ${deal.title} - Great deal at ${deal.store}! Check it out`;
     const url = `${window.location.origin}/deals/${deal.id}`;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(shareUrl, '_blank', 'width=600,height=400');
@@ -417,7 +417,7 @@ export default function AdminDashboard() {
     const calculatedDiscount = deal.original_price > 0 && deal.sale_price < deal.original_price 
       ? Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100 * 10) / 10
       : deal.discount_percentage || 0;
-    const text = `🔥 Amazing Deal Alert! ${deal.title} - Save ${calculatedDiscount}% at ${deal.store}! Only $${deal.sale_price} (was $${deal.original_price}). Check it out: ${window.location.origin}/deals/${deal.id}`;
+    const text = `🔥 Amazing Deal Alert! ${deal.title} - Great deal at ${deal.store}! Check it out: ${window.location.origin}/deals/${deal.id}`;
     const shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(shareUrl, '_blank');
   };

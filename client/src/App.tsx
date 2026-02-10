@@ -12,6 +12,7 @@ import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsConditions from "@/pages/terms-conditions";
+import AffiliateDisclosure from "@/pages/affiliate-disclosure";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-conditions" component={TermsConditions} />
+      <Route path="/affiliate-disclosure" component={AffiliateDisclosure} />
       <Route component={NotFound} />
     </Switch>
   );

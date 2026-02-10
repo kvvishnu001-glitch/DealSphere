@@ -341,9 +341,10 @@ export default function DealDetail() {
                     {calculatedPercentage}% OFF
                   </Badge>
                   <span className="text-sm text-gray-600">
-                    Save ${(deal.original_price - deal.sale_price).toFixed(2)}
+                    Est. savings: ${(deal.original_price - deal.sale_price).toFixed(2)}
                   </span>
                 </div>
+                <p className="text-[10px] text-gray-400 mt-2">Prices and availability are subject to change. Final price at retailer may differ.</p>
               </div>
 
               {/* Coupon Code */}
@@ -426,18 +427,18 @@ export default function DealDetail() {
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">4</span>
-                      <span className="text-sm text-gray-700">The discount of {deal.discount_percentage}% will be applied, saving you ${savings.toFixed(2)}!</span>
+                      <span className="text-sm text-gray-700">The discount should be applied at checkout.</span>
                     </li>
                   </>
                 ) : (
                   <>
                     <li className="flex items-start gap-3">
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">2</span>
-                      <span className="text-sm text-gray-700">The discounted price of ${deal.sale_price.toFixed(2)} is already applied - no coupon needed.</span>
+                      <span className="text-sm text-gray-700">The discounted price should already be reflected on the retailer's page.</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">3</span>
-                      <span className="text-sm text-gray-700">Add to cart and complete checkout to save ${savings.toFixed(2)} ({deal.discount_percentage}% off)!</span>
+                      <span className="text-sm text-gray-700">Add to cart and complete your purchase at the retailer.</span>
                     </li>
                   </>
                 )}
@@ -455,7 +456,7 @@ export default function DealDetail() {
               <details className="bg-white rounded-lg border border-gray-200 p-4">
                 <summary className="font-medium text-gray-900 cursor-pointer">How much can I save on {deal.title}?</summary>
                 <p className="mt-3 text-sm text-gray-600">
-                  You can save ${savings.toFixed(2)} ({deal.discount_percentage}% off) on {deal.title}. The regular price is ${deal.original_price.toFixed(2)}, and the sale price is ${deal.sale_price.toFixed(2)}.
+                  This deal was listed at ${deal.sale_price.toFixed(2)} (originally ${deal.original_price.toFixed(2)}) at the time it was verified. Prices and availability are subject to change. Please check the retailer for the current price.
                 </p>
               </details>
               <details className="bg-white rounded-lg border border-gray-200 p-4">
@@ -488,7 +489,7 @@ export default function DealDetail() {
             </div>
           </section>
 
-          <div className="text-center mb-8">
+          <div className="text-center mb-4">
             <Link href={`/category/${categorySlug}`}>
               <Button variant="outline" className="mr-3">
                 More {deal.category} Deals
@@ -500,6 +501,15 @@ export default function DealDetail() {
                 All Deals
               </Button>
             </Link>
+          </div>
+
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8 text-center">
+            <p className="text-xs text-gray-500">
+              As an Amazon Associate, we earn from qualifying purchases. Prices and availability are subject to change.
+            </p>
+            <p className="text-[10px] text-gray-400 mt-1">
+              <Link href="/affiliate-disclosure" className="underline hover:text-gray-600">Affiliate Disclosure</Link>
+            </p>
           </div>
         </div>
       </div>
@@ -521,8 +531,8 @@ export default function DealDetail() {
             <div className="text-center mb-6">
               <p className="text-gray-600 mb-4">
                 {deal.coupon_required 
-                  ? "This coupon code is required to get the deal price. Copy it and apply during checkout."
-                  : "Use this coupon code for additional savings on top of the sale price!"
+                  ? "This coupon code may be required for the deal. Copy and apply during checkout."
+                  : "Try this coupon code at checkout for a potential additional discount."
                 }
               </p>
               

@@ -40,7 +40,7 @@ def generate_deal_seo(deal: Any, base_url: str) -> str:
     if len(meta_title) > 60:
         meta_title = f"{deal.title[:40]}... - {discount}% OFF | DealSphere"
     
-    meta_description = f"Save ${savings:.2f} on {title} at {store}. Now ${sale_price:.2f} (was ${original_price:.2f}). {discount}% discount. AI-verified deal."
+    meta_description = f"{title} at {store} - {discount}% off. Listed at ${sale_price:.2f}. Prices subject to change. AI-verified deal."
     if len(meta_description) > 160:
         meta_description = meta_description[:157] + "..."
     
@@ -52,7 +52,7 @@ def generate_deal_seo(deal: Any, base_url: str) -> str:
         "@context": "https://schema.org",
         "@type": "Product",
         "name": deal.title,
-        "description": deal.description or f"{deal.title} available at {deal.store}",
+        "description": (deal.description or f"{deal.title} available at {deal.store}") + " Prices and availability subject to change.",
         "image": deal.image_url or "",
         "brand": {
             "@type": "Brand",
@@ -114,7 +114,7 @@ def generate_deal_seo(deal: Any, base_url: str) -> str:
             "name": f"How much can I save on {deal.title}?",
             "acceptedAnswer": {
                 "@type": "Answer",
-                "text": f"You can save ${savings:.2f} ({discount}% off) on {deal.title}. The regular price is ${original_price:.2f}, and the sale price is ${sale_price:.2f}."
+                "text": f"This deal was listed at ${sale_price:.2f} (originally ${original_price:.2f}) when verified. Prices and availability are subject to change."
             }
         },
         {
@@ -122,7 +122,7 @@ def generate_deal_seo(deal: Any, base_url: str) -> str:
             "name": f"Is this {deal.store} deal verified?",
             "acceptedAnswer": {
                 "@type": "Answer",
-                "text": f"Yes, this deal has been AI-verified by DealSphere's validation system with a quality score to ensure it's a genuine offer from {deal.store}."
+                "text": f"This deal has been verified by DealSphere's AI validation system. However, prices and availability may change at any time."
             }
         },
         {
@@ -182,8 +182,8 @@ def generate_deal_seo(deal: Any, base_url: str) -> str:
 
 
 def generate_home_seo(base_url: str, deal_count: int = 0) -> str:
-    meta_title = "DealSphere - AI-Verified Deals, Coupons & Discounts | Save Up to 90%"
-    meta_description = f"Discover {deal_count}+ AI-verified deals and coupons from top stores. Save up to 90% on electronics, fashion, home & more. Updated daily with the best discounts."
+    meta_title = "DealSphere - AI-Verified Deals, Coupons & Discounts"
+    meta_description = f"Discover {deal_count}+ AI-verified deals and coupons from top stores. Find discounts on electronics, fashion, home & more. Updated daily."
     og_image = f"{base_url}{DEFAULT_OG_IMAGE_PATH}"
     
     website_schema = {
@@ -191,7 +191,7 @@ def generate_home_seo(base_url: str, deal_count: int = 0) -> str:
         "@type": "WebSite",
         "name": "DealSphere",
         "url": base_url,
-        "description": "AI-powered deals and coupons platform aggregating the best discounts from top stores.",
+        "description": "AI-powered deals and coupons platform aggregating verified discounts from top stores.",
         "potentialAction": {
             "@type": "SearchAction",
             "target": {
@@ -208,7 +208,7 @@ def generate_home_seo(base_url: str, deal_count: int = 0) -> str:
         "name": "DealSphere",
         "url": base_url,
         "logo": f"{base_url}{DEFAULT_OG_IMAGE_PATH}",
-        "description": "AI-powered deals aggregation platform that verifies and curates the best online deals and coupons from top retailers.",
+        "description": "AI-powered deals aggregation platform that verifies and curates top online deals and coupons from top retailers.",
         "foundingDate": "2025",
         "knowsAbout": ["deals", "coupons", "discounts", "online shopping", "price comparison", "AI deal verification"]
     }
@@ -252,8 +252,8 @@ def generate_home_seo(base_url: str, deal_count: int = 0) -> str:
 
 
 def generate_category_seo(category_name: str, category_slug: str, base_url: str, deal_count: int = 0) -> str:
-    meta_title = f"{category_name} Deals & Coupons - Up to 90% Off | DealSphere"
-    meta_description = f"Browse {deal_count}+ AI-verified {category_name.lower()} deals and coupons. Find the best discounts on {category_name.lower()} products from top stores. Updated daily."
+    meta_title = f"{category_name} Deals & Coupons | DealSphere"
+    meta_description = f"Browse {deal_count}+ AI-verified {category_name.lower()} deals and coupons. Find verified discounts on {category_name.lower()} products from top stores. Updated daily."
     category_url = f"{base_url}/category/{category_slug}"
     og_image = f"{base_url}{DEFAULT_OG_IMAGE_PATH}"
     
@@ -261,7 +261,7 @@ def generate_category_seo(category_name: str, category_slug: str, base_url: str,
         "@context": "https://schema.org",
         "@type": "CollectionPage",
         "name": f"{category_name} Deals",
-        "description": f"Best {category_name.lower()} deals, coupons, and discounts curated and verified by AI.",
+        "description": f"Top {category_name.lower()} deals, coupons, and discounts curated and verified by AI.",
         "url": category_url,
         "isPartOf": {
             "@type": "WebSite",
@@ -314,8 +314,8 @@ def generate_category_seo(category_name: str, category_slug: str, base_url: str,
 
 
 def generate_category_seo_with_deals(category_name: str, category_slug: str, base_url: str, deal_count: int = 0, deals: list = None) -> str:
-    meta_title = f"{category_name} Deals & Coupons - Up to 90% Off | DealSphere"
-    meta_description = f"Browse {deal_count}+ AI-verified {category_name.lower()} deals and coupons. Find the best discounts on {category_name.lower()} products from top stores. Updated daily."
+    meta_title = f"{category_name} Deals & Coupons | DealSphere"
+    meta_description = f"Browse {deal_count}+ AI-verified {category_name.lower()} deals and coupons. Find verified discounts on {category_name.lower()} products from top stores. Updated daily."
     category_url = f"{base_url}/category/{category_slug}"
     og_image = f"{base_url}{DEFAULT_OG_IMAGE_PATH}"
     
@@ -323,7 +323,7 @@ def generate_category_seo_with_deals(category_name: str, category_slug: str, bas
         "@context": "https://schema.org",
         "@type": "CollectionPage",
         "name": f"{category_name} Deals",
-        "description": f"Best {category_name.lower()} deals, coupons, and discounts curated and verified by AI.",
+        "description": f"Top {category_name.lower()} deals, coupons, and discounts curated and verified by AI.",
         "url": category_url,
         "isPartOf": {
             "@type": "WebSite",
@@ -400,7 +400,7 @@ def generate_category_seo_with_deals(category_name: str, category_slug: str, bas
 
 def generate_about_seo(base_url: str) -> str:
     meta_title = "About DealSphere - AI-Powered Deals & Coupons Platform"
-    meta_description = "DealSphere uses artificial intelligence to find, verify, and curate the best deals and coupons from top online stores. Learn about our mission to save you money."
+    meta_description = "DealSphere uses artificial intelligence to find, verify, and curate verified deals and coupons from top online stores. Learn about our mission to save you money."
     about_url = f"{base_url}/about"
     og_image = f"{base_url}{DEFAULT_OG_IMAGE_PATH}"
     
@@ -410,7 +410,7 @@ def generate_about_seo(base_url: str) -> str:
         "name": "DealSphere",
         "url": base_url,
         "logo": f"{base_url}{DEFAULT_OG_IMAGE_PATH}",
-        "description": "AI-powered deals aggregation platform that verifies and curates the best online deals and coupons from top retailers.",
+        "description": "AI-powered deals aggregation platform that verifies and curates top online deals and coupons from top retailers.",
         "foundingDate": "2025",
         "knowsAbout": ["deals", "coupons", "discounts", "online shopping", "price comparison", "affiliate marketing"]
     }
@@ -500,7 +500,7 @@ def generate_about_seo(base_url: str) -> str:
 
 def generate_contact_seo(base_url: str) -> str:
     meta_title = "Contact DealSphere - Get in Touch | Support & Feedback"
-    meta_description = "Contact the DealSphere team for support, partnership inquiries, or feedback. We're here to help you find the best deals and coupons."
+    meta_description = "Contact the DealSphere team for support, partnership inquiries, or feedback. We're here to help you find great deals and coupons."
     contact_url = f"{base_url}/contact"
     og_image = f"{base_url}{DEFAULT_OG_IMAGE_PATH}"
     

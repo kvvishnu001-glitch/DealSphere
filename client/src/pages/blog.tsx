@@ -51,7 +51,7 @@ const guides = [
   {
     id: "best-deal-categories",
     title: "Top Deal Categories: Where to Find the Biggest Discounts",
-    excerpt: "A comprehensive guide to the best deal categories including electronics, fashion, home goods, and more. Learn which categories offer the deepest discounts throughout the year.",
+    excerpt: "A comprehensive guide to the top deal categories including electronics, fashion, home goods, and more. Learn which categories offer the deepest discounts throughout the year.",
     category: "Shopping Guide",
     icon: TrendingUp,
     readTime: "7 min read",
@@ -92,7 +92,7 @@ export default function Blog() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-3xl sm:text-4xl font-bold mb-3">Deal Guides & Shopping Tips</h1>
             <p className="text-lg text-red-100">
-              Expert guides to help you find the best deals, avoid scams, and save more money on every purchase.
+              Expert guides to help you find great deals, avoid scams, and save more money on every purchase.
             </p>
           </div>
         </section>
@@ -152,11 +152,12 @@ export default function Blog() {
                 <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
                 <Link href="/about" className="hover:text-white transition-colors">About</Link>
                 <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+                <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
               </div>
             </div>
             <div className="flex flex-col items-end gap-2 text-right">
               <div className="text-gray-400 text-xs">&copy; {new Date().getFullYear()} DealSphere. All rights reserved.</div>
-              <p className="text-[10px] text-gray-500 max-w-[200px]">We may earn a commission on qualifying purchases.</p>
+              <p className="text-[10px] text-gray-500 max-w-[200px]">As an Amazon Associate, we earn from qualifying purchases.</p>
             </div>
           </div>
         </div>

@@ -171,11 +171,12 @@ export default function Contact() {
                 <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
                 <Link href="/about" className="hover:text-white transition-colors">About</Link>
                 <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+                <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
               </div>
             </div>
             <div className="flex flex-col items-end gap-2 text-right">
               <div className="text-gray-400 text-xs">© {new Date().getFullYear()} DealSphere. All rights reserved.</div>
-              <p className="text-[10px] text-gray-500 max-w-[200px]">We may earn a commission on qualifying purchases.</p>
+              <p className="text-[10px] text-gray-500 max-w-[200px]">As an Amazon Associate, we earn from qualifying purchases.</p>
             </div>
           </div>
         </div>

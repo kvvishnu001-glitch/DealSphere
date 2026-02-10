@@ -98,9 +98,15 @@ export default function PrivacyPolicy() {
           <CardHeader>
             <CardTitle className="text-xl font-semibold">4. Affiliate Disclosure</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <p className="text-gray-700">
               DealSphere participates in affiliate marketing programs, meaning we may earn commissions when you click on links or make purchases through partner websites. These links do not affect the price you pay but help us maintain our website and services.
+            </p>
+            <p className="text-gray-700">
+              As an Amazon Associate, DealSphere earns from qualifying purchases.
+            </p>
+            <p className="text-gray-700">
+              Product prices and availability are accurate as of the date/time indicated and are subject to change. Any price and availability information displayed on Amazon.com at the time of purchase will apply to the purchase of the product.
             </p>
           </CardContent>
         </Card>
@@ -201,8 +207,16 @@ export default function PrivacyPolicy() {
 
       <Separator className="my-8" />
       
-      <div className="text-center text-sm text-gray-500">
+      <div className="text-center text-sm text-gray-500 space-y-2">
+        <div className="flex justify-center items-center gap-4 text-xs">
+          <Link href="/privacy-policy" className="hover:text-gray-700 transition-colors">Privacy Policy</Link>
+          <Link href="/terms-conditions" className="hover:text-gray-700 transition-colors">Terms of Service</Link>
+          <Link href="/about" className="hover:text-gray-700 transition-colors">About</Link>
+          <Link href="/contact" className="hover:text-gray-700 transition-colors">Contact</Link>
+          <Link href="/affiliate-disclosure" className="hover:text-gray-700 transition-colors">Affiliate Disclosure</Link>
+        </div>
         <p>© {new Date().getFullYear()} DealSphere. All rights reserved.</p>
+        <p className="text-[10px] text-gray-400">As an Amazon Associate, we earn from qualifying purchases.</p>
       </div>
     </div>
   );

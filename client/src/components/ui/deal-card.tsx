@@ -149,7 +149,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
             <Clock className="w-3 h-3 mr-1" />
             {formatDate(deal.created_at)}
           </p>
-          <div className="flex items-center space-x-1 mb-4">
+          <div className="flex items-center space-x-1 mb-1">
             <span className="text-lg font-bold text-red-600">
               {formatPrice(deal.sale_price)}
             </span>
@@ -157,6 +157,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
               {formatPrice(deal.original_price)}
             </span>
           </div>
+          <p className="text-[9px] text-gray-400 mb-3">Prices may vary</p>
           <div className="mt-auto space-y-3">
             <Button
               onClick={handleDealClick}
@@ -210,6 +211,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
               <CouponCode code={deal.coupon_code} variant="badge" />
             )}
           </div>
+          <p className="text-[9px] text-gray-400 mt-1">Prices may vary</p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:ml-4">
           <Button
@@ -293,10 +295,11 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
           </div>
           <div className="text-right">
             <span className="text-sm text-green-600 font-medium">
-              Save {formatSavings()}
+              Potential savings: {formatSavings()}
             </span>
           </div>
         </div>
+        <p className="text-[10px] text-gray-400 mt-1">Prices may vary. Check retailer for current pricing.</p>
         
         {/* Coupon Code */}
         {deal.coupon_code && (
@@ -360,7 +363,7 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
               <p className="text-gray-600 mb-4">
                 {deal.coupon_required 
                   ? "This coupon code is required to get the deal price. Copy it and apply during checkout."
-                  : "Use this coupon code for additional savings on top of the sale price!"
+                  : "Use this coupon code at checkout for a potential additional discount."
                 }
               </p>
               

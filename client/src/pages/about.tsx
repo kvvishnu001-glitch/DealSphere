@@ -43,7 +43,7 @@ export default function About() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-3xl sm:text-5xl font-bold mb-4">About DealSphere</h1>
             <p className="text-lg sm:text-xl text-red-100 max-w-2xl mx-auto">
-              We use artificial intelligence to find, verify, and curate the best deals and coupons from top online stores, saving you time and money.
+              We use artificial intelligence to find, verify, and curate verified deals and coupons from top online stores, saving you time and money.
             </p>
           </div>
         </section>
@@ -102,7 +102,7 @@ export default function About() {
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-sm">3</div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Categorization & Scoring</h3>
-                  <p className="text-gray-600 text-sm">Approved deals are categorized by type (electronics, fashion, home, etc.) and scored to help you find the best offers quickly.</p>
+                  <p className="text-gray-600 text-sm">Approved deals are categorized by type (electronics, fashion, home, etc.) and scored to help you find great offers quickly.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -153,11 +153,12 @@ export default function About() {
                 <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
                 <Link href="/about" className="hover:text-white transition-colors">About</Link>
                 <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+                <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
               </div>
             </div>
             <div className="flex flex-col items-end gap-2 text-right">
               <div className="text-gray-400 text-xs">© {new Date().getFullYear()} DealSphere. All rights reserved.</div>
-              <p className="text-[10px] text-gray-500 max-w-[200px]">We may earn a commission on qualifying purchases.</p>
+              <p className="text-[10px] text-gray-500 max-w-[200px]">As an Amazon Associate, we earn from qualifying purchases.</p>
             </div>
           </div>
         </div>

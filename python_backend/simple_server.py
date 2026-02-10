@@ -466,6 +466,17 @@ if frontend_dist_path.exists():
         )
         return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
 
+    @app.get("/affiliate-disclosure")
+    async def serve_affiliate_disclosure(request: Request):
+        base_url = _get_base_url(request)
+        html_content = _read_html()
+        seo_tags = generate_generic_seo(
+            "Affiliate Disclosure | DealSphere",
+            "DealSphere affiliate disclosure. As an Amazon Associate, we earn from qualifying purchases. Learn about our affiliate relationships and how we earn revenue.",
+            f"{base_url}/affiliate-disclosure", base_url
+        )
+        return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
+
     @app.get("/docs")
     @app.get("/redoc")
     @app.get("/openapi.json")

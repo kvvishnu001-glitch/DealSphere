@@ -599,7 +599,7 @@ export default function Home() {
               Top Deals
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-sm text-gray-500">AI-curated best deals</span>
+              <span className="text-xs sm:text-sm text-gray-500">AI-curated deals</span>
               {!showAllTop && topDeals.length >= 3 && (
                 <Button 
                   variant="outline" 
@@ -793,7 +793,7 @@ export default function Home() {
             <div className="text-gray-600 flex flex-col items-center justify-center">
               <div className="text-3xl mb-3">🎉</div>
               <div className="text-lg font-medium mb-2">You've seen all deals!</div>
-              <div className="text-sm">Check back soon for more amazing offers</div>
+              <div className="text-sm">Check back soon for new deals</div>
             </div>
           </div>
         )}
@@ -822,6 +822,7 @@ export default function Home() {
                 <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
                 <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
                 <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
+                <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
               </div>
             </div>
 
@@ -830,7 +831,7 @@ export default function Home() {
                 © {new Date().getFullYear()} DealSphere. All rights reserved.
               </div>
               <p className="text-[10px] text-gray-500 max-w-[200px]">
-                We may earn a commission on qualifying purchases.
+                As an Amazon Associate, we earn from qualifying purchases.
               </p>
             </div>
           </div>

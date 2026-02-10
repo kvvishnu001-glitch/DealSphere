@@ -28,9 +28,9 @@ const guides: Record<string, {
     readTime: "5 min read",
     date: "January 15, 2025",
     content: [
-      { heading: "Use Price Comparison Tools", text: "Before making any purchase, compare prices across multiple retailers. Tools like DealSphere aggregate deals from dozens of stores, making it easy to find the lowest price." },
+      { heading: "Use Price Comparison Tools", text: "Before making any purchase, compare prices across multiple retailers. Tools like DealSphere aggregate deals from dozens of stores, making it easy to compare prices." },
       { heading: "Look for AI-Verified Deals", text: "AI-powered deal platforms can detect fake discounts and inflated original prices. Only trust deals that have been verified by reliable systems." },
-      { heading: "Time Your Purchases", text: "Major retailers run predictable sales cycles. Electronics are cheapest during Black Friday, fashion during end-of-season sales, and home goods during holiday weekends." },
+      { heading: "Time Your Purchases", text: "Major retailers run predictable sales cycles. Electronics are often discounted during Black Friday, fashion during end-of-season sales, and home goods during holiday weekends." },
       { heading: "Stack Coupons and Cashback", text: "Combine store coupons with cashback programs for maximum savings. Many deals can be stacked with credit card rewards for additional discounts." },
       { heading: "Set Price Alerts", text: "For big-ticket items, set price alerts and wait for drops. Prices on electronics and appliances can fluctuate significantly over weeks." }
     ]
@@ -59,9 +59,9 @@ const guides: Record<string, {
     content: [
       { heading: "Digital Coupon Aggregators", text: "Sites like DealSphere collect and verify coupon codes from hundreds of stores. Always check for available codes before completing checkout." },
       { heading: "Store Loyalty Programs", text: "Most major retailers offer loyalty programs with exclusive discounts. Sign up for free programs at stores you shop at regularly." },
-      { heading: "Browser Extensions", text: "Install coupon-finding browser extensions that automatically apply the best available codes at checkout." },
+      { heading: "Browser Extensions", text: "Install coupon-finding browser extensions that automatically apply available codes at checkout." },
       { heading: "Email Signup Discounts", text: "Many stores offer 10-20% off your first purchase when you sign up for their newsletter. Use a dedicated email to manage these subscriptions." },
-      { heading: "Seasonal Timing", text: "The best coupon deals appear during major shopping events: Black Friday, Cyber Monday, Prime Day, and end-of-season clearances." }
+      { heading: "Seasonal Timing", text: "The biggest coupon deals appear during major shopping events: Black Friday, Cyber Monday, Prime Day, and end-of-season clearances." }
     ]
   },
   "online-shopping-safety": {
@@ -80,7 +80,7 @@ const guides: Record<string, {
   },
   "best-deal-categories": {
     title: "Top Deal Categories: Where to Find the Biggest Discounts",
-    excerpt: "A comprehensive guide to the best deal categories including electronics, fashion, home goods, and more.",
+    excerpt: "A comprehensive guide to the top deal categories including electronics, fashion, home goods, and more.",
     category: "Shopping Guide",
     icon: TrendingUp,
     readTime: "7 min read",
@@ -88,9 +88,9 @@ const guides: Record<string, {
     content: [
       { heading: "Electronics & Tech", text: "Electronics see the biggest discounts during Black Friday, Prime Day, and back-to-school season. Look for open-box deals and refurbished items for additional savings." },
       { heading: "Fashion & Apparel", text: "Fashion deals peak during end-of-season clearances (January and July). Fast fashion brands often offer 40-60% off during these periods." },
-      { heading: "Home & Garden", text: "Home improvement deals are best during Memorial Day, Labor Day, and Black Friday. Furniture sees deep discounts during Presidents' Day sales." },
+      { heading: "Home & Garden", text: "Home improvement deals are often discounted during Memorial Day, Labor Day, and Black Friday. Furniture sees deep discounts during Presidents' Day sales." },
       { heading: "Health & Beauty", text: "Beauty products often have buy-one-get-one deals and gift-with-purchase offers. Subscribe-and-save programs can reduce costs by 15-20%." },
-      { heading: "Travel", text: "Flight and hotel deals are best booked 6-8 weeks in advance for domestic travel. Use fare comparison tools and be flexible with dates for maximum savings." }
+      { heading: "Travel", text: "Flight and hotel deals are often booked 6-8 weeks in advance for domestic travel. Use fare comparison tools and be flexible with dates for maximum savings." }
     ]
   }
 };
@@ -216,11 +216,12 @@ export default function BlogArticle() {
                 <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
                 <Link href="/about" className="hover:text-white transition-colors">About</Link>
                 <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+                <Link href="/affiliate-disclosure" className="hover:text-white transition-colors">Affiliate Disclosure</Link>
               </div>
             </div>
             <div className="flex flex-col items-end gap-2 text-right">
               <div className="text-gray-400 text-xs">&copy; {new Date().getFullYear()} DealSphere. All rights reserved.</div>
-              <p className="text-[10px] text-gray-500 max-w-[200px]">We may earn a commission on qualifying purchases.</p>
+              <p className="text-[10px] text-gray-500 max-w-[200px]">As an Amazon Associate, we earn from qualifying purchases.</p>
             </div>
           </div>
         </div>
