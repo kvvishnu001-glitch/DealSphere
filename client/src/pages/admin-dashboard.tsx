@@ -25,7 +25,7 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalDeals, setTotalDeals] = useState(0);
-  const [dealsPerPage] = useState(25);
+  const [dealsPerPage, setDealsPerPage] = useState(25);
   const [newDeal, setNewDeal] = useState({
     title: "",
     description: "",
@@ -1673,8 +1673,21 @@ export default function AdminDashboard() {
                     Last
                   </button>
                 </div>
-                <div style={{ fontSize: "14px", color: "#666" }}>
-                  Page {currentPage} of {totalPages}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <label style={{ fontSize: "13px", color: "#666" }}>Show:</label>
+                  <select
+                    value={dealsPerPage}
+                    onChange={(e) => { setDealsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                    style={{ padding: "5px 8px", border: "1px solid #dee2e6", borderRadius: "4px", fontSize: "13px", backgroundColor: "white", cursor: "pointer" }}
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={500}>500</option>
+                    <option value={1000}>1000</option>
+                  </select>
+                  <span style={{ fontSize: "13px", color: "#666" }}>per page</span>
+                  <span style={{ fontSize: "14px", color: "#666", marginLeft: "8px" }}>Page {currentPage} of {totalPages}</span>
                 </div>
               </div>
             )}
