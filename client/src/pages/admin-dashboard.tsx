@@ -17,6 +17,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [urlCheckRunning, setUrlCheckRunning] = useState(false);
   const [urlCheckResult, setUrlCheckResult] = useState<any>(null);
+  const [urlCheckProgress, setUrlCheckProgress] = useState(0);
+  const [urlCheckStatus, setUrlCheckStatus] = useState("");
   const [newDeal, setNewDeal] = useState({
     title: "",
     description: "",
@@ -362,19 +364,55 @@ export default function AdminDashboard() {
     if (!confirm("This will check all deal URLs and remove any that are expired, not found, or broken. Continue?")) return;
     setUrlCheckRunning(true);
     setUrlCheckResult(null);
+    setUrlCheckProgress(0);
+    setUrlCheckStatus("Getting deal count...");
     try {
       const token = localStorage.getItem("admin_token");
+      const statsRes = await fetch("/api/admin/url-health", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const initialStats = await statsRes.json();
+      const totalDeals = initialStats.total_active || 1;
+      const initialUnchecked = initialStats.unchecked || 0;
+
+      setUrlCheckStatus(`Checking ${totalDeals} deal URLs...`);
+
+      let polling = true;
+      const pollInterval = setInterval(async () => {
+        if (!polling) return;
+        try {
+          const pollRes = await fetch("/api/admin/url-health", {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const pollStats = await pollRes.json();
+          const currentUnchecked = pollStats.unchecked || 0;
+          const checked = Math.max(0, initialUnchecked - currentUnchecked);
+          const pct = initialUnchecked > 0 ? Math.min(95, Math.round((checked / initialUnchecked) * 100)) : 50;
+          setUrlCheckProgress(pct);
+          setUrlCheckStatus(`Checking URLs... ${checked} of ${initialUnchecked} done`);
+        } catch {}
+      }, 2000);
+
       const checkResponse = await fetch("/api/admin/url-health/check", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
       const checkData = await checkResponse.json();
 
+      polling = false;
+      clearInterval(pollInterval);
+
+      setUrlCheckProgress(97);
+      setUrlCheckStatus("Cleaning up broken deals...");
+
       const cleanupResponse = await fetch("/api/admin/url-health/cleanup", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
       const cleanupData = await cleanupResponse.json();
+
+      setUrlCheckProgress(100);
+      setUrlCheckStatus("Complete!");
 
       setUrlCheckResult({
         total_checked: checkData.total_checked || 0,
@@ -945,9 +983,10 @@ export default function AdminDashboard() {
                     cursor: urlCheckRunning ? "not-allowed" : "pointer",
                     fontSize: "14px",
                     opacity: urlCheckRunning ? 0.7 : 1,
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  {urlCheckRunning ? "⏳ Checking URLs..." : "🔍 Check & Clean URLs"}
+                  {urlCheckRunning ? "⏳ Running..." : "🔍 Check Deal URLs"}
                 </button>
                 <div style={{ position: "relative" }}>
                   <button
@@ -1031,25 +1070,74 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {urlCheckResult && (
+            {(urlCheckRunning || urlCheckResult) && (
               <div style={{ 
-                backgroundColor: "#f8f9fa", 
-                border: "1px solid #dee2e6", 
+                backgroundColor: urlCheckResult ? (urlCheckResult.broken > 0 || urlCheckResult.removed > 0 ? "#fff3cd" : "#d4edda") : "#e8f4fd", 
+                border: `1px solid ${urlCheckResult ? (urlCheckResult.broken > 0 || urlCheckResult.removed > 0 ? "#ffc107" : "#28a745") : "#b8daff"}`, 
                 borderRadius: "8px", 
-                padding: "15px 20px", 
+                padding: "16px 20px", 
                 marginBottom: "20px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
               }}>
-                <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-                  <span><strong>URLs Checked:</strong> {urlCheckResult.total_checked}</span>
-                  <span style={{ color: "#28a745" }}><strong>Healthy:</strong> {urlCheckResult.healthy}</span>
-                  <span style={{ color: "#dc3545" }}><strong>Broken:</strong> {urlCheckResult.broken}</span>
-                  <span style={{ color: "#ffc107" }}><strong>Flagged:</strong> {urlCheckResult.flagged}</span>
-                  <span style={{ color: "#dc3545" }}><strong>Removed:</strong> {urlCheckResult.removed}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: urlCheckRunning ? "10px" : "0" }}>
+                  <span style={{ fontWeight: "bold", fontSize: "14px" }}>
+                    {urlCheckRunning ? "🔍 " + urlCheckStatus : urlCheckResult ? "✅ URL Health Check Complete" : ""}
+                  </span>
+                  {urlCheckResult && !urlCheckRunning && (
+                    <button onClick={() => { setUrlCheckResult(null); setUrlCheckProgress(0); setUrlCheckStatus(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#666" }}>✕</button>
+                  )}
                 </div>
-                <button onClick={() => setUrlCheckResult(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>✕</button>
+
+                {urlCheckRunning && (
+                  <div>
+                    <div style={{ 
+                      width: "100%", 
+                      height: "20px", 
+                      backgroundColor: "#e0e0e0", 
+                      borderRadius: "10px", 
+                      overflow: "hidden",
+                      marginBottom: "6px",
+                    }}>
+                      <div style={{ 
+                        width: `${urlCheckProgress}%`, 
+                        height: "100%", 
+                        backgroundColor: urlCheckProgress >= 97 ? "#28a745" : "#007bff", 
+                        borderRadius: "10px", 
+                        transition: "width 0.5s ease",
+                        background: urlCheckProgress < 97 
+                          ? "linear-gradient(90deg, #007bff 0%, #0056b3 50%, #007bff 100%)" 
+                          : "#28a745",
+                        backgroundSize: "200% 100%",
+                        animation: urlCheckProgress < 97 ? "shimmer 1.5s infinite" : "none",
+                      }} />
+                    </div>
+                    <div style={{ fontSize: "12px", color: "#666", textAlign: "right" }}>{urlCheckProgress}%</div>
+                  </div>
+                )}
+
+                {urlCheckResult && !urlCheckRunning && (
+                  <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", marginTop: "10px" }}>
+                    <div style={{ textAlign: "center", padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.7)", borderRadius: "6px" }}>
+                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#333" }}>{urlCheckResult.total_checked}</div>
+                      <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase" }}>Checked</div>
+                    </div>
+                    <div style={{ textAlign: "center", padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.7)", borderRadius: "6px" }}>
+                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#28a745" }}>{urlCheckResult.healthy}</div>
+                      <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase" }}>Healthy</div>
+                    </div>
+                    <div style={{ textAlign: "center", padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.7)", borderRadius: "6px" }}>
+                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#dc3545" }}>{urlCheckResult.broken}</div>
+                      <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase" }}>Broken</div>
+                    </div>
+                    <div style={{ textAlign: "center", padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.7)", borderRadius: "6px" }}>
+                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#fd7e14" }}>{urlCheckResult.flagged}</div>
+                      <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase" }}>Flagged</div>
+                    </div>
+                    <div style={{ textAlign: "center", padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.7)", borderRadius: "6px" }}>
+                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#dc3545" }}>{urlCheckResult.removed}</div>
+                      <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase" }}>Removed</div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
