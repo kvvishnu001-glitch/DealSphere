@@ -38,6 +38,8 @@ class DealScheduler:
         schedule.every(1).hours.do(self._schedule_cleanup_rejected_deals)
         schedule.every(6).hours.do(self._schedule_update_deal_stats)
         schedule.every().day.at("02:00").do(self._schedule_daily_maintenance)
+        schedule.every(2).hours.do(self._schedule_url_health_check)
+        schedule.every(1).hours.do(self._schedule_stale_deal_cleanup)
         
         # Start scheduler in background thread
         self.scheduler_thread = threading.Thread(target=self._run_scheduler, daemon=True)
@@ -72,6 +74,14 @@ class DealScheduler:
     def _schedule_daily_maintenance(self):
         """Schedule daily maintenance tasks"""
         asyncio.create_task(self.daily_maintenance())
+        
+    def _schedule_url_health_check(self):
+        """Schedule URL health checking"""
+        asyncio.create_task(self.url_health_check_task())
+        
+    def _schedule_stale_deal_cleanup(self):
+        """Schedule cleanup of stale URL-flagged deals"""
+        asyncio.create_task(self.stale_deal_cleanup_task())
 
     async def fetch_deals_task(self):
         """Automated deal fetching task"""
@@ -208,6 +218,30 @@ class DealScheduler:
                 await db.commit()
         except Exception as e:
             logger.error(f"Error logging task result: {e}")
+
+    async def url_health_check_task(self):
+        """Check all deal URLs for accessibility"""
+        try:
+            logger.info("Starting scheduled URL health check")
+            from services.url_health_checker import run_url_health_check
+            result = await run_url_health_check()
+            logger.info(f"URL health check completed: {result}")
+            await self._log_task_result('url_health_check', result)
+        except Exception as e:
+            logger.error(f"Error in URL health check: {e}")
+            await self._log_task_result('url_health_check', {'error': str(e)})
+
+    async def stale_deal_cleanup_task(self):
+        """Remove deals flagged with broken URLs for more than 24 hours"""
+        try:
+            logger.info("Starting stale URL-flagged deal cleanup")
+            from services.url_health_checker import cleanup_stale_flagged_deals
+            result = await cleanup_stale_flagged_deals()
+            logger.info(f"Stale deal cleanup completed: {result}")
+            await self._log_task_result('stale_deal_cleanup', result)
+        except Exception as e:
+            logger.error(f"Error in stale deal cleanup: {e}")
+            await self._log_task_result('stale_deal_cleanup', {'error': str(e)})
 
     async def manual_fetch_deals(self) -> Dict[str, Any]:
         """Manually trigger deal fetching (for admin use)"""

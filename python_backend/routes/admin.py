@@ -453,3 +453,45 @@ async def cleanup_rejected_deals(
         ip_address=request.client.host if request.client else None
     )
     return {"message": f"Cleaned up {len(old_rejected_deals)} old rejected deals"}
+
+@router.get("/url-health")
+async def get_url_health_stats_endpoint(
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_deals")
+    from services.url_health_checker import get_url_health_stats
+    stats = await get_url_health_stats()
+    return stats
+
+@router.post("/url-health/check")
+async def trigger_url_health_check(
+    request: Request,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_deals")
+    from services.url_health_checker import run_url_health_check
+    result = await run_url_health_check()
+    await log_audit(
+        db, current_admin, "trigger_url_health_check", "deal", None,
+        {"result": result},
+        ip_address=request.client.host if request.client else None
+    )
+    return result
+
+@router.post("/url-health/cleanup")
+async def trigger_stale_cleanup(
+    request: Request,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_deals")
+    from services.url_health_checker import cleanup_stale_flagged_deals
+    result = await cleanup_stale_flagged_deals()
+    await log_audit(
+        db, current_admin, "trigger_stale_cleanup", "deal", None,
+        {"result": result},
+        ip_address=request.client.host if request.client else None
+    )
+    return result

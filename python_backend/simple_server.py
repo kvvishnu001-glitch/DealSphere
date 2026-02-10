@@ -88,9 +88,29 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return response
 
 
+async def _migrate_url_health_columns():
+    """Add URL health check columns if they don't exist"""
+    from sqlalchemy import text as sql_text
+    from database import engine
+    async with engine.begin() as conn:
+        for col, col_type, default in [
+            ("url_last_checked", "TIMESTAMP", None),
+            ("url_check_failures", "INTEGER", "0"),
+            ("url_status", "VARCHAR", "'unchecked'"),
+            ("url_flagged_at", "TIMESTAMP", None),
+        ]:
+            try:
+                default_clause = f" DEFAULT {default}" if default else ""
+                await conn.execute(sql_text(
+                    f"ALTER TABLE deals ADD COLUMN IF NOT EXISTS {col} {col_type}{default_clause}"
+                ))
+            except Exception:
+                pass
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_database()
+    await _migrate_url_health_columns()
     yield
 
 app = FastAPI(
@@ -160,11 +180,16 @@ async def health_check():
 async def get_deals(db: AsyncSession = Depends(get_db)):
     try:
         # Only return active, approved deals for public website
+        from sqlalchemy import or_
         result = await db.execute(
             select(DealModel).where(
                 DealModel.is_active == True,
                 DealModel.is_ai_approved == True,
-                DealModel.status == 'approved'
+                DealModel.status == 'approved',
+                or_(
+                    DealModel.url_status.is_(None),
+                    DealModel.url_status.in_(['unchecked', 'healthy']),
+                )
             ).order_by(DealModel.created_at.desc())
         )
         deals = result.scalars().all()

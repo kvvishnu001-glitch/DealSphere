@@ -38,6 +38,10 @@ class Deal(Base):
     coupon_required = Column(Boolean, default=False)  # Whether deal requires coupon
     rejected_at = Column(DateTime, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
+    url_last_checked = Column(DateTime, nullable=True)
+    url_check_failures = Column(Integer, default=0)
+    url_status = Column(String, default='unchecked')  # unchecked, healthy, broken
+    url_flagged_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     
