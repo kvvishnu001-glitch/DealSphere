@@ -344,6 +344,7 @@ class AdminMetrics(BaseModel):
     total_clicks: int
     total_shares: int
     revenue_estimate: float
+    issues_count: int = 0
     top_categories: List[Dict[str, Any]]
     top_stores: List[Dict[str, Any]]
     recent_activity: List[Dict[str, Any]]

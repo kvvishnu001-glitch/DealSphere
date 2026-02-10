@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, desc, select, and_
+from sqlalchemy import func, desc, select, and_, or_, case
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -252,10 +252,39 @@ async def get_admin_metrics(
         for deal in recent_deals
     ]
     
+    issues_result = await db.execute(
+        select(func.count(Deal.id)).where(
+            and_(
+                active_filter,
+                or_(
+                    Deal.image_url == None,
+                    Deal.image_url == '',
+                    Deal.title == None,
+                    Deal.title == '',
+                    Deal.description == None,
+                    Deal.description == '',
+                    Deal.store == None,
+                    Deal.store == '',
+                    Deal.category == None,
+                    Deal.category == '',
+                    Deal.affiliate_url == None,
+                    Deal.affiliate_url == '',
+                    Deal.original_price == None,
+                    Deal.original_price <= 0,
+                    Deal.sale_price == None,
+                    Deal.sale_price <= 0,
+                    Deal.sale_price >= Deal.original_price
+                )
+            )
+        )
+    )
+    issues_count = issues_result.scalar() or 0
+    
     return AdminMetrics(
         total_deals=total_deals, ai_approved_deals=ai_approved_deals,
         pending_deals=pending_deals, total_clicks=total_clicks,
         total_shares=total_shares, revenue_estimate=revenue_estimate,
+        issues_count=issues_count,
         top_categories=top_categories_list, top_stores=top_stores_list,
         recent_activity=recent_activity
     )

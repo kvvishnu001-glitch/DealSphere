@@ -968,7 +968,7 @@ export default function AdminDashboard() {
               
               <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
                 <h3 style={{ margin: "0 0 10px 0", color: "#666", fontSize: "14px" }}>Issues Found</h3>
-                <div style={{ fontSize: "24px", fontWeight: "bold", color: "#ffc107" }}>{Object.keys(dealIssues).length}</div>
+                <div style={{ fontSize: "24px", fontWeight: "bold", color: "#ffc107" }}>{metrics.issues_count || 0}</div>
                 <div style={{ fontSize: "12px", color: "#666", marginTop: "5px" }}>Deals need review</div>
               </div>
             </div>
