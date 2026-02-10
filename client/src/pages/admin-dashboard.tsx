@@ -419,7 +419,7 @@ export default function AdminDashboard() {
         healthy: checkData.healthy || 0,
         broken: checkData.broken || 0,
         flagged: checkData.flagged_pending_review || 0,
-        removed: cleanupData.removed || 0,
+        removed: (checkData.removed || 0) + (cleanupData.removed || 0),
       });
       fetchData();
     } catch (error) {

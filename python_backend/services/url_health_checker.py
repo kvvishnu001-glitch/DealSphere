@@ -46,6 +46,13 @@ SOFT_404_PATTERNS = [
     "this product is currently unavailable",
     "looking for something?",
     '"message":"page not found"',
+    '"message": "page not found"',
+    '"message":"deal not found"',
+    '"message": "deal not found"',
+    '"message":"deal expired"',
+    '"message": "deal expired"',
+    '"message":"not found"',
+    '"message": "not found"',
     '"message":"not found"',
 ]
 
@@ -127,6 +134,7 @@ async def run_url_health_check() -> Dict[str, Any]:
         "healthy": 0,
         "broken": 0,
         "flagged_pending_review": 0,
+        "removed": 0,
         "errors": 0,
         "started_at": now.isoformat(),
     }
@@ -185,26 +193,46 @@ async def run_url_health_check() -> Dict[str, Any]:
                     deal.url_status = "healthy"
                     stats["healthy"] += 1
                 else:
-                    deal.url_check_failures = (deal.url_check_failures or 0) + 1
-                    logger.warning(
-                        f"Deal {deal.id} URL failed check #{deal.url_check_failures}: "
-                        f"{deal.affiliate_url} - status {check_result.get('status')} "
-                        f"error: {check_result.get('error', 'N/A')}"
+                    error_type = check_result.get("error", "")
+                    http_status = check_result.get("status", 0)
+                    is_definite_dead = (
+                        error_type == "soft_404_detected"
+                        or http_status == 404
+                        or http_status == 410
                     )
 
-                    if deal.url_check_failures >= MAX_FAILURES_BEFORE_FLAG:
+                    if is_definite_dead:
                         deal.url_status = "broken"
-                        deal.status = "pending"
-                        deal.is_ai_approved = False
+                        deal.status = "deleted"
+                        deal.is_active = False
                         deal.url_flagged_at = now
-                        stats["flagged_pending_review"] += 1
+                        deal.url_check_failures = (deal.url_check_failures or 0) + 1
+                        stats["removed"] += 1
                         logger.info(
-                            f"Deal {deal.id} flagged as pending review - "
-                            f"URL broken after {deal.url_check_failures} failures"
+                            f"Deal {deal.id} removed - URL is dead "
+                            f"(status={http_status}, error={error_type}): {deal.affiliate_url}"
                         )
                     else:
-                        deal.url_status = "broken"
-                        stats["broken"] += 1
+                        deal.url_check_failures = (deal.url_check_failures or 0) + 1
+                        logger.warning(
+                            f"Deal {deal.id} URL failed check #{deal.url_check_failures}: "
+                            f"{deal.affiliate_url} - status {http_status} "
+                            f"error: {error_type or 'N/A'}"
+                        )
+
+                        if deal.url_check_failures >= MAX_FAILURES_BEFORE_FLAG:
+                            deal.url_status = "broken"
+                            deal.status = "pending"
+                            deal.is_ai_approved = False
+                            deal.url_flagged_at = now
+                            stats["flagged_pending_review"] += 1
+                            logger.info(
+                                f"Deal {deal.id} flagged as pending review - "
+                                f"URL broken after {deal.url_check_failures} failures"
+                            )
+                        else:
+                            deal.url_status = "broken"
+                            stats["broken"] += 1
 
             await db.commit()
 
