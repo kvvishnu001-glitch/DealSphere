@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func, distinct
 from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import os
@@ -17,6 +17,12 @@ from pathlib import Path
 from database import get_db, init_database
 from models import Deal as DealModel
 from routes.admin import router as admin_router
+from seo_helper import (
+    generate_deal_seo, generate_home_seo, generate_category_seo,
+    generate_about_seo, generate_contact_seo, generate_blog_seo,
+    generate_generic_seo, inject_seo_into_html
+)
+from routes.seo import router as seo_router
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -260,69 +266,143 @@ async def redirect_short_url(short_code: str, db: AsyncSession = Depends(get_db)
         print(f"Error resolving short URL: {e}")
         raise HTTPException(status_code=404, detail="Short URL not found")
 
+# Include SEO router (sitemap.xml, robots.txt, seo categories)
+app.include_router(seo_router)
+
 # Serve static files for frontend (when built)
 frontend_dist_path = Path("../client/dist")
+HTML_PATH = "../client/dist/index.html"
+
+def _read_html():
+    with open(HTML_PATH, 'r', encoding='utf-8') as f:
+        return f.read()
+
+def _get_base_url(request: Request) -> str:
+    forwarded_proto = request.headers.get("x-forwarded-proto", "https")
+    host = request.headers.get("host", request.base_url.hostname)
+    return f"{forwarded_proto}://{host}"
+
 if frontend_dist_path.exists():
     app.mount("/assets", StaticFiles(directory="../client/dist/assets"), name="assets")
-    
-    # Handle deal pages with Open Graph meta tags for social sharing
+
+    @app.get("/")
+    async def serve_home(request: Request, db: AsyncSession = Depends(get_db)):
+        base_url = _get_base_url(request)
+        html_content = _read_html()
+        try:
+            result = await db.execute(
+                select(func.count()).select_from(DealModel).where(
+                    DealModel.is_active == True,
+                    DealModel.is_ai_approved == True,
+                    DealModel.status == 'approved'
+                )
+            )
+            deal_count = result.scalar() or 0
+        except Exception:
+            deal_count = 0
+        seo_tags = generate_home_seo(base_url, deal_count)
+        return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
+
     @app.api_route("/deals/{deal_id}", methods=["GET", "HEAD"])
     async def serve_deal_page(deal_id: str, request: Request, db: AsyncSession = Depends(get_db)):
-        """Serve deal page with Open Graph meta tags for rich social sharing"""
+        base_url = _get_base_url(request)
+        html_content = _read_html()
         try:
-            # Get deal data
             result = await db.execute(select(DealModel).where(DealModel.id == deal_id))
             deal = result.scalar_one_or_none()
-            
-            # Read the base HTML template
-            html_path = "../client/dist/index.html"
-            with open(html_path, 'r', encoding='utf-8') as f:
-                html_content = f.read()
-            
             if deal:
-                # Get base URL for absolute URLs
-                base_url = str(request.base_url).rstrip('/')
-                
-                # Create Open Graph meta tags
-                og_title = f"{deal.title} - {deal.discount_percentage}% OFF"
-                og_description = deal.description or f"Get {deal.title} for just ${deal.sale_price} (was ${deal.original_price}). Save ${float(deal.original_price) - float(deal.sale_price):.2f}!"
-                og_image = deal.image_url or "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=630&fit=crop"
-                og_url = f"{base_url}/deals/{deal_id}"
-                
-                # Insert Open Graph meta tags into the HTML
-                meta_tags = f'''
-    <!-- Open Graph Meta Tags for Social Sharing -->
-    <meta property="og:title" content="{og_title.replace('"', '&quot;')}" />
-    <meta property="og:description" content="{og_description.replace('"', '&quot;')}" />
-    <meta property="og:image" content="{og_image}" />
-    <meta property="og:url" content="{og_url}" />
-    <meta property="og:type" content="product" />
-    <meta property="og:site_name" content="DealSphere" />
-    
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{og_title.replace('"', '&quot;')}" />
-    <meta name="twitter:description" content="{og_description.replace('"', '&quot;')}" />
-    <meta name="twitter:image" content="{og_image}" />
-    
-    <!-- Additional Meta Tags -->
-    <meta name="description" content="{og_description.replace('"', '&quot;')}" />
-    <title>{og_title.replace('"', '&quot;')}</title>
-'''
-                
-                # Insert meta tags before closing </head> tag
-                html_content = html_content.replace('</head>', f'{meta_tags}</head>')
-            
-            return Response(content=html_content, media_type="text/html")
+                seo_tags = generate_deal_seo(deal, base_url)
+                return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
         except Exception as e:
             print(f"Error serving deal page: {e}")
-            return FileResponse("../client/dist/index.html")
-    
-    # Specific route for admin
+        return Response(content=html_content, media_type="text/html")
+
+    @app.get("/category/{category_slug}")
+    async def serve_category_page(category_slug: str, request: Request, db: AsyncSession = Depends(get_db)):
+        import re as _re
+        base_url = _get_base_url(request)
+        html_content = _read_html()
+        try:
+            cat_result = await db.execute(
+                select(distinct(DealModel.category)).where(
+                    DealModel.is_active == True,
+                    DealModel.is_ai_approved == True,
+                    DealModel.status == 'approved'
+                )
+            )
+            all_cats = [r[0] for r in cat_result.all() if r[0]]
+            category_name = None
+            for cat in all_cats:
+                slug = _re.sub(r'[^a-z0-9]+', '-', cat.lower()).strip('-')
+                if slug == category_slug:
+                    category_name = cat
+                    break
+            if not category_name:
+                category_name = category_slug.replace('-', ' ').title()
+            
+            result = await db.execute(
+                select(func.count()).select_from(DealModel).where(
+                    DealModel.is_active == True,
+                    DealModel.is_ai_approved == True,
+                    DealModel.status == 'approved',
+                    func.lower(DealModel.category) == category_name.lower()
+                )
+            )
+            deal_count = result.scalar() or 0
+        except Exception:
+            category_name = category_slug.replace('-', ' ').title()
+            deal_count = 0
+        seo_tags = generate_category_seo(category_name, category_slug, base_url, deal_count)
+        return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
+
+    @app.get("/about")
+    async def serve_about(request: Request):
+        base_url = _get_base_url(request)
+        html_content = _read_html()
+        seo_tags = generate_about_seo(base_url)
+        return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
+
+    @app.get("/contact")
+    async def serve_contact(request: Request):
+        base_url = _get_base_url(request)
+        html_content = _read_html()
+        seo_tags = generate_contact_seo(base_url)
+        return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
+
+    @app.get("/blog")
+    async def serve_blog(request: Request):
+        base_url = _get_base_url(request)
+        html_content = _read_html()
+        seo_tags = generate_blog_seo(base_url)
+        return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
+
     @app.get("/admin")
+    @app.get("/admin/dashboard")
     async def serve_admin():
-        return FileResponse("../client/dist/index.html")
-    
+        return FileResponse(HTML_PATH)
+
+    @app.get("/privacy-policy")
+    async def serve_privacy(request: Request):
+        base_url = _get_base_url(request)
+        html_content = _read_html()
+        seo_tags = generate_generic_seo(
+            "Privacy Policy | DealSphere",
+            "Read DealSphere's privacy policy. Learn how we protect your data and handle information.",
+            f"{base_url}/privacy-policy", base_url
+        )
+        return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
+
+    @app.get("/terms-conditions")
+    async def serve_terms(request: Request):
+        base_url = _get_base_url(request)
+        html_content = _read_html()
+        seo_tags = generate_generic_seo(
+            "Terms & Conditions | DealSphere",
+            "Read DealSphere's terms and conditions for using our deals and coupons platform.",
+            f"{base_url}/terms-conditions", base_url
+        )
+        return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
+
     @app.get("/docs")
     @app.get("/redoc")
     @app.get("/openapi.json")
@@ -330,11 +410,10 @@ if frontend_dist_path.exists():
         raise HTTPException(status_code=404, detail="Not found")
 
     @app.get("/{full_path:path}")
-    async def serve_frontend(full_path: str):
+    async def serve_frontend(full_path: str, request: Request):
         if full_path.startswith("api/") or full_path.startswith("s/"):
             raise HTTPException(status_code=404, detail="Not found")
-        
-        return FileResponse("../client/dist/index.html")
+        return FileResponse(HTML_PATH)
 else:
     @app.get("/")
     async def root():

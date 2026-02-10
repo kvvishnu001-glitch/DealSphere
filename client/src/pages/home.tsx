@@ -378,12 +378,12 @@ export default function Home() {
       <header className="bg-white shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center py-4 sm:h-16 space-y-3 sm:space-y-0">
-            <div className="flex items-center">
+            <Link href="/" className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
                 <Percent className="text-red-600 text-xl sm:text-2xl mr-2" />
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">DealSphere</h1>
+                <span className="text-xl sm:text-2xl font-bold text-gray-800">DealSphere</span>
               </div>
-            </div>
+            </Link>
             
             {/* Search Bar */}
             <div className="flex-1 max-w-lg mx-0 sm:mx-4 lg:mx-8 w-full sm:w-auto">
@@ -394,6 +394,7 @@ export default function Home() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 bg-gray-100 border-gray-300 focus:border-red-600 focus:ring-red-600"
+                  aria-label="Search deals"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
                   <Search className="text-gray-400 w-4 h-4" />
@@ -401,9 +402,11 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              {/* Admin Dashboard button will be shown only on /admin route */}
-            </div>
+            <nav className="hidden md:flex items-center space-x-4 text-sm">
+              <Link href="/about" className="text-gray-600 hover:text-red-600 transition-colors">About</Link>
+              <Link href="/blog" className="text-gray-600 hover:text-red-600 transition-colors">Blog</Link>
+              <Link href="/contact" className="text-gray-600 hover:text-red-600 transition-colors">Contact</Link>
+            </nav>
           </div>
         </div>
       </header>
@@ -412,7 +415,7 @@ export default function Home() {
       <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-8 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold mb-4">
-            AI-Powered Deals & Coupons
+            AI-Powered Deals, Coupons & Discounts
           </h1>
           <p className="text-lg sm:text-xl lg:text-2xl mb-8 text-red-100">
             Discover verified deals curated by artificial intelligence
@@ -823,7 +826,10 @@ export default function Home() {
                 <Instagram className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
                 <Youtube className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
               </div>
-              <div className="flex items-center gap-4 text-xs text-gray-400">
+              <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
+                <Link href="/about" className="hover:text-white transition-colors">About</Link>
+                <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+                <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
                 <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
                 <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
               </div>

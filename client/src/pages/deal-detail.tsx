@@ -19,7 +19,10 @@ import {
   Store,
   Copy,
   Link as LinkIcon,
-  X
+  X,
+  ChevronRight,
+  Percent,
+  HelpCircle
 } from "lucide-react";
 
 interface Deal {
@@ -207,25 +210,51 @@ export default function DealDetail() {
     );
   }
 
+  const categorySlug = deal?.category ? deal.category.toLowerCase().replace(/\s+/g, '-') : '';
+  const savings = deal ? (deal.original_price - deal.sale_price) : 0;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center space-x-2">
+              <Percent className="text-red-600 w-6 h-6" />
+              <span className="text-xl font-bold text-gray-900">DealSphere</span>
+            </Link>
+            <nav className="hidden md:flex items-center space-x-6 text-sm">
+              <Link href="/" className="text-gray-600 hover:text-red-600 transition-colors">Home</Link>
+              <Link href="/about" className="text-gray-600 hover:text-red-600 transition-colors">About</Link>
+              <Link href="/blog" className="text-gray-600 hover:text-red-600 transition-colors">Blog</Link>
+              <Link href="/contact" className="text-gray-600 hover:text-red-600 transition-colors">Contact</Link>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {deal && (
+        <nav aria-label="Breadcrumb" className="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-3">
+          <ol className="flex items-center space-x-2 text-sm text-gray-500">
+            <li><Link href="/" className="hover:text-red-600">Home</Link></li>
+            <li><ChevronRight className="w-4 h-4" /></li>
+            <li><Link href={`/category/${categorySlug}`} className="hover:text-red-600">{deal.category}</Link></li>
+            <li><ChevronRight className="w-4 h-4" /></li>
+            <li className="text-gray-900 font-medium truncate max-w-[200px]">{deal.title}</li>
+          </ol>
+        </nav>
+      )}
+
+      <div className="flex-1 container mx-auto px-4 py-4">
         <div className="max-w-4xl mx-auto">
-          {/* Back button */}
-          <Link href="/">
-            <Button variant="ghost" className="mb-6">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Deals
-            </Button>
-          </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Deal Image */}
             <div className="space-y-4">
               <img
                 src={deal.image_url}
-                alt={deal.title}
+                alt={`${deal.title} - ${deal.discount_percentage}% off at ${deal.store}`}
                 className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg shadow-lg"
+                loading="lazy"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = 'https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Deal+Image';
@@ -370,6 +399,108 @@ export default function DealDetail() {
               <SocialShare deal={deal} onShare={() => setTimeout(() => refetch(), 1000)} />
             </CardContent>
           </Card>
+
+          {/* How to Redeem Section */}
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ExternalLink className="w-5 h-5 text-green-600" />
+                How to Redeem This Deal
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">1</span>
+                  <span className="text-sm text-gray-700">Click the "Get This Deal" button above to visit {deal.store}'s website.</span>
+                </li>
+                {deal.coupon_code ? (
+                  <>
+                    <li className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">2</span>
+                      <span className="text-sm text-gray-700">Copy the coupon code: <strong>{deal.coupon_code}</strong></span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">3</span>
+                      <span className="text-sm text-gray-700">Add the item to your cart and paste the code at checkout.</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">4</span>
+                      <span className="text-sm text-gray-700">The discount of {deal.discount_percentage}% will be applied, saving you ${savings.toFixed(2)}!</span>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">2</span>
+                      <span className="text-sm text-gray-700">The discounted price of ${deal.sale_price.toFixed(2)} is already applied - no coupon needed.</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">3</span>
+                      <span className="text-sm text-gray-700">Add to cart and complete checkout to save ${savings.toFixed(2)} ({deal.discount_percentage}% off)!</span>
+                    </li>
+                  </>
+                )}
+              </ol>
+            </CardContent>
+          </Card>
+
+          {/* FAQ Section */}
+          <section className="mt-8 mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-red-600" />
+              Frequently Asked Questions
+            </h2>
+            <div className="space-y-3">
+              <details className="bg-white rounded-lg border border-gray-200 p-4">
+                <summary className="font-medium text-gray-900 cursor-pointer">How much can I save on {deal.title}?</summary>
+                <p className="mt-3 text-sm text-gray-600">
+                  You can save ${savings.toFixed(2)} ({deal.discount_percentage}% off) on {deal.title}. The regular price is ${deal.original_price.toFixed(2)}, and the sale price is ${deal.sale_price.toFixed(2)}.
+                </p>
+              </details>
+              <details className="bg-white rounded-lg border border-gray-200 p-4">
+                <summary className="font-medium text-gray-900 cursor-pointer">Is this {deal.store} deal verified?</summary>
+                <p className="mt-3 text-sm text-gray-600">
+                  Yes, this deal has been AI-verified by DealSphere's validation system to ensure it's a genuine offer from {deal.store}.
+                </p>
+              </details>
+              <details className="bg-white rounded-lg border border-gray-200 p-4">
+                <summary className="font-medium text-gray-900 cursor-pointer">How do I redeem this deal?</summary>
+                <p className="mt-3 text-sm text-gray-600">
+                  Click the "Get This Deal" button to visit {deal.store}'s website where the discount will be applied.
+                  {deal.coupon_code ? ` Use coupon code ${deal.coupon_code} at checkout.` : ' No coupon code is required - the price is already discounted.'}
+                </p>
+              </details>
+              {deal.expires_at && (
+                <details className="bg-white rounded-lg border border-gray-200 p-4">
+                  <summary className="font-medium text-gray-900 cursor-pointer">When does this deal expire?</summary>
+                  <p className="mt-3 text-sm text-gray-600">
+                    This deal expires on {new Date(deal.expires_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}. We recommend acting quickly to secure this discount.
+                  </p>
+                </details>
+              )}
+              <details className="bg-white rounded-lg border border-gray-200 p-4">
+                <summary className="font-medium text-gray-900 cursor-pointer">Can I share this deal?</summary>
+                <p className="mt-3 text-sm text-gray-600">
+                  Absolutely! Use the share buttons above to share this deal on Facebook, Twitter, WhatsApp, or copy the link. When shared, it will show a rich preview with the deal image and pricing.
+                </p>
+              </details>
+            </div>
+          </section>
+
+          <div className="text-center mb-8">
+            <Link href={`/category/${categorySlug}`}>
+              <Button variant="outline" className="mr-3">
+                More {deal.category} Deals
+              </Button>
+            </Link>
+            <Link href="/">
+              <Button variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                All Deals
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
       

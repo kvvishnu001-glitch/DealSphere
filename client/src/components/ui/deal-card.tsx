@@ -127,8 +127,9 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
           <Link href={`/deals/${deal.id}`}>
             <img 
               src={deal.image_url}
-              alt={deal.title}
+              alt={`${deal.title} - ${deal.discount_percentage || calculatedPercentage}% off at ${deal.store}`}
               className="w-full h-48 object-cover cursor-pointer"
+              loading="lazy"
               onError={(e) => {
                 console.log('Image failed to load for deal:', deal.title, deal.image_url);
                 setImageError(true);
@@ -180,8 +181,9 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
         <Link href={`/deals/${deal.id}`}>
           <img 
             src={deal.image_url}
-            alt={deal.title}
+            alt={`${deal.title} - ${deal.discount_percentage || calculatedPercentage}% off at ${deal.store}`}
             className="w-16 h-16 rounded-lg sm:mr-4 flex-shrink-0 self-start object-cover cursor-pointer"
+            loading="lazy"
             onError={(e) => {
               console.log('Image failed to load for deal:', deal.title, deal.image_url);
               setImageError(true);
@@ -233,8 +235,9 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
         <Link href={`/deals/${deal.id}`}>
           <img 
             src={deal.image_url}
-            alt={deal.title}
+            alt={`${deal.title} - ${deal.discount_percentage || calculatedPercentage}% off at ${deal.store}`}
             className="w-full h-64 object-cover cursor-pointer"
+            loading="lazy"
             onError={(e) => {
               console.log('Image failed to load for deal:', deal.title, deal.image_url);
               setImageError(true);
