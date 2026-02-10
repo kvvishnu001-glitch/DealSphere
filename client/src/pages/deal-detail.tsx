@@ -210,7 +210,7 @@ export default function DealDetail() {
     );
   }
 
-  const categorySlug = deal?.category ? deal.category.toLowerCase().replace(/\s+/g, '-') : '';
+  const categorySlug = deal?.category ? deal.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : '';
   const savings = deal ? (deal.original_price - deal.sale_price) : 0;
 
   return (

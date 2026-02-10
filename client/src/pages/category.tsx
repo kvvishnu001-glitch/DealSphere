@@ -51,7 +51,6 @@ interface CategoryInfo {
 export default function CategoryPage() {
   const [match, params] = useRoute("/category/:slug");
   const slug = params?.slug || "";
-  const categoryName = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   const [visibleCount, setVisibleCount] = useState(20);
 
   const { data: allDeals = [], isLoading } = useQuery<Deal[]>({
@@ -61,6 +60,9 @@ export default function CategoryPage() {
   const { data: categories = [] } = useQuery<CategoryInfo[]>({
     queryKey: ['/api/seo/categories'],
   });
+
+  const matchedCategory = categories.find((cat: CategoryInfo) => cat.slug === slug);
+  const categoryName = matchedCategory?.name || slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   const categoryDeals = allDeals.filter(
     (deal: Deal) => deal.category.toLowerCase() === categoryName.toLowerCase()
