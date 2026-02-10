@@ -472,7 +472,7 @@ async def trigger_url_health_check(
 ):
     check_permission(current_admin, "manage_deals")
     from services.url_health_checker import run_url_health_check
-    result = await run_url_health_check()
+    result = await run_url_health_check(check_all=True)
     await log_audit(
         db, current_admin, "trigger_url_health_check", "deal", None,
         {"result": result},

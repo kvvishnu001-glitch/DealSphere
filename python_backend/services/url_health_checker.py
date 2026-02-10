@@ -126,7 +126,7 @@ async def check_single_url(session: aiohttp.ClientSession, url: str) -> Dict[str
         return {"url": url, "status": 0, "accessible": False, "error": str(e)}
 
 
-async def run_url_health_check() -> Dict[str, Any]:
+async def run_url_health_check(check_all: bool = False) -> Dict[str, Any]:
     logger.info("Starting URL health check for active deals")
     now = datetime.utcnow()
     stats = {
@@ -141,18 +141,21 @@ async def run_url_health_check() -> Dict[str, Any]:
 
     try:
         async with async_session() as db:
-            result = await db.execute(
-                select(DealModel).where(
-                    and_(
-                        DealModel.is_active == True,
-                        DealModel.status.in_(["approved", "pending"]),
-                        or_(
-                            DealModel.url_last_checked.is_(None),
-                            DealModel.url_last_checked < now - timedelta(hours=2),
-                        ),
+            query = select(DealModel).where(
+                and_(
+                    DealModel.is_active == True,
+                    DealModel.status.in_(["approved", "pending"]),
+                )
+            )
+            if not check_all:
+                query = query.where(
+                    or_(
+                        DealModel.url_last_checked.is_(None),
+                        DealModel.url_last_checked < now - timedelta(hours=2),
                     )
-                ).order_by(DealModel.url_last_checked.asc().nullsfirst())
-                .limit(200)
+                ).limit(200)
+            result = await db.execute(
+                query.order_by(DealModel.url_last_checked.asc().nullsfirst())
             )
             deals = result.scalars().all()
 
