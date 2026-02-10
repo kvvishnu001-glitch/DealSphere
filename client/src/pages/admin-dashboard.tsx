@@ -15,6 +15,8 @@ export default function AdminDashboard() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [editingDeal, setEditingDeal] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [urlCheckRunning, setUrlCheckRunning] = useState(false);
+  const [urlCheckResult, setUrlCheckResult] = useState<any>(null);
   const [newDeal, setNewDeal] = useState({
     title: "",
     description: "",
@@ -353,6 +355,39 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       alert("Error deleting deal: " + error);
+    }
+  };
+
+  const runUrlHealthCheck = async () => {
+    if (!confirm("This will check all deal URLs and remove any that are expired, not found, or broken. Continue?")) return;
+    setUrlCheckRunning(true);
+    setUrlCheckResult(null);
+    try {
+      const token = localStorage.getItem("admin_token");
+      const checkResponse = await fetch("/api/admin/url-health/check", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const checkData = await checkResponse.json();
+
+      const cleanupResponse = await fetch("/api/admin/url-health/cleanup", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const cleanupData = await cleanupResponse.json();
+
+      setUrlCheckResult({
+        total_checked: checkData.total_checked || 0,
+        healthy: checkData.healthy || 0,
+        broken: checkData.broken || 0,
+        flagged: checkData.flagged_pending_review || 0,
+        removed: cleanupData.removed || 0,
+      });
+      fetchData();
+    } catch (error) {
+      alert("Error running URL health check: " + error);
+    } finally {
+      setUrlCheckRunning(false);
     }
   };
 
@@ -897,7 +932,23 @@ export default function AdminDashboard() {
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h2 style={{ color: "#333" }}>Manage Deals</h2>
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <button
+                  onClick={runUrlHealthCheck}
+                  disabled={urlCheckRunning}
+                  style={{ 
+                    padding: "10px 20px", 
+                    backgroundColor: urlCheckRunning ? "#6c757d" : "#dc3545", 
+                    color: "white", 
+                    border: "none", 
+                    borderRadius: "4px", 
+                    cursor: urlCheckRunning ? "not-allowed" : "pointer",
+                    fontSize: "14px",
+                    opacity: urlCheckRunning ? 0.7 : 1,
+                  }}
+                >
+                  {urlCheckRunning ? "⏳ Checking URLs..." : "🔍 Check & Clean URLs"}
+                </button>
                 <div style={{ position: "relative" }}>
                   <button
                     onClick={() => setShowFileUpload(true)}
@@ -979,6 +1030,28 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+
+            {urlCheckResult && (
+              <div style={{ 
+                backgroundColor: "#f8f9fa", 
+                border: "1px solid #dee2e6", 
+                borderRadius: "8px", 
+                padding: "15px 20px", 
+                marginBottom: "20px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
+              }}>
+                <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+                  <span><strong>URLs Checked:</strong> {urlCheckResult.total_checked}</span>
+                  <span style={{ color: "#28a745" }}><strong>Healthy:</strong> {urlCheckResult.healthy}</span>
+                  <span style={{ color: "#dc3545" }}><strong>Broken:</strong> {urlCheckResult.broken}</span>
+                  <span style={{ color: "#ffc107" }}><strong>Flagged:</strong> {urlCheckResult.flagged}</span>
+                  <span style={{ color: "#dc3545" }}><strong>Removed:</strong> {urlCheckResult.removed}</span>
+                </div>
+                <button onClick={() => setUrlCheckResult(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>✕</button>
+              </div>
+            )}
 
             {/* Filters */}
             <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", marginBottom: "20px" }}>
