@@ -678,25 +678,39 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-4 sticky bottom-0 z-50 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
+      <footer className="bg-gray-800 text-white py-6 sticky bottom-0 z-50 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center">
-              <Percent className="text-red-600 text-xl mr-2" />
-              <h3 className="text-lg font-bold">DealSphere</h3>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center">
+                <Percent className="text-red-600 text-xl mr-2" />
+                <h3 className="text-lg font-bold">DealSphere</h3>
+              </div>
+              <p className="text-gray-400 text-xs max-w-xs">
+                AI-verified deals and coupons updated daily to help you save more.
+              </p>
             </div>
             
-            <div className="flex space-x-6">
-              <Facebook className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-              <Twitter className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-              <Instagram className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
-              <Youtube className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
+            <div className="flex flex-col gap-3">
+              <div className="flex space-x-6">
+                <Facebook className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
+                <Twitter className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
+                <Instagram className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
+                <Youtube className="w-5 h-5 hover:text-red-600 cursor-pointer transition-colors" />
+              </div>
+              <div className="flex items-center gap-4 text-xs text-gray-400">
+                <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</Link>
+              </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-              <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
-              <Link href="/terms-conditions" className="hover:text-white transition-colors">Terms</Link>
-              <span>© 2025 DealSphere</span>
+            <div className="flex flex-col items-end gap-2 text-right">
+              <div className="text-gray-400 text-xs">
+                © 2025 DealSphere. All rights reserved.
+              </div>
+              <p className="text-[10px] text-gray-500 max-w-[200px]">
+                We may earn a commission on qualifying purchases.
+              </p>
             </div>
           </div>
         </div>
