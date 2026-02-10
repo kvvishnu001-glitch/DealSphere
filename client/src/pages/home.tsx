@@ -414,13 +414,12 @@ export default function Home() {
 
 
 
-      {/* Sticky Filter Bar - outside main so it sticks properly */}
-      <div className="sticky top-14 sm:top-16 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-3">
-          <div className="flex gap-2 sm:gap-3 items-center overflow-x-auto no-scrollbar">
+      {/* Fixed Filter Bar */}
+      <div className="fixed top-14 sm:top-16 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2.5">
+          <div className="flex gap-1.5 sm:gap-3 items-center">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="h-8 sm:h-10 min-w-[110px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm flex-shrink-0">
-                <Tag className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 mr-1 flex-shrink-0" />
+              <SelectTrigger className="h-7 sm:h-9 flex-1 border-gray-300 rounded-full bg-gray-50 text-[11px] sm:text-sm">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -434,8 +433,7 @@ export default function Home() {
             </Select>
 
             <Select value={selectedStore} onValueChange={setSelectedStore}>
-              <SelectTrigger className="h-8 sm:h-10 min-w-[90px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm flex-shrink-0">
-                <Store className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 mr-1 flex-shrink-0" />
+              <SelectTrigger className="h-7 sm:h-9 flex-1 border-gray-300 rounded-full bg-gray-50 text-[11px] sm:text-sm">
                 <SelectValue placeholder="Store" />
               </SelectTrigger>
               <SelectContent>
@@ -449,7 +447,7 @@ export default function Home() {
             </Select>
 
             <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
-              <SelectTrigger className="h-8 sm:h-10 min-w-[100px] border-gray-300 rounded-full bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 text-xs sm:text-sm flex-shrink-0">
+              <SelectTrigger className="h-7 sm:h-9 flex-1 border-gray-300 rounded-full bg-gray-50 text-[11px] sm:text-sm">
                 <SelectValue placeholder="Discount" />
               </SelectTrigger>
               <SelectContent>
@@ -468,21 +466,20 @@ export default function Home() {
 
             {(selectedCategory !== "all" || selectedStore !== "all" || selectedDiscount !== "all" || searchQuery) && (
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm"
                 onClick={clearFilters}
-                className="h-8 sm:h-10 px-2.5 text-gray-600 hover:text-gray-800 border-gray-300 rounded-full hover:bg-gray-50 text-xs sm:text-sm flex-shrink-0"
+                className="h-7 sm:h-9 px-2 text-red-600 text-[11px] sm:text-sm flex-shrink-0"
               >
-                <X className="w-3 h-3 mr-0.5" />
-                Clear
+                <X className="w-3 h-3" />
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Main Content - add top padding to account for fixed filter bar */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-14 pb-6 sm:pb-8">
 
         {/* Search Results Section - shown when user searches */}
         {isSearchActive && (
