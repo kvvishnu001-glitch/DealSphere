@@ -55,7 +55,6 @@ interface Deal {
 export default function DealDetail() {
   const [match, params] = useRoute("/deals/:id");
   const [shortUrl, setShortUrl] = useState<string>("");
-  const [isGeneratingShortUrl, setIsGeneratingShortUrl] = useState(false);
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [isDealLoading, setIsDealLoading] = useState(false);
   const { toast } = useToast();
@@ -77,25 +76,10 @@ export default function DealDetail() {
     refetchInterval: 10000, // Refresh every 10 seconds to update stats
   });
 
-  // Generate short URL when component loads
   useEffect(() => {
-    const generateShortUrl = async () => {
-      if (!dealId) return;
-      
-      setIsGeneratingShortUrl(true);
-      try {
-        const response = await apiRequest('POST', `/api/deals/${dealId}/share?platform=copy`);
-        const data = await response.json();
-        setShortUrl(data.shortUrl);
-      } catch (error) {
-        console.error('Failed to generate short URL:', error);
-        setShortUrl(window.location.href);
-      } finally {
-        setIsGeneratingShortUrl(false);
-      }
-    };
-
-    generateShortUrl();
+    if (dealId) {
+      setShortUrl(`${window.location.origin}/deals/${dealId}`);
+    }
   }, [dealId]);
 
   const handleDealClick = async () => {
@@ -258,12 +242,12 @@ export default function DealDetail() {
                 <CardContent className="pt-0">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 p-2 bg-gray-50 rounded border text-xs sm:text-sm font-mono truncate">
-                      {isGeneratingShortUrl ? "Generating..." : shortUrl}
+                      {shortUrl || "Loading..."}
                     </div>
                     <Button 
                       size="sm" 
                       onClick={copyShortUrl}
-                      disabled={isGeneratingShortUrl || !shortUrl}
+                      disabled={!shortUrl}
                     >
                       <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>

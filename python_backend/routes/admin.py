@@ -204,10 +204,10 @@ async def get_admin_metrics(
     pending_result = await db.execute(select(func.count(Deal.id)).where(and_(active_filter, Deal.status == "pending")))
     pending_deals = pending_result.scalar() or 0
     
-    clicks_result = await db.execute(select(func.sum(Deal.click_count)).where(active_filter))
+    clicks_result = await db.execute(select(func.count(DealClick.id)))
     total_clicks = clicks_result.scalar() or 0
     
-    shares_result = await db.execute(select(func.sum(Deal.share_count)).where(active_filter))
+    shares_result = await db.execute(select(func.count(SocialShare.id)))
     total_shares = shares_result.scalar() or 0
     
     revenue_estimate = float(total_clicks) * 0.05
