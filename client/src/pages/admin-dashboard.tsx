@@ -526,33 +526,35 @@ export default function AdminDashboard() {
     let csvContent = '';
     let filename = '';
     
+    const header = 'title,description,original_price,sale_price,store,category,affiliate_url,image_url,deal_type,coupon_code,coupon_required,needs_ai_review';
+    
     switch (networkType) {
       case 'amazon':
-        csvContent = `title,description,original_price,sale_price,store,category,affiliate_url,image_url,deal_type,coupon_code,coupon_required,needs_ai_review
+        csvContent = `${header}
 "Amazon Echo Dot (5th Gen)","Smart speaker with Alexa - Charcoal",49.99,29.99,"Amazon","Electronics","https://amazon.com/dp/B09B8V1LZ3?tag=YOURTAG-20","https://m.media-amazon.com/images/I/714Rq4k05UL.jpg","hot","SAVE20",false,false
-"Wireless Bluetooth Headphones","Premium sound quality with noise cancellation",199.99,99.99,"Amazon","Electronics","https://amazon.com/dp/B08PZHYWJS?tag=YOURTAG-20","https://m.media-amazon.com/images/I/61a45+UbLYL.jpg","regular","",false,false
+"Wireless Bluetooth Headphones","Premium sound quality with noise cancellation",199.99,99.99,"Amazon","Electronics","https://amazon.com/dp/B08PZHYWJS?tag=YOURTAG-20","https://m.media-amazon.com/images/I/61a45+UbLYL.jpg","latest","",false,false
 "Kitchen Stand Mixer","Professional 6-quart stand mixer with attachments",399.99,249.99,"Amazon","Home & Garden","https://amazon.com/dp/B00005UP2P?tag=YOURTAG-20","https://m.media-amazon.com/images/I/81VjYXa6NFL.jpg","top","KITCHEN15",true,false`;
         filename = 'amazon_sample_deals.csv';
         break;
       case 'cj':
-        csvContent = `advertiser_name,product_name,product_description,retail_price,sale_price,category,buy_url,image_url,promotional_type,coupon_code,coupon_required,needs_ai_review
-"Best Buy","Gaming Laptop","High-performance gaming laptop with RTX 4060",1299.99,999.99,"Electronics","https://www.tkqlhce.com/click-123456-987654?url=https://bestbuy.com/laptop","https://pisces.bbystatic.com/image2/BestBuy_US/images/products/laptop.jpg","sale","GAME100",false,false
-"Target","Home Decor Set","Modern living room decor bundle",249.99,149.99,"Home & Garden","https://www.anrdoezrs.net/links/123456/type/dlg/https://target.com/decor","https://target.scene7.com/is/image/Target/decor_set","coupon","HOME25",true,false
-"Walmart","Fitness Tracker","Advanced fitness tracker with heart rate monitor",199.99,119.99,"Sports","https://linksynergy.walmart.com/deeplink?id=abc123&mid=2149&murl=https://walmart.com/tracker","https://i5.walmartimages.com/asr/fitness-tracker.jpg","flash_sale","",false,false`;
+        csvContent = `${header}
+"Gaming Laptop - RTX 4060","High-performance gaming laptop with RTX 4060",1299.99,999.99,"Best Buy","Electronics","https://www.tkqlhce.com/click-123456-987654?url=https://bestbuy.com/laptop","https://pisces.bbystatic.com/image2/BestBuy_US/images/products/laptop.jpg","hot","GAME100",false,false
+"Modern Home Decor Set","Modern living room decor bundle",249.99,149.99,"Target","Home & Garden","https://www.anrdoezrs.net/links/123456/type/dlg/https://target.com/decor","https://target.scene7.com/is/image/Target/decor_set","latest","HOME25",true,false
+"Advanced Fitness Tracker","Fitness tracker with heart rate monitor",199.99,119.99,"Walmart","Sports","https://linksynergy.walmart.com/deeplink?id=abc123&mid=2149&murl=https://walmart.com/tracker","https://i5.walmartimages.com/asr/fitness-tracker.jpg","latest","",false,false`;
         filename = 'commission_junction_sample_deals.csv';
         break;
       case 'shareasale':
-        csvContent = `merchantname,productname,description,price,saleprice,category,directurl,imageurl,dealtype,promocode,coupon_required,needs_ai_review
-"Nike","Running Shoes","Professional running shoes with advanced cushioning",129.99,89.99,"Sports","https://www.shareasale.com/r.cfm?b=123456&u=789012&m=1234&urllink=nike.com%2Frunning-shoes","https://static.nike.com/a/images/running-shoe.jpg","clearance","RUN30",false,false
-"Barnes & Noble","Bestseller Book Set","Collection of top 10 bestselling novels",199.99,99.99,"Books","https://www.shareasale.com/r.cfm?b=234567&u=789012&m=2345&urllink=barnesandnoble.com%2Fbook-set","https://prodimage.images-bn.com/book-collection.jpg","bundle","BOOKS50",true,false
-"Nordstrom","Designer Handbag","Luxury leather handbag from premium brand",599.99,399.99,"Clothing","https://www.shareasale.com/r.cfm?b=345678&u=789012&m=3456&urllink=nordstrom.com%2Fhandbag","https://n.nordstrommedia.com/id/handbag-image.jpg","designer_sale","",false,false`;
+        csvContent = `${header}
+"Professional Running Shoes","Running shoes with advanced cushioning",129.99,89.99,"Nike","Sports","https://www.shareasale.com/r.cfm?b=123456&u=789012&m=1234&urllink=nike.com/running-shoes","https://static.nike.com/a/images/running-shoe.jpg","latest","RUN30",false,false
+"Bestseller Book Set","Collection of top 10 bestselling novels",199.99,99.99,"Barnes & Noble","Books","https://www.shareasale.com/r.cfm?b=234567&u=789012&m=2345&urllink=barnesandnoble.com/book-set","https://prodimage.images-bn.com/book-collection.jpg","hot","BOOKS50",true,false
+"Designer Leather Handbag","Luxury leather handbag from premium brand",599.99,399.99,"Nordstrom","Clothing","https://www.shareasale.com/r.cfm?b=345678&u=789012&m=3456&urllink=nordstrom.com/handbag","https://n.nordstrommedia.com/id/handbag-image.jpg","top","",false,false`;
         filename = 'shareasale_sample_deals.csv';
         break;
       case 'rakuten':
-        csvContent = `advertiser,offer_name,description,original_price,current_price,category,tracking_url,image_url,promotion_type,promo_code,coupon_required,needs_ai_review
-"Macy's","Winter Coat Collection","Premium winter coats for men and women",299.99,179.99,"Clothing","https://click.linksynergy.com/deeplink?id=xyz789&mid=1234&murl=macys.com%2Fcoats","https://slimages.macysassets.com/winter-coat.jpg","seasonal","WINTER40",false,false
-"Home Depot","Power Tool Set","Professional grade power tools with case",399.99,249.99,"Home & Garden","https://click.linksynergy.com/deeplink?id=xyz789&mid=2345&murl=homedepot.com%2Ftools","https://images.homedepot-static.com/power-tools.jpg","tool_sale","TOOLS25",true,false
-"Petco","Pet Food Bundle","Premium dog food and treats bundle",89.99,59.99,"Pet Supplies","https://click.linksynergy.com/deeplink?id=xyz789&mid=3456&murl=petco.com%2Fpet-food","https://assets.petco.com/petco/image/pet-food.jpg","pet_deal","",false,false`;
+        csvContent = `${header}
+"Winter Coat Collection","Premium winter coats for men and women",299.99,179.99,"Macy's","Clothing","https://click.linksynergy.com/deeplink?id=xyz789&mid=1234&murl=macys.com/coats","https://slimages.macysassets.com/winter-coat.jpg","latest","WINTER40",false,false
+"Professional Power Tool Set","Professional grade power tools with case",399.99,249.99,"Home Depot","Home & Garden","https://click.linksynergy.com/deeplink?id=xyz789&mid=2345&murl=homedepot.com/tools","https://images.homedepot-static.com/power-tools.jpg","hot","TOOLS25",true,false
+"Premium Pet Food Bundle","Premium dog food and treats bundle",89.99,59.99,"Petco","Pet Supplies","https://click.linksynergy.com/deeplink?id=xyz789&mid=3456&murl=petco.com/pet-food","https://assets.petco.com/petco/image/pet-food.jpg","latest","",false,false`;
         filename = 'rakuten_sample_deals.csv';
         break;
     }

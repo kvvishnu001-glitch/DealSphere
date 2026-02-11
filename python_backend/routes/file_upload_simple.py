@@ -47,23 +47,34 @@ async def upload_deal_file(
                 # Check if AI review is needed
                 needs_ai_review = row.get('needs_ai_review', 'true').lower() == 'true'
                 
-                # Map CSV fields to deal model (all mandatory fields included)
+                orig = float(row.get('original_price', 0)) if row.get('original_price') else 0
+                sale = float(row.get('sale_price', 0)) if row.get('sale_price') else 0
+                discount = int(row.get('discount_percentage', 0)) if row.get('discount_percentage') else 0
+                if discount == 0 and orig > 0 and sale > 0:
+                    discount = round(((orig - sale) / orig) * 100)
+                
+                coupon_req = row.get('coupon_required', 'false')
+                if isinstance(coupon_req, str):
+                    coupon_req = coupon_req.lower() == 'true'
+                
                 deal_data = {
-                    'id': str(uuid.uuid4()),  # Generate unique ID
+                    'id': str(uuid.uuid4()),
                     'title': row.get('title', ''),
                     'description': row.get('description', ''),
-                    'sale_price': float(row.get('sale_price', 0)) if row.get('sale_price') else 0,
-                    'original_price': float(row.get('original_price', 0)) if row.get('original_price') else 0,
-                    'discount_percentage': int(row.get('discount_percentage', 0)) if row.get('discount_percentage') else 0,
+                    'sale_price': sale,
+                    'original_price': orig,
+                    'discount_percentage': discount,
                     'image_url': row.get('image_url', ''),
                     'affiliate_url': row.get('affiliate_url', ''),
                     'store': row.get('store', network.title()),
                     'category': row.get('category', 'General'),
                     'rating': float(row.get('rating', 0)) if row.get('rating') else None,
                     'deal_type': row.get('deal_type', 'latest'),
+                    'coupon_code': row.get('coupon_code', '') or None,
+                    'coupon_required': coupon_req,
                     'status': 'approved' if not needs_ai_review else 'pending',
                     'is_active': True,
-                    'is_ai_approved': not needs_ai_review,  # Auto-approve if no AI review needed
+                    'is_ai_approved': not needs_ai_review,
                     'click_count': 0,
                     'share_count': 0
                 }
