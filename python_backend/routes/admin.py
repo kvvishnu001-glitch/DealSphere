@@ -578,6 +578,78 @@ async def trigger_stale_cleanup(
     return result
 
 
+class JsonImportRequest(BaseModel):
+    deals: List[dict]
+
+@router.post("/deals/json-import")
+async def json_import_deals(
+    request: Request,
+    body: JsonImportRequest,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_deals")
+    
+    required_fields = {"title", "original_price", "sale_price", "store", "category", "affiliate_url"}
+    created = 0
+    errors = 0
+    error_details = []
+    
+    for i, deal_data in enumerate(body.deals):
+        missing = required_fields - set(deal_data.keys())
+        if missing:
+            errors += 1
+            error_details.append(f"Deal {i+1}: missing {', '.join(missing)}")
+            continue
+        
+        try:
+            orig = float(deal_data["original_price"])
+            sale = float(deal_data["sale_price"])
+            discount = deal_data.get("discount_percentage")
+            if discount is None and orig > 0:
+                discount = round(((orig - sale) / orig) * 100)
+            
+            deal = Deal(
+                id=str(uuid.uuid4()),
+                title=deal_data["title"],
+                description=deal_data.get("description", ""),
+                original_price=orig,
+                sale_price=sale,
+                discount_percentage=discount or 0,
+                store=deal_data["store"],
+                category=deal_data["category"],
+                affiliate_url=deal_data["affiliate_url"],
+                image_url=deal_data.get("image_url", ""),
+                deal_type=deal_data.get("deal_type", "latest"),
+                coupon_code=deal_data.get("coupon_code"),
+                coupon_required=deal_data.get("coupon_required", False),
+                source_api=deal_data.get("source_api"),
+                store_logo_url=deal_data.get("store_logo_url"),
+                rating=deal_data.get("rating"),
+                review_count=deal_data.get("review_count", 0),
+                status="approved",
+                is_active=True,
+                is_ai_approved=True,
+                ai_score=8.5,
+            )
+            db.add(deal)
+            created += 1
+        except Exception as e:
+            errors += 1
+            error_details.append(f"Deal {i+1}: {str(e)}")
+    
+    if created > 0:
+        await db.commit()
+    
+    await log_audit(
+        db, current_admin, "json_import_deals", "deals", None,
+        {"created": created, "errors": errors, "total_submitted": len(body.deals)},
+        ip_address=request.client.host if request.client else None
+    )
+    
+    return {"created": created, "errors": errors, "error_details": error_details}
+
+
 class BulkActionRequest(BaseModel):
     deal_ids: List[str]
     action: str

@@ -13,6 +13,9 @@ export default function AdminDashboard() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddDeal, setShowAddDeal] = useState(false);
+  const [showJsonImport, setShowJsonImport] = useState(false);
+  const [jsonInput, setJsonInput] = useState("");
+  const [jsonImportLoading, setJsonImportLoading] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [editingDeal, setEditingDeal] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -273,6 +276,56 @@ export default function AdminDashboard() {
       alert("Error creating deal: " + error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleJsonImport = async () => {
+    if (!jsonInput.trim()) {
+      alert("Please paste JSON data first.");
+      return;
+    }
+    
+    let deals: any[];
+    try {
+      const parsed = JSON.parse(jsonInput);
+      deals = Array.isArray(parsed) ? parsed : [parsed];
+    } catch (err) {
+      alert("Invalid JSON format. Please check your input.");
+      return;
+    }
+    
+    if (deals.length === 0) {
+      alert("No deals found in the JSON data.");
+      return;
+    }
+    
+    setJsonImportLoading(true);
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/admin/deals/json-import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ deals })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Successfully imported ${result.created} deal(s)!${result.errors > 0 ? ` ${result.errors} failed.` : ''}`);
+        setShowJsonImport(false);
+        setJsonInput("");
+        fetchData();
+      } else {
+        const errData = await response.json().catch(() => null);
+        const detail = errData?.detail || "Failed to import deals";
+        alert("Error: " + (typeof detail === 'string' ? detail : JSON.stringify(detail)));
+      }
+    } catch (error) {
+      alert("Error importing deals: " + error);
+    } finally {
+      setJsonImportLoading(false);
     }
   };
 
@@ -1106,6 +1159,20 @@ export default function AdminDashboard() {
                   }}
                 >
                   + Add Deal
+                </button>
+                <button
+                  onClick={() => setShowJsonImport(true)}
+                  style={{ 
+                    padding: "10px 20px", 
+                    backgroundColor: "#6f42c1", 
+                    color: "white", 
+                    border: "none", 
+                    borderRadius: "4px", 
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  }}
+                >
+                  { } JSON Import
                 </button>
               </div>
             </div>
@@ -2641,6 +2708,92 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* JSON Import Modal */}
+      {showJsonImport && (
+        <div style={{ 
+          position: "fixed", 
+          top: 0, left: 0, right: 0, bottom: 0, 
+          backgroundColor: "rgba(0,0,0,0.5)", 
+          display: "flex", alignItems: "center", justifyContent: "center", 
+          zIndex: 1000 
+        }}>
+          <div style={{ 
+            backgroundColor: "white", padding: "30px", borderRadius: "8px", 
+            width: "90%", maxWidth: "700px", maxHeight: "90vh", overflowY: "auto" 
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0, color: "#333" }}>Import Deals via JSON</h3>
+              <button
+                onClick={() => setShowJsonImport(false)}
+                style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer", color: "#666" }}
+              >×</button>
+            </div>
+            
+            <p style={{ color: "#666", fontSize: "14px", marginBottom: "10px" }}>
+              Paste a JSON array of deals. Each deal should have: <strong>title</strong>, <strong>original_price</strong>, <strong>sale_price</strong>, <strong>store</strong>, <strong>category</strong>, <strong>affiliate_url</strong>. Optional: description, image_url, deal_type, coupon_code, coupon_required.
+            </p>
+            
+            <div style={{ marginBottom: "10px" }}>
+              <button
+                onClick={() => setJsonInput(JSON.stringify([
+                  {
+                    "title": "Example Product 50% Off",
+                    "description": "Great deal on this product",
+                    "original_price": 99.99,
+                    "sale_price": 49.99,
+                    "store": "Amazon",
+                    "category": "Electronics",
+                    "deal_type": "latest",
+                    "affiliate_url": "https://example.com/deal",
+                    "image_url": "https://example.com/image.jpg"
+                  }
+                ], null, 2))}
+                style={{ padding: "6px 12px", backgroundColor: "#e9ecef", border: "1px solid #ced4da", borderRadius: "4px", cursor: "pointer", fontSize: "12px" }}
+              >
+                Load Example
+              </button>
+            </div>
+            
+            <textarea
+              value={jsonInput}
+              onChange={(e) => setJsonInput(e.target.value)}
+              placeholder='[{"title": "...", "original_price": 99.99, "sale_price": 49.99, "store": "Amazon", "category": "Electronics", "affiliate_url": "https://..."}]'
+              rows={15}
+              style={{ 
+                width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "4px", 
+                fontFamily: "monospace", fontSize: "13px", resize: "vertical" 
+              }}
+            />
+            
+            <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+              <button
+                onClick={handleJsonImport}
+                disabled={jsonImportLoading}
+                style={{ 
+                  flex: 1, padding: "12px", 
+                  backgroundColor: jsonImportLoading ? "#ccc" : "#6f42c1", 
+                  color: "white", border: "none", borderRadius: "4px", 
+                  cursor: jsonImportLoading ? "not-allowed" : "pointer",
+                  fontSize: "14px"
+                }}
+              >
+                {jsonImportLoading ? "Importing..." : "Import Deals"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowJsonImport(false); setJsonInput(""); }}
+                style={{ 
+                  flex: 1, padding: "12px", backgroundColor: "#6c757d", 
+                  color: "white", border: "none", borderRadius: "4px", cursor: "pointer" 
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
