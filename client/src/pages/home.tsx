@@ -415,13 +415,13 @@ export default function Home() {
 
 
 
-      {/* Leaderboard Ad - Below Hero */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <AdBannerLeaderboard />
-      </div>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+        {/* Leaderboard Ad - Below Hero */}
+        <div className="mb-6 sm:mb-8 lg:mb-10">
+          <AdBannerLeaderboard />
+        </div>
+
         {/* Filter Bar - below hero banner */}
         <div className="bg-white rounded-lg lg:rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4 lg:p-5 mb-6 sm:mb-8 lg:mb-10">
           <div className="flex gap-2 sm:gap-3 lg:gap-4 items-center">

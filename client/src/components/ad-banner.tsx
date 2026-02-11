@@ -48,16 +48,7 @@ export function AdBanner({ position, className = "" }: AdBannerProps) {
   };
 
   if (!banners || banners.length === 0) {
-    return (
-      <div className={`ad-slot ${className}`}>
-        <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 text-sm py-6 px-4">
-          <div className="text-center">
-            <div className="text-xs uppercase tracking-wider mb-1 font-medium">Advertisement</div>
-            <div className="text-xs">Ad Space - {position.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -92,7 +83,7 @@ export function AdBanner({ position, className = "" }: AdBannerProps) {
 }
 
 export function AdBannerLeaderboard({ className = "" }: { className?: string }) {
-  return <AdBanner position="hero_below" className={`max-w-4xl mx-auto ${className}`} />;
+  return <AdBanner position="hero_below" className={className} />;
 }
 
 export function AdBannerBetweenSections({ className = "" }: { className?: string }) {
