@@ -337,6 +337,73 @@ class AuditLogResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class Banner(Base):
+    __tablename__ = "banners"
+    
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    position = Column(String, nullable=False)  # hero_below, between_sections, sidebar, before_footer, deal_detail
+    banner_type = Column(String, nullable=False, default='custom')  # custom, google_ads
+    image_url = Column(Text, nullable=True)
+    link_url = Column(Text, nullable=True)
+    html_code = Column(Text, nullable=True)  # For Google Ads script/code
+    alt_text = Column(String, nullable=True)
+    sort_order = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    click_count = Column(Integer, default=0)
+    impression_count = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+class BannerCreate(BaseModel):
+    name: str
+    position: str
+    banner_type: str = 'custom'
+    image_url: Optional[str] = None
+    link_url: Optional[str] = None
+    html_code: Optional[str] = None
+    alt_text: Optional[str] = None
+    sort_order: int = 0
+    is_active: bool = True
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+
+class BannerUpdate(BaseModel):
+    name: Optional[str] = None
+    position: Optional[str] = None
+    banner_type: Optional[str] = None
+    image_url: Optional[str] = None
+    link_url: Optional[str] = None
+    html_code: Optional[str] = None
+    alt_text: Optional[str] = None
+    sort_order: Optional[int] = None
+    is_active: Optional[bool] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+
+class BannerResponse(BaseModel):
+    id: str
+    name: str
+    position: str
+    banner_type: str
+    image_url: Optional[str] = None
+    link_url: Optional[str] = None
+    html_code: Optional[str] = None
+    alt_text: Optional[str] = None
+    sort_order: int
+    is_active: bool
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    click_count: int = 0
+    impression_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
 class AdminMetrics(BaseModel):
     total_deals: int
     ai_approved_deals: int

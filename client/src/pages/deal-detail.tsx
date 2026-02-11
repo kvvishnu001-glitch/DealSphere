@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { CouponCode } from "@/components/ui/coupon-code";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { AdBannerDealDetail } from "@/components/ad-banner";
 import { 
   Star, 
   Clock, 
@@ -415,6 +416,11 @@ export default function DealDetail() {
               </ol>
             </CardContent>
           </Card>
+
+          {/* Ad on Deal Detail Page */}
+          <div className="mt-6">
+            <AdBannerDealDetail />
+          </div>
 
           {/* FAQ Section */}
           <section className="mt-8 mb-8">

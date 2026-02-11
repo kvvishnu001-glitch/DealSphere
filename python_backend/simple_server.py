@@ -177,6 +177,12 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import affiliate management router: {e}")
 
+try:
+    from routes.banners import router as banners_router
+    app.include_router(banners_router, prefix="/api")
+except ImportError as e:
+    print(f"Warning: Could not import banners router: {e}")
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "message": "DealSphere Python API is running"}

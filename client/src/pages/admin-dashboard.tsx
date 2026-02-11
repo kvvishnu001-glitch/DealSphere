@@ -67,6 +67,16 @@ export default function AdminDashboard() {
   });
   const [auditFilter, setAuditFilter] = useState({ admin_id: "", action: "" });
 
+  // Banner management state
+  const [banners, setBanners] = useState<any[]>([]);
+  const [showBannerForm, setShowBannerForm] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<any>(null);
+  const [bannerForm, setBannerForm] = useState({
+    name: "", position: "hero_below", banner_type: "custom",
+    image_url: "", link_url: "", html_code: "", alt_text: "",
+    sort_order: 0, is_active: true, start_date: "", end_date: ""
+  });
+
   // Enable real-time updates
   useRealTimeUpdates();
 
@@ -88,6 +98,8 @@ export default function AdminDashboard() {
       fetchUsers();
       fetchAuditLogs();
       fetchPermissions();
+    } else if (activeTab === "banners") {
+      fetchBanners();
     }
     
     // Set up auto-refresh for deals and metrics every 30 seconds
@@ -801,6 +813,108 @@ export default function AdminDashboard() {
     } catch (error) { /* ignore */ }
   };
 
+  const fetchBanners = async () => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/admin/banners", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBanners(data);
+      }
+    } catch (error) { /* ignore */ }
+  };
+
+  const resetBannerForm = () => {
+    setBannerForm({
+      name: "", position: "hero_below", banner_type: "custom",
+      image_url: "", link_url: "", html_code: "", alt_text: "",
+      sort_order: 0, is_active: true, start_date: "", end_date: ""
+    });
+    setEditingBanner(null);
+    setShowBannerForm(false);
+  };
+
+  const handleSaveBanner = async (e: any) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("admin_token");
+      const payload: any = { ...bannerForm };
+      payload.start_date = payload.start_date ? new Date(payload.start_date).toISOString() : null;
+      payload.end_date = payload.end_date ? new Date(payload.end_date).toISOString() : null;
+      if (!payload.image_url) payload.image_url = null;
+      if (!payload.link_url) payload.link_url = null;
+      if (!payload.html_code) payload.html_code = null;
+      if (!payload.alt_text) payload.alt_text = null;
+
+      const url = editingBanner ? `/api/admin/banners/${editingBanner.id}` : "/api/admin/banners";
+      const method = editingBanner ? "PUT" : "POST";
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        resetBannerForm();
+        fetchBanners();
+        alert(editingBanner ? "Banner updated!" : "Banner created!");
+      } else {
+        const err = await response.json();
+        alert(err.detail || "Failed to save banner");
+      }
+    } catch (error) {
+      alert("Error saving banner");
+    }
+  };
+
+  const handleEditBanner = (banner: any) => {
+    setEditingBanner(banner);
+    setBannerForm({
+      name: banner.name || "",
+      position: banner.position || "hero_below",
+      banner_type: banner.banner_type || "custom",
+      image_url: banner.image_url || "",
+      link_url: banner.link_url || "",
+      html_code: banner.html_code || "",
+      alt_text: banner.alt_text || "",
+      sort_order: banner.sort_order || 0,
+      is_active: banner.is_active !== false,
+      start_date: banner.start_date ? banner.start_date.slice(0, 16) : "",
+      end_date: banner.end_date ? banner.end_date.slice(0, 16) : ""
+    });
+    setShowBannerForm(true);
+  };
+
+  const handleDeleteBanner = async (bannerId: string) => {
+    if (!confirm("Delete this banner?")) return;
+    try {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(`/api/admin/banners/${bannerId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        fetchBanners();
+        alert("Banner deleted");
+      }
+    } catch (error) {
+      alert("Error deleting banner");
+    }
+  };
+
+  const handleToggleBanner = async (banner: any) => {
+    try {
+      const token = localStorage.getItem("admin_token");
+      await fetch(`/api/admin/banners/${banner.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ is_active: !banner.is_active })
+      });
+      fetchBanners();
+    } catch (error) { /* ignore */ }
+  };
+
   const handleCreateUser = async (e: any) => {
     e.preventDefault();
     try {
@@ -969,6 +1083,19 @@ export default function AdminDashboard() {
                 }}
               >
                 Users
+              </button>
+              <button
+                onClick={() => setActiveTab("banners")}
+                style={{ 
+                  padding: "8px 15px", 
+                  backgroundColor: activeTab === "banners" ? "#007bff" : "transparent", 
+                  color: activeTab === "banners" ? "white" : "#333",
+                  border: "1px solid #007bff",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                Banners / Ads
               </button>
             </nav>
           </div>
@@ -3006,6 +3133,192 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Banners Tab */}
+      {activeTab === "banners" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <h2 style={{ color: "#333" }}>Banner / Ad Management</h2>
+            <button
+              onClick={() => { resetBannerForm(); setShowBannerForm(true); }}
+              style={{ padding: "10px 20px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+            >
+              + Add Banner
+            </button>
+          </div>
+
+          {showBannerForm && (
+            <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", marginBottom: "20px" }}>
+              <h3 style={{ marginBottom: "15px" }}>{editingBanner ? "Edit Banner" : "Create New Banner"}</h3>
+              <form onSubmit={handleSaveBanner}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>Name *</label>
+                    <input type="text" required value={bannerForm.name} onChange={e => setBannerForm({...bannerForm, name: e.target.value})}
+                      style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>Position *</label>
+                    <select value={bannerForm.position} onChange={e => setBannerForm({...bannerForm, position: e.target.value})}
+                      style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}>
+                      <option value="hero_below">Below Hero (Leaderboard)</option>
+                      <option value="between_sections">Between Sections</option>
+                      <option value="sidebar">Sidebar</option>
+                      <option value="before_footer">Before Footer</option>
+                      <option value="deal_detail">Deal Detail Page</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>Banner Type *</label>
+                    <select value={bannerForm.banner_type} onChange={e => setBannerForm({...bannerForm, banner_type: e.target.value})}
+                      style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}>
+                      <option value="custom">Custom (Image + Link)</option>
+                      <option value="google_ads">Google Ads (HTML Code)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>Sort Order</label>
+                    <input type="number" value={bannerForm.sort_order} onChange={e => setBannerForm({...bannerForm, sort_order: parseInt(e.target.value) || 0})}
+                      style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }} />
+                  </div>
+                  {bannerForm.banner_type === "custom" && (
+                    <>
+                      <div>
+                        <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>Image URL</label>
+                        <input type="url" value={bannerForm.image_url} onChange={e => setBannerForm({...bannerForm, image_url: e.target.value})}
+                          placeholder="https://example.com/banner.jpg"
+                          style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }} />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>Click-Through URL</label>
+                        <input type="url" value={bannerForm.link_url} onChange={e => setBannerForm({...bannerForm, link_url: e.target.value})}
+                          placeholder="https://example.com/landing"
+                          style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }} />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>Alt Text</label>
+                        <input type="text" value={bannerForm.alt_text} onChange={e => setBannerForm({...bannerForm, alt_text: e.target.value})}
+                          style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }} />
+                      </div>
+                    </>
+                  )}
+                  {bannerForm.banner_type === "google_ads" && (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>Google Ads HTML Code</label>
+                      <textarea value={bannerForm.html_code} onChange={e => setBannerForm({...bannerForm, html_code: e.target.value})}
+                        rows={6} placeholder="Paste your Google Ads script/code here..."
+                        style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px", fontFamily: "monospace", fontSize: "12px", boxSizing: "border-box" }} />
+                    </div>
+                  )}
+                  <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>Start Date (optional)</label>
+                    <input type="datetime-local" value={bannerForm.start_date} onChange={e => setBannerForm({...bannerForm, start_date: e.target.value})}
+                      style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "13px" }}>End Date (optional)</label>
+                    <input type="datetime-local" value={bannerForm.end_date} onChange={e => setBannerForm({...bannerForm, end_date: e.target.value})}
+                      style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px", boxSizing: "border-box" }} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input type="checkbox" checked={bannerForm.is_active} onChange={e => setBannerForm({...bannerForm, is_active: e.target.checked})} id="bannerActive" />
+                    <label htmlFor="bannerActive" style={{ fontWeight: "bold", fontSize: "13px" }}>Active</label>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+                  <button type="submit" style={{ padding: "10px 20px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                    {editingBanner ? "Update Banner" : "Create Banner"}
+                  </button>
+                  <button type="button" onClick={resetBannerForm} style={{ padding: "10px 20px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          <div style={{ backgroundColor: "white", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#f8f9fa" }}>
+                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "13px" }}>Name</th>
+                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "13px" }}>Position</th>
+                  <th style={{ padding: "12px", textAlign: "left", borderBottom: "2px solid #dee2e6", fontSize: "13px" }}>Type</th>
+                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #dee2e6", fontSize: "13px" }}>Status</th>
+                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #dee2e6", fontSize: "13px" }}>Impressions</th>
+                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #dee2e6", fontSize: "13px" }}>Clicks</th>
+                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #dee2e6", fontSize: "13px" }}>CTR</th>
+                  <th style={{ padding: "12px", textAlign: "center", borderBottom: "2px solid #dee2e6", fontSize: "13px" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {banners.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ padding: "30px", textAlign: "center", color: "#999" }}>
+                      No banners configured. Click "+ Add Banner" to create one.
+                    </td>
+                  </tr>
+                ) : banners.map(banner => (
+                  <tr key={banner.id} style={{ borderBottom: "1px solid #eee" }}>
+                    <td style={{ padding: "12px", fontSize: "13px" }}>
+                      <div style={{ fontWeight: "bold" }}>{banner.name}</div>
+                      {banner.image_url && (
+                        <img src={banner.image_url} alt="" style={{ width: "60px", height: "30px", objectFit: "cover", borderRadius: "3px", marginTop: "4px" }} />
+                      )}
+                    </td>
+                    <td style={{ padding: "12px", fontSize: "13px" }}>
+                      {banner.position.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                    </td>
+                    <td style={{ padding: "12px", fontSize: "13px" }}>
+                      <span style={{
+                        padding: "3px 8px", borderRadius: "3px", fontSize: "11px",
+                        backgroundColor: banner.banner_type === 'google_ads' ? '#fff3cd' : '#d4edda',
+                        color: banner.banner_type === 'google_ads' ? '#856404' : '#155724'
+                      }}>
+                        {banner.banner_type === 'google_ads' ? 'Google Ads' : 'Custom'}
+                      </span>
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>
+                      <button onClick={() => handleToggleBanner(banner)} style={{
+                        padding: "3px 10px", borderRadius: "3px", fontSize: "11px", border: "none", cursor: "pointer",
+                        backgroundColor: banner.is_active ? '#28a745' : '#dc3545', color: 'white'
+                      }}>
+                        {banner.is_active ? 'Active' : 'Inactive'}
+                      </button>
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "center", fontSize: "13px" }}>{(banner.impression_count || 0).toLocaleString()}</td>
+                    <td style={{ padding: "12px", textAlign: "center", fontSize: "13px" }}>{(banner.click_count || 0).toLocaleString()}</td>
+                    <td style={{ padding: "12px", textAlign: "center", fontSize: "13px" }}>
+                      {banner.impression_count > 0 ? ((banner.click_count / banner.impression_count) * 100).toFixed(2) + '%' : '0%'}
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>
+                      <button onClick={() => handleEditBanner(banner)} style={{ padding: "4px 10px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "3px", cursor: "pointer", marginRight: "5px", fontSize: "12px" }}>Edit</button>
+                      <button onClick={() => handleDeleteBanner(banner.id)} style={{ padding: "4px 10px", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: "3px", cursor: "pointer", fontSize: "12px" }}>Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ marginTop: "20px", backgroundColor: "white", padding: "15px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
+            <h3 style={{ fontSize: "14px", color: "#666", marginBottom: "10px" }}>Ad Slot Positions</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "10px" }}>
+              {["hero_below", "between_sections", "sidebar", "before_footer", "deal_detail"].map(pos => {
+                const count = banners.filter(b => b.position === pos && b.is_active).length;
+                return (
+                  <div key={pos} style={{ padding: "10px", border: "1px solid #eee", borderRadius: "4px", fontSize: "13px" }}>
+                    <div style={{ fontWeight: "bold" }}>{pos.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</div>
+                    <div style={{ color: count > 0 ? "#28a745" : "#999", fontSize: "12px", marginTop: "4px" }}>
+                      {count > 0 ? `${count} active banner${count > 1 ? 's' : ''}` : 'No active banners'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

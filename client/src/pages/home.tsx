@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { AdBannerLeaderboard, AdBannerBetweenSections, AdBannerBeforeFooter } from "@/components/ad-banner";
 // Define types to match API response
 interface Deal {
   id: string;
@@ -414,6 +415,11 @@ export default function Home() {
 
 
 
+      {/* Leaderboard Ad - Below Hero */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <AdBannerLeaderboard />
+      </div>
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         {/* Filter Bar - below hero banner */}
@@ -597,6 +603,11 @@ export default function Home() {
           )}
         </section>
 
+        {/* Ad Between Top and Hot Deals */}
+        <div className="mb-10 sm:mb-12 lg:mb-16">
+          <AdBannerBetweenSections />
+        </div>
+
         {/* Hot Deals Section */}
         <section className="mb-10 sm:mb-12 lg:mb-16">
           <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
@@ -650,6 +661,11 @@ export default function Home() {
             </div>
           )}
         </section>
+
+        {/* Ad Between Hot and Latest Deals */}
+        <div className="mb-10 sm:mb-12 lg:mb-16">
+          <AdBannerBetweenSections className="second-ad" />
+        </div>
 
         {/* Latest Deals Section - Infinite scroll enabled by default */}
         <section className="mb-10 sm:mb-12 lg:mb-16">
@@ -752,6 +768,11 @@ export default function Home() {
         </>
         )}
       </main>
+
+      {/* Ad Before Footer */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <AdBannerBeforeFooter />
+      </div>
 
       <Footer />
     </div>
