@@ -91,7 +91,7 @@ export function AdBannerBetweenSections({ className = "" }: { className?: string
 }
 
 export function AdBannerSidebar({ className = "" }: { className?: string }) {
-  return <AdBanner position="sidebar" className={className} />;
+  return <AdBanner position="sidebar" className={`w-full ${className}`} />;
 }
 
 export function AdBannerBeforeFooter({ className = "" }: { className?: string }) {
