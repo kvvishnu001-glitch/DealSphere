@@ -38,18 +38,13 @@ interface Deal {
   coupon_required?: boolean;
 }
 
-interface CategoryInfo {
-  name: string;
-  slug: string;
-  count: number;
-}
-
 export default function CategoryPage() {
   const [match, params] = useRoute("/category/:slug");
   const slug = params?.slug || "";
   const [visibleCount, setVisibleCount] = useState(20);
 
   const categoryName = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const displayName = categoryName;
 
   const { data: categoryDeals = [], isLoading } = useQuery<Deal[]>({
     queryKey: ['/api/deals', { category: categoryName }],
@@ -60,13 +55,6 @@ export default function CategoryPage() {
     },
     enabled: !!slug,
   });
-
-  const { data: categories = [] } = useQuery<CategoryInfo[]>({
-    queryKey: ['/api/seo/categories'],
-  });
-
-  const matchedCategory = categories.find((cat: CategoryInfo) => cat.slug === slug);
-  const displayName = matchedCategory?.name || categoryName;
 
   const visibleDeals = categoryDeals.slice(0, visibleCount);
 
@@ -96,8 +84,8 @@ export default function CategoryPage() {
       </section>
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="flex-1">
+        <div>
+          <div>
             {isLoading ? (
               <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
@@ -137,30 +125,6 @@ export default function CategoryPage() {
             )}
           </div>
 
-          <aside className="lg:w-64 shrink-0">
-            <div className="sticky top-20">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Browse Categories</h2>
-              <nav aria-label="Categories">
-                <ul className="space-y-2">
-                  {categories.map((cat: CategoryInfo) => (
-                    <li key={cat.slug}>
-                      <Link
-                        href={`/category/${cat.slug}`}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                          cat.slug === slug
-                            ? 'bg-red-50 text-red-700 font-medium'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        <span>{cat.name}</span>
-                        <span className="text-xs text-gray-400">{cat.count}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </div>
-          </aside>
         </div>
       </main>
 
