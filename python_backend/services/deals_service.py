@@ -81,7 +81,7 @@ class DealsService:
             query = query.where(DealModel.deal_type == deal_type)
         
         if category:
-            query = query.where(DealModel.category == category)
+            query = query.where(func.lower(DealModel.category) == category.lower())
             
         if store:
             query = query.where(DealModel.store == store)

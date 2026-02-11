@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ChevronRight,
   ArrowLeft,
-  Loader2,
   Tag,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
@@ -50,8 +49,16 @@ export default function CategoryPage() {
   const slug = params?.slug || "";
   const [visibleCount, setVisibleCount] = useState(20);
 
-  const { data: allDeals = [], isLoading } = useQuery<Deal[]>({
-    queryKey: ['/api/deals'],
+  const categoryName = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  const { data: categoryDeals = [], isLoading } = useQuery<Deal[]>({
+    queryKey: ['/api/deals', { category: categoryName }],
+    queryFn: async () => {
+      const res = await fetch(`/api/deals?category=${encodeURIComponent(categoryName)}&limit=100&offset=0`);
+      if (!res.ok) throw new Error('Failed to fetch deals');
+      return res.json();
+    },
+    enabled: !!slug,
   });
 
   const { data: categories = [] } = useQuery<CategoryInfo[]>({
@@ -59,11 +66,7 @@ export default function CategoryPage() {
   });
 
   const matchedCategory = categories.find((cat: CategoryInfo) => cat.slug === slug);
-  const categoryName = matchedCategory?.name || slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
-  const categoryDeals = allDeals.filter(
-    (deal: Deal) => deal.category.toLowerCase() === categoryName.toLowerCase()
-  );
+  const displayName = matchedCategory?.name || categoryName;
 
   const visibleDeals = categoryDeals.slice(0, visibleCount);
 
@@ -75,15 +78,15 @@ export default function CategoryPage() {
         <ol className="flex items-center space-x-2 text-sm text-gray-500">
           <li><Link href="/" className="hover:text-red-600">Home</Link></li>
           <li><ChevronRight className="w-4 h-4" /></li>
-          <li className="text-gray-900 font-medium">{categoryName} Deals</li>
+          <li className="text-gray-900 font-medium">{displayName} Deals</li>
         </ol>
       </nav>
 
       <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl sm:text-4xl font-bold mb-3">{categoryName} Deals & Coupons</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold mb-3">{displayName} Deals & Coupons</h1>
           <p className="text-red-100 text-lg mb-4">
-            Browse {categoryDeals.length} AI-verified {categoryName.toLowerCase()} deals from top stores. Updated daily.
+            Browse {categoryDeals.length} AI-verified {displayName.toLowerCase()} deals from top stores. Updated daily.
           </p>
           <div className="flex items-center gap-2 text-sm text-red-200">
             <Tag className="w-4 h-4" />
@@ -122,8 +125,8 @@ export default function CategoryPage() {
             ) : (
               <Card className="text-center py-12">
                 <CardContent>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No {categoryName} deals available</h3>
-                  <p className="text-gray-600 mb-4">Check back soon for new {categoryName.toLowerCase()} deals and coupons.</p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No {displayName} deals available</h3>
+                  <p className="text-gray-600 mb-4">Check back soon for new {displayName.toLowerCase()} deals and coupons.</p>
                   <Link href="/">
                     <Button className="bg-red-600 hover:bg-red-700">
                       <ArrowLeft className="w-4 h-4 mr-2" /> Browse All Deals
