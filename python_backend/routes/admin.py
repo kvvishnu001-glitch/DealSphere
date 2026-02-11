@@ -346,7 +346,15 @@ async def create_deal(
     db: AsyncSession = Depends(get_db)
 ):
     check_permission(current_admin, "manage_deals")
-    deal = Deal(id=str(uuid.uuid4()), **deal_data.model_dump())
+    deal_dict = deal_data.model_dump()
+    if deal_dict.get("discount_percentage") is None and deal_dict.get("original_price") and deal_dict.get("sale_price"):
+        orig = float(deal_dict["original_price"])
+        sale = float(deal_dict["sale_price"])
+        if orig > 0:
+            deal_dict["discount_percentage"] = round(((orig - sale) / orig) * 100)
+        else:
+            deal_dict["discount_percentage"] = 0
+    deal = Deal(id=str(uuid.uuid4()), **deal_dict)
     db.add(deal)
     await db.commit()
     await db.refresh(deal)

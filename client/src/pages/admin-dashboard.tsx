@@ -264,7 +264,10 @@ export default function AdminDashboard() {
         });
         fetchData();
       } else {
-        alert("Failed to create deal");
+        const errData = await response.json().catch(() => null);
+        const detail = errData?.detail;
+        const msg = Array.isArray(detail) ? detail.map((d: any) => d.msg || d.loc?.join('.')).join(', ') : (typeof detail === 'string' ? detail : "Failed to create deal");
+        alert("Error: " + msg);
       }
     } catch (error) {
       alert("Error creating deal: " + error);

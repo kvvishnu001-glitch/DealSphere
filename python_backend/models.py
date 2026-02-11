@@ -139,7 +139,7 @@ class DealBase(BaseModel):
     description: Optional[str] = None
     original_price: float
     sale_price: float
-    discount_percentage: int
+    discount_percentage: Optional[int] = None
     image_url: Optional[str] = None
     affiliate_url: str
     store: str
