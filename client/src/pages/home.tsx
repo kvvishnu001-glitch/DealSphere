@@ -387,26 +387,26 @@ export default function Home() {
       </Header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-5 sm:py-10 lg:py-14">
+      <section className="bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white py-6 sm:py-12 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-xl sm:text-3xl lg:text-5xl font-bold mb-2 sm:mb-4">
+          <h1 className="text-2xl sm:text-4xl lg:text-6xl font-extrabold mb-2 sm:mb-4 lg:mb-6 tracking-tight">
             AI-Powered Deals & Coupons
           </h1>
-          <p className="text-sm sm:text-lg lg:text-xl mb-4 sm:mb-8 text-red-100">
-            Verified deals curated by artificial intelligence
+          <p className="text-sm sm:text-lg lg:text-xl mb-5 sm:mb-8 lg:mb-12 text-red-100 max-w-2xl mx-auto">
+            Verified deals curated by artificial intelligence. Save more on every purchase.
           </p>
-          <div className="grid grid-cols-3 gap-4 sm:gap-8 text-red-100 max-w-md sm:max-w-2xl mx-auto">
-            <div className="text-center">
-              <div className="text-lg sm:text-3xl font-bold">{heroStats?.active_deals?.toLocaleString() || '...'}</div>
-              <div className="text-[10px] sm:text-sm">Active Deals</div>
+          <div className="grid grid-cols-3 gap-3 sm:gap-6 lg:gap-10 max-w-sm sm:max-w-2xl lg:max-w-3xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-5 lg:p-8 border border-white/20">
+              <div className="text-xl sm:text-3xl lg:text-5xl font-extrabold text-white">{heroStats?.active_deals?.toLocaleString() || '...'}</div>
+              <div className="text-[10px] sm:text-sm lg:text-base text-red-100 mt-1 lg:mt-2 font-medium">Active Deals</div>
             </div>
-            <div className="text-center">
-              <div className="text-lg sm:text-3xl font-bold">{heroStats?.total_savings || '...'}</div>
-              <div className="text-[10px] sm:text-sm">Total Savings</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-5 lg:p-8 border border-white/20">
+              <div className="text-xl sm:text-3xl lg:text-5xl font-extrabold text-white">{heroStats?.total_savings || '...'}</div>
+              <div className="text-[10px] sm:text-sm lg:text-base text-red-100 mt-1 lg:mt-2 font-medium">Total Savings</div>
             </div>
-            <div className="text-center">
-              <div className="text-lg sm:text-3xl font-bold">{heroStats ? `${heroStats.ai_verified_pct}%` : '...'}</div>
-              <div className="text-[10px] sm:text-sm">AI Verified</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-5 lg:p-8 border border-white/20">
+              <div className="text-xl sm:text-3xl lg:text-5xl font-extrabold text-white">{heroStats ? `${heroStats.ai_verified_pct}%` : '...'}</div>
+              <div className="text-[10px] sm:text-sm lg:text-base text-red-100 mt-1 lg:mt-2 font-medium">AI Verified</div>
             </div>
           </div>
         </div>
@@ -415,12 +415,12 @@ export default function Home() {
 
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         {/* Filter Bar - below hero banner */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-3 sm:p-4 mb-6 sm:mb-8">
-          <div className="flex gap-2 sm:gap-3 items-center">
+        <div className="bg-white rounded-lg lg:rounded-xl border border-gray-200 shadow-sm p-3 sm:p-4 lg:p-5 mb-6 sm:mb-8 lg:mb-10">
+          <div className="flex gap-2 sm:gap-3 lg:gap-4 items-center">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="h-9 sm:h-10 flex-1 border-gray-300 rounded-lg bg-gray-50 text-xs sm:text-sm">
+              <SelectTrigger className="h-9 sm:h-10 lg:h-11 flex-1 border-gray-300 rounded-lg bg-gray-50 text-xs sm:text-sm lg:text-sm">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -434,7 +434,7 @@ export default function Home() {
             </Select>
 
             <Select value={selectedStore} onValueChange={setSelectedStore}>
-              <SelectTrigger className="h-9 sm:h-10 flex-1 border-gray-300 rounded-lg bg-gray-50 text-xs sm:text-sm">
+              <SelectTrigger className="h-9 sm:h-10 lg:h-11 flex-1 border-gray-300 rounded-lg bg-gray-50 text-xs sm:text-sm lg:text-sm">
                 <SelectValue placeholder="Store" />
               </SelectTrigger>
               <SelectContent>
@@ -448,7 +448,7 @@ export default function Home() {
             </Select>
 
             <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
-              <SelectTrigger className="h-9 sm:h-10 flex-1 border-gray-300 rounded-lg bg-gray-50 text-xs sm:text-sm">
+              <SelectTrigger className="h-9 sm:h-10 lg:h-11 flex-1 border-gray-300 rounded-lg bg-gray-50 text-xs sm:text-sm lg:text-sm">
                 <SelectValue placeholder="Discount" />
               </SelectTrigger>
               <SelectContent>
@@ -544,14 +544,14 @@ export default function Home() {
         {!isSearchActive && (
         <>
         {/* Top Deals Section */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-              <Flame className="text-red-600 mr-2 w-5 h-5 sm:w-6 sm:h-6" />
+        <section className="mb-10 sm:mb-12 lg:mb-16">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+              <Flame className="text-red-600 mr-2 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
               Top Deals
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-sm text-gray-500">AI-curated deals</span>
+              <span className="text-xs sm:text-sm lg:text-base text-gray-500">AI-curated deals</span>
               {!showAllTop && topDeals.length >= 3 && (
                 <Button 
                   variant="outline" 
@@ -578,7 +578,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className={`grid gap-4 sm:gap-6 ${showAllTop ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+          <div className={`grid gap-4 sm:gap-6 lg:gap-8 ${showAllTop ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
             {topDeals.length > 0 ? topDeals.map((deal: Deal) => (
               <DealCard key={deal.id} deal={deal} variant="full" />
             )) : (
@@ -598,14 +598,14 @@ export default function Home() {
         </section>
 
         {/* Hot Deals Section */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-              <Flame className="text-amber-500 mr-2 w-5 h-5 sm:w-6 sm:h-6" />
+        <section className="mb-10 sm:mb-12 lg:mb-16">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+              <Flame className="text-amber-500 mr-2 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
               Hot Deals
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-sm text-gray-500">Trending now</span>
+              <span className="text-xs sm:text-sm lg:text-base text-gray-500">Trending now</span>
               {!showAllHot && hotDeals.length >= 4 && (
                 <Button 
                   variant="outline" 
@@ -632,7 +632,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className={`grid gap-4 ${showAllHot ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
+          <div className={`grid gap-4 sm:gap-6 lg:gap-8 ${showAllHot ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
             {hotDeals.length > 0 ? hotDeals.map((deal: Deal) => (
               <DealCard key={deal.id} deal={deal} variant="compact" />
             )) : (
@@ -652,20 +652,20 @@ export default function Home() {
         </section>
 
         {/* Latest Deals Section - Infinite scroll enabled by default */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-              <Clock className="text-blue-500 mr-2 w-5 h-5 sm:w-6 sm:h-6" />
+        <section className="mb-10 sm:mb-12 lg:mb-16">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+              <Clock className="text-blue-500 mr-2 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
               Latest Deals
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-sm text-gray-500">
+              <span className="text-xs sm:text-sm lg:text-base text-gray-500">
                 Showing {latestDeals.length.toLocaleString()} of {(latestDealsTotal?.count || latestFilteredDeals.length).toLocaleString()} deals
               </span>
             </div>
           </div>
           
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 lg:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {latestDeals.length > 0 ? latestDeals.map((deal: Deal) => (
               <DealCard key={deal.id} deal={deal} variant="compact" />
             )) : (
