@@ -95,9 +95,41 @@ export function AdBannerSidebar({ className = "" }: { className?: string }) {
 }
 
 export function AdBannerBeforeFooter({ className = "" }: { className?: string }) {
-  return <AdBanner position="before_footer" className={`max-w-4xl mx-auto ${className}`} />;
+  return <AdBanner position="before_footer" className={className} />;
 }
 
 export function AdBannerDealDetail({ className = "" }: { className?: string }) {
   return <AdBanner position="deal_detail" className={className} />;
+}
+
+export function SidebarAdWrapper({ children }: { children: React.ReactNode }) {
+  const { data: sidebarBanners } = useQuery<BannerData[]>({
+    queryKey: ['/api/banners', 'sidebar'],
+    queryFn: async () => {
+      const res = await fetch(`/api/banners?position=sidebar`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    staleTime: 60000,
+  });
+
+  const hasSidebarAds = sidebarBanners && sidebarBanners.length > 0;
+
+  if (!hasSidebarAds) {
+    return <>{children}</>;
+  }
+
+  return (
+    <div className="flex gap-6 lg:gap-8">
+      <div className="flex-1 min-w-0">
+        {children}
+      </div>
+      <aside className="hidden xl:block w-[200px] flex-shrink-0">
+        <div className="sticky top-20 space-y-6">
+          <AdBannerSidebar />
+          <AdBannerSidebar className="sidebar-second" />
+        </div>
+      </aside>
+    </div>
+  );
 }

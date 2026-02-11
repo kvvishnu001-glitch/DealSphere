@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { AdBannerLeaderboard, AdBannerBetweenSections, AdBannerBeforeFooter, AdBannerSidebar } from "@/components/ad-banner";
+import { AdBannerLeaderboard, AdBannerBetweenSections, AdBannerBeforeFooter, SidebarAdWrapper } from "@/components/ad-banner";
 // Define types to match API response
 interface Deal {
   id: string;
@@ -484,10 +484,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Main layout with sidebar */}
-        <div className="flex gap-6 lg:gap-8">
-        {/* Left content area */}
-        <div className="flex-1 min-w-0">
+        <SidebarAdWrapper>
 
         {/* Search Results Section - shown when user searches */}
         {isSearchActive && (
@@ -773,15 +770,7 @@ export default function Home() {
         </>
         )}
 
-        </div>
-        {/* Right Sidebar - visible on xl screens */}
-        <aside className="hidden xl:block w-[200px] flex-shrink-0">
-          <div className="sticky top-20 space-y-6">
-            <AdBannerSidebar />
-            <AdBannerSidebar className="sidebar-second" />
-          </div>
-        </aside>
-        </div>
+        </SidebarAdWrapper>
       </main>
 
       {/* Ad Before Footer */}
