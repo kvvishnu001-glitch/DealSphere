@@ -100,7 +100,7 @@ export default function DealDetail() {
     
     setIsDealLoading(true);
     try {
-      await apiRequest('POST', `/api/deals/${deal.id}/click`);
+      await apiRequest(`/api/deals/${deal.id}/click`, { method: 'POST' });
       window.open(deal.affiliate_url, '_blank', 'noopener,noreferrer');
       // Refresh deal data to update click count
       setTimeout(() => refetch(), 1000);

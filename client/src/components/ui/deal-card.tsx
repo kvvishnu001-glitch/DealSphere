@@ -62,10 +62,9 @@ export function DealCard({ deal, variant = "full" }: DealCardProps) {
   const redirectToDeal = async () => {
     setIsLoading(true);
     try {
-      const response = await apiRequest('POST', `/api/deals/${deal.id}/click`);
-      const data = await response.json();
+      const data = await apiRequest(`/api/deals/${deal.id}/click`, { method: 'POST' });
       
-      window.open(data.affiliate_url || deal.affiliate_url, '_blank', 'noopener,noreferrer');
+      window.open(data.affiliateUrl || deal.affiliate_url, '_blank', 'noopener,noreferrer');
       
       toast({
         title: "Deal Opened",

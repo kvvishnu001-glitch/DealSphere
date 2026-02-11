@@ -32,7 +32,7 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
 
   const trackShare = async (platform: string) => {
     try {
-      await apiRequest('POST', `/api/deals/${deal.id}/share`, { platform });
+      await apiRequest(`/api/deals/${deal.id}/share?platform=${platform}`, { method: 'POST' });
     } catch (error) {
       console.error('Failed to track share:', error);
     }
@@ -42,8 +42,8 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
     setIsSharing(true);
     try {
       // Create short URL for Facebook sharing
-      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=facebook`);
-      const { shortUrl } = await response.json();
+      const data = await apiRequest(`/api/deals/${deal.id}/share?platform=facebook`, { method: 'POST' });
+      const shortUrl = data.shortUrl;
       
       const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shortUrl)}&quote=${encodeURIComponent(deal.title)}`;
       
@@ -84,8 +84,8 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
     setIsSharing(true);
     try {
       // Create short URL for X sharing
-      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=x`);
-      const { shortUrl } = await response.json();
+      const data = await apiRequest(`/api/deals/${deal.id}/share?platform=x`, { method: 'POST' });
+      const shortUrl = data.shortUrl;
       
       const postText = `${deal.title} - Great deal at ${deal.store}! Check it out`;
       const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(postText)}&url=${encodeURIComponent(shortUrl)}`;
@@ -128,8 +128,8 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
     setIsSharing(true);
     try {
       // Create short URL for WhatsApp sharing
-      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=whatsapp`);
-      const { shortUrl } = await response.json();
+      const data = await apiRequest(`/api/deals/${deal.id}/share?platform=whatsapp`, { method: 'POST' });
+      const shortUrl = data.shortUrl;
       
       const message = `Check out this deal: ${deal.title} at ${deal.store}! ${shortUrl}`;
       const shareUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -172,8 +172,8 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
     setIsSharing(true);
     try {
       // Create short URL for SMS sharing
-      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=sms`);
-      const { shortUrl } = await response.json();
+      const data = await apiRequest(`/api/deals/${deal.id}/share?platform=sms`, { method: 'POST' });
+      const shortUrl = data.shortUrl;
       
       const message = `Check out this deal: ${deal.title} at ${deal.store}! ${shortUrl}`;
       const smsUrl = `sms:?body=${encodeURIComponent(message)}`;
@@ -215,8 +215,8 @@ export function SocialShare({ deal, onShare }: SocialShareProps) {
     setIsSharing(true);
     try {
       // Create short URL for sharing
-      const response = await apiRequest('POST', `/api/deals/${deal.id}/share?platform=copy`);
-      const { shortUrl } = await response.json();
+      const data = await apiRequest(`/api/deals/${deal.id}/share?platform=copy`, { method: 'POST' });
+      const shortUrl = data.shortUrl;
       
       await navigator.clipboard.writeText(shortUrl);
       toast({
