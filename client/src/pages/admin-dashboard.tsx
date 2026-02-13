@@ -257,7 +257,10 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           ...newDeal,
           original_price: parseFloat(newDeal.original_price),
-          sale_price: parseFloat(newDeal.sale_price)
+          sale_price: parseFloat(newDeal.sale_price),
+          image_url: newDeal.image_url || null,
+          coupon_code: newDeal.coupon_code || null,
+          description: newDeal.description || null
         })
       });
 
@@ -357,7 +360,9 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           ...editingDeal,
           original_price: parseFloat(editingDeal.original_price),
-          sale_price: parseFloat(editingDeal.sale_price)
+          sale_price: parseFloat(editingDeal.sale_price),
+          image_url: editingDeal.image_url || null,
+          coupon_code: editingDeal.coupon_code || null
         })
       });
 
@@ -2769,11 +2774,12 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Image URL</label>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Image URL (Optional)</label>
                   <input
-                    type="url"
+                    type="text"
                     value={newDeal.image_url}
                     onChange={(e) => setNewDeal({...newDeal, image_url: e.target.value})}
+                    placeholder="https://example.com/image.jpg"
                     style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
                   />
                 </div>
@@ -3065,11 +3071,12 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Image URL</label>
+                  <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Image URL (Optional)</label>
                   <input
-                    type="url"
-                    value={editingDeal.image_url}
+                    type="text"
+                    value={editingDeal.image_url || ""}
                     onChange={(e) => setEditingDeal({...editingDeal, image_url: e.target.value})}
+                    placeholder="https://example.com/image.jpg"
                     style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "4px" }}
                   />
                 </div>
