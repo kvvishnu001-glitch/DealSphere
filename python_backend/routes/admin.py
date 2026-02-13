@@ -599,6 +599,22 @@ async def trigger_stale_cleanup(
     )
     return result
 
+@router.post("/url-health/data-quality-cleanup")
+async def trigger_data_quality_cleanup(
+    request: Request,
+    current_admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    check_permission(current_admin, "manage_deals")
+    from services.url_health_checker import cleanup_data_quality_issues
+    result = await cleanup_data_quality_issues()
+    await log_audit(
+        db, current_admin, "trigger_data_quality_cleanup", "deal", None,
+        {"result": {k: v for k, v in result.items() if k != "removed_deals"}},
+        ip_address=request.client.host if request.client else None
+    )
+    return result
+
 
 class JsonImportRequest(BaseModel):
     deals: List[dict]

@@ -328,6 +328,106 @@ async def cleanup_stale_flagged_deals() -> Dict[str, Any]:
         return stats
 
 
+async def cleanup_data_quality_issues() -> Dict[str, Any]:
+    logger.info("Starting data quality cleanup for active deals")
+    now = datetime.utcnow()
+    stats = {
+        "removed": 0,
+        "missing_image": 0,
+        "invalid_pricing": 0,
+        "missing_required_fields": 0,
+        "started_at": now.isoformat(),
+        "removed_deals": [],
+    }
+
+    try:
+        async with async_session() as db:
+            quality_filter = or_(
+                DealModel.image_url == None,
+                DealModel.image_url == "",
+                DealModel.title == None,
+                DealModel.title == "",
+                DealModel.description == None,
+                DealModel.description == "",
+                DealModel.store == None,
+                DealModel.store == "",
+                DealModel.category == None,
+                DealModel.category == "",
+                DealModel.affiliate_url == None,
+                DealModel.affiliate_url == "",
+                DealModel.original_price == None,
+                DealModel.original_price <= 0,
+                DealModel.sale_price == None,
+                DealModel.sale_price <= 0,
+                DealModel.sale_price >= DealModel.original_price,
+            )
+
+            result = await db.execute(
+                select(DealModel).where(
+                    and_(
+                        DealModel.status != "deleted",
+                        quality_filter,
+                    )
+                )
+            )
+            bad_deals = result.scalars().all()
+
+            for deal in bad_deals:
+                issues = []
+                if not deal.image_url or deal.image_url.strip() == "":
+                    issues.append("missing_image")
+                    stats["missing_image"] += 1
+                if not deal.title or deal.title.strip() == "":
+                    issues.append("missing_title")
+                    stats["missing_required_fields"] += 1
+                if not deal.description or deal.description.strip() == "":
+                    issues.append("missing_description")
+                    stats["missing_required_fields"] += 1
+                if not deal.store or deal.store.strip() == "":
+                    issues.append("missing_store")
+                    stats["missing_required_fields"] += 1
+                if not deal.category or deal.category.strip() == "":
+                    issues.append("missing_category")
+                    stats["missing_required_fields"] += 1
+                if not deal.affiliate_url or deal.affiliate_url.strip() == "":
+                    issues.append("missing_affiliate_url")
+                    stats["missing_required_fields"] += 1
+                if not deal.original_price or deal.original_price <= 0:
+                    issues.append("invalid_original_price")
+                    stats["invalid_pricing"] += 1
+                if not deal.sale_price or deal.sale_price <= 0:
+                    issues.append("invalid_sale_price")
+                    stats["invalid_pricing"] += 1
+                if (deal.original_price and deal.sale_price and
+                        deal.original_price > 0 and deal.sale_price >= deal.original_price):
+                    issues.append("sale_price_not_lower")
+                    stats["invalid_pricing"] += 1
+
+                deal.is_active = False
+                deal.status = "deleted"
+                deal.deleted_at = now
+                stats["removed"] += 1
+                stats["removed_deals"].append({
+                    "id": str(deal.id),
+                    "title": deal.title[:60] if deal.title else "(no title)",
+                    "issues": issues,
+                })
+                logger.info(
+                    f"Removed deal {deal.id} - data quality issues: {', '.join(issues)}"
+                )
+
+            await db.commit()
+
+        stats["completed_at"] = datetime.utcnow().isoformat()
+        logger.info(f"Data quality cleanup completed: {stats['removed']} deals removed")
+        return stats
+
+    except Exception as e:
+        logger.error(f"Error in data quality cleanup: {e}")
+        stats["error"] = str(e)
+        return stats
+
+
 async def get_url_health_stats() -> Dict[str, Any]:
     try:
         async with async_session() as db:
@@ -375,12 +475,41 @@ async def get_url_health_stats() -> Dict[str, Any]:
             )
             unchecked_count = unchecked.scalar() or 0
 
+            quality_issues = await db.execute(
+                select(func.count(DealModel.id)).where(
+                    and_(
+                        DealModel.status != "deleted",
+                        or_(
+                            DealModel.image_url == None,
+                            DealModel.image_url == "",
+                            DealModel.title == None,
+                            DealModel.title == "",
+                            DealModel.description == None,
+                            DealModel.description == "",
+                            DealModel.store == None,
+                            DealModel.store == "",
+                            DealModel.category == None,
+                            DealModel.category == "",
+                            DealModel.affiliate_url == None,
+                            DealModel.affiliate_url == "",
+                            DealModel.original_price == None,
+                            DealModel.original_price <= 0,
+                            DealModel.sale_price == None,
+                            DealModel.sale_price <= 0,
+                            DealModel.sale_price >= DealModel.original_price,
+                        ),
+                    )
+                )
+            )
+            quality_issues_count = quality_issues.scalar() or 0
+
             return {
                 "total_active_deals": total_count,
                 "healthy_urls": healthy_count,
                 "broken_urls": broken_count,
                 "flagged_pending_review": flagged_count,
                 "unchecked": unchecked_count,
+                "data_quality_issues": quality_issues_count,
                 "health_percentage": round(
                     (healthy_count / max(total_count, 1)) * 100, 1
                 ),
