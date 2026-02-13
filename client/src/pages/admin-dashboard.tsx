@@ -158,74 +158,61 @@ export default function AdminDashboard() {
       });
       if (response.ok) {
         const data = await response.json();
-        setDeals(data.deals || []);
+        const allDeals = data.deals || [];
+        const issueMap = getIssueMap(allDeals);
+        setDealIssues(issueMap);
+        setDeals(allDeals);
         setTotalPages(data.total_pages || 1);
         setTotalDeals(data.total || 0);
-        setFilteredDeals(data.deals || []);
-        analyzeDealIssues(data.deals || []);
+        setFilteredDeals(allDeals);
       }
     } catch (error) {
       console.error("Error fetching deals:", error);
     }
   };
 
-  // Function to analyze deals and identify issues
-  const analyzeDealIssues = (dealsData: any[]) => {
+  const getIssueMap = (dealsData: any[]): Record<string, string[]> => {
     const issues: Record<string, string[]> = {};
     
     dealsData.forEach((deal) => {
-      const dealIssues: string[] = [];
+      const di: string[] = [];
       
-      // Check for missing or invalid image URL
       if (!deal.image_url || deal.image_url.trim() === '') {
-        dealIssues.push('Missing image URL');
-      } else if (!isValidImageUrl(deal.image_url)) {
-        dealIssues.push('Invalid image URL format');
+        di.push('Missing image URL');
       }
       
-      // Check for missing required fields
       if (!deal.title || deal.title.trim() === '') {
-        dealIssues.push('Missing title');
+        di.push('Missing title');
       }
       if (!deal.description || deal.description.trim() === '') {
-        dealIssues.push('Missing description');
+        di.push('Missing description');
       }
       if (!deal.store || deal.store.trim() === '') {
-        dealIssues.push('Missing store name');
+        di.push('Missing store name');
       }
       if (!deal.category || deal.category.trim() === '') {
-        dealIssues.push('Missing category');
+        di.push('Missing category');
       }
       if (!deal.affiliate_url || deal.affiliate_url.trim() === '') {
-        dealIssues.push('Missing affiliate URL');
+        di.push('Missing affiliate URL');
       }
       
-      // Check for invalid pricing
       if (!deal.original_price || deal.original_price <= 0) {
-        dealIssues.push('Invalid original price');
+        di.push('Invalid original price');
       }
       if (!deal.sale_price || deal.sale_price <= 0) {
-        dealIssues.push('Invalid sale price');
+        di.push('Invalid sale price');
       }
-      if (deal.sale_price >= deal.original_price) {
-        dealIssues.push('Sale price not lower than original price');
-      }
-      // Auto-calculate discount percentage if missing or invalid
-      const calculatedDiscount = deal.original_price > 0 && deal.sale_price < deal.original_price 
-        ? Math.round(((deal.original_price - deal.sale_price) / deal.original_price) * 100 * 10) / 10
-        : 0;
-      
-      if (calculatedDiscount === 0 && deal.original_price > 0 && deal.sale_price >= deal.original_price) {
-        dealIssues.push('Sale price not lower than original price - no discount available');
+      if (deal.original_price > 0 && deal.sale_price >= deal.original_price) {
+        di.push('Sale price not lower than original price');
       }
       
-      // Store issues if any found
-      if (dealIssues.length > 0) {
-        issues[deal.id] = dealIssues;
+      if (di.length > 0) {
+        issues[deal.id] = di;
       }
     });
     
-    setDealIssues(issues);
+    return issues;
   };
 
   // Helper function to validate image URL format

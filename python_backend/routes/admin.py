@@ -311,7 +311,29 @@ async def get_all_deals(
     if category:
         query = query.where(Deal.category == category)
         count_query = count_query.where(Deal.category == category)
-    if deal_status and deal_status != "needs_review":
+    if deal_status == "needs_review":
+        needs_review_filter = or_(
+            Deal.image_url == None,
+            Deal.image_url == "",
+            Deal.title == None,
+            Deal.title == "",
+            Deal.description == None,
+            Deal.description == "",
+            Deal.store == None,
+            Deal.store == "",
+            Deal.category == None,
+            Deal.category == "",
+            Deal.affiliate_url == None,
+            Deal.affiliate_url == "",
+            Deal.original_price == None,
+            Deal.original_price <= 0,
+            Deal.sale_price == None,
+            Deal.sale_price <= 0,
+            Deal.sale_price >= Deal.original_price
+        )
+        query = query.where(needs_review_filter)
+        count_query = count_query.where(needs_review_filter)
+    elif deal_status:
         if deal_status == "approved":
             status_filter = and_(Deal.status == "approved", Deal.is_ai_approved == True)
         elif deal_status == "pending":
