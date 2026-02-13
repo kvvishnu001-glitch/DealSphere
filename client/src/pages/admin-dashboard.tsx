@@ -452,14 +452,23 @@ export default function AdminDashboard() {
       polling = false;
       clearInterval(pollInterval);
 
-      setUrlCheckProgress(97);
-      setUrlCheckStatus("Cleaning up broken deals...");
+      setUrlCheckProgress(90);
+      setUrlCheckStatus("Cleaning up broken URLs...");
 
       const cleanupResponse = await fetch("/api/admin/url-health/cleanup", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
       const cleanupData = await cleanupResponse.json();
+
+      setUrlCheckProgress(95);
+      setUrlCheckStatus("Cleaning up data quality issues...");
+
+      const qualityResponse = await fetch("/api/admin/url-health/data-quality-cleanup", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const qualityData = await qualityResponse.json();
 
       setUrlCheckProgress(100);
       setUrlCheckStatus("Complete!");
@@ -470,6 +479,7 @@ export default function AdminDashboard() {
         broken: checkData.broken || 0,
         flagged: checkData.flagged_pending_review || 0,
         removed: (checkData.removed || 0) + (cleanupData.removed || 0),
+        quality_removed: qualityData.removed || 0,
       });
       fetchData();
     } catch (error) {
@@ -1362,7 +1372,11 @@ export default function AdminDashboard() {
                     </div>
                     <div style={{ textAlign: "center", padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.7)", borderRadius: "6px" }}>
                       <div style={{ fontSize: "24px", fontWeight: "bold", color: "#dc3545" }}>{urlCheckResult.removed}</div>
-                      <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase" }}>Removed</div>
+                      <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase" }}>URL Removed</div>
+                    </div>
+                    <div style={{ textAlign: "center", padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.7)", borderRadius: "6px" }}>
+                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#6f42c1" }}>{urlCheckResult.quality_removed || 0}</div>
+                      <div style={{ fontSize: "11px", color: "#666", textTransform: "uppercase" }}>Quality Cleaned</div>
                     </div>
                   </div>
                 )}

@@ -40,6 +40,7 @@ class DealScheduler:
         schedule.every().day.at("02:00").do(self._schedule_daily_maintenance)
         schedule.every(2).hours.do(self._schedule_url_health_check)
         schedule.every(1).hours.do(self._schedule_stale_deal_cleanup)
+        schedule.every(2).hours.do(self._schedule_data_quality_cleanup)
         
         # Start scheduler in background thread
         self.scheduler_thread = threading.Thread(target=self._run_scheduler, daemon=True)
@@ -82,6 +83,10 @@ class DealScheduler:
     def _schedule_stale_deal_cleanup(self):
         """Schedule cleanup of stale URL-flagged deals"""
         asyncio.create_task(self.stale_deal_cleanup_task())
+
+    def _schedule_data_quality_cleanup(self):
+        """Schedule cleanup of deals with data quality issues"""
+        asyncio.create_task(self.data_quality_cleanup_task())
 
     async def fetch_deals_task(self):
         """Automated deal fetching task"""
@@ -242,6 +247,20 @@ class DealScheduler:
         except Exception as e:
             logger.error(f"Error in stale deal cleanup: {e}")
             await self._log_task_result('stale_deal_cleanup', {'error': str(e)})
+
+    async def data_quality_cleanup_task(self):
+        """Remove deals with data quality issues (missing images, invalid pricing, etc.)"""
+        try:
+            logger.info("Starting data quality cleanup")
+            from services.url_health_checker import cleanup_data_quality_issues
+            result = await cleanup_data_quality_issues()
+            logger.info(f"Data quality cleanup completed: {result.get('removed', 0)} deals removed")
+            await self._log_task_result('data_quality_cleanup', {
+                k: v for k, v in result.items() if k != 'removed_deals'
+            })
+        except Exception as e:
+            logger.error(f"Error in data quality cleanup: {e}")
+            await self._log_task_result('data_quality_cleanup', {'error': str(e)})
 
     async def manual_fetch_deals(self) -> Dict[str, Any]:
         """Manually trigger deal fetching (for admin use)"""
