@@ -349,7 +349,7 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem("admin_token");
       const response = await fetch(`/api/admin/deals/${editingDeal.id}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
