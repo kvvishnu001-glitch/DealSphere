@@ -287,19 +287,37 @@ async def create_share_url(deal_id: str, platform: str = "general", db: AsyncSes
         return {"error": "Failed to create share URL"}
 
 @app.get("/s/{short_code}")
-async def redirect_short_url(short_code: str, db: AsyncSession = Depends(get_db)):
-    """Redirect short URL to deal page"""
+async def redirect_short_url(short_code: str, request: Request, db: AsyncSession = Depends(get_db)):
+    """Serve deal page with OG meta tags for social media crawlers, redirect browsers"""
     try:
-        from services.deals_service import DealsService
+        from models import ShortUrl as ShortUrlModel
         
-        deals_service = DealsService(db)
-        deal_url = await deals_service.resolve_short_url(short_code)
+        query = select(ShortUrlModel).where(ShortUrlModel.short_code == short_code)
+        result = await db.execute(query)
+        short_url = result.scalar_one_or_none()
         
-        if not deal_url:
+        if not short_url:
             raise HTTPException(status_code=404, detail="Short URL not found")
         
-        # Redirect to the deal page
-        return RedirectResponse(url=deal_url, status_code=302)
+        short_url.click_count = (short_url.click_count or 0) + 1
+        await db.commit()
+        
+        if short_url.deal_id and frontend_dist_path.exists():
+            deal_result = await db.execute(select(DealModel).where(DealModel.id == short_url.deal_id))
+            deal = deal_result.scalar_one_or_none()
+            if deal:
+                base_url = _get_base_url(request)
+                html_content = _read_html()
+                seo_tags = generate_deal_seo(deal, base_url)
+                deal_page_url = f"{base_url}/deals/{deal.id}"
+                redirect_script = f'<script>window.location.replace("{deal_page_url}");</script>'
+                html_with_seo = inject_seo_into_html(html_content, seo_tags)
+                html_with_redirect = html_with_seo.replace('</head>', f'{redirect_script}</head>')
+                return Response(content=html_with_redirect, media_type="text/html")
+        
+        return RedirectResponse(url=short_url.original_url, status_code=302)
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error resolving short URL: {e}")
         raise HTTPException(status_code=404, detail="Short URL not found")
