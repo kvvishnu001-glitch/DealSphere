@@ -120,12 +120,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="DealSphere API",
-    description="AI-powered deals and coupons platform",
+    description="Deals and coupons aggregation platform with comprehensive deal management, affiliate network integration, and automated validation.",
     version="1.0.0",
     lifespan=lifespan,
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 app.add_middleware(SecurityHeadersMiddleware)
@@ -531,15 +531,9 @@ if frontend_dist_path.exists():
         )
         return Response(content=inject_seo_into_html(html_content, seo_tags), media_type="text/html")
 
-    @app.get("/docs")
-    @app.get("/redoc")
-    @app.get("/openapi.json")
-    async def block_docs():
-        raise HTTPException(status_code=404, detail="Not found")
-
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str, request: Request):
-        if full_path.startswith("api/") or full_path.startswith("s/"):
+        if full_path.startswith("api/") or full_path.startswith("s/") or full_path in ("docs", "redoc", "openapi.json"):
             raise HTTPException(status_code=404, detail="Not found")
         return FileResponse(HTML_PATH)
 else:
