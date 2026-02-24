@@ -438,7 +438,7 @@ export default function DealDetail() {
               <details className="bg-white rounded-lg border border-gray-200 p-4">
                 <summary className="font-medium text-gray-900 cursor-pointer">Is this {deal.store} deal verified?</summary>
                 <p className="mt-3 text-sm text-gray-600">
-                  Yes, this deal has been AI-verified by DealSphere's validation system to ensure it's a genuine offer from {deal.store}.
+                  Yes, this deal has been verified by DealSphere's validation system to ensure it's a genuine offer from {deal.store}.
                 </p>
               </details>
               <details className="bg-white rounded-lg border border-gray-200 p-4">

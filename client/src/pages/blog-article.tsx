@@ -23,31 +23,31 @@ const guides: Record<string, {
 }> = {
   "how-to-find-best-deals": {
     title: "How to Find the Best Online Deals in 2025",
-    excerpt: "Learn proven strategies for finding genuine discounts, comparing prices across retailers, and using AI-powered tools to maximize your savings on every purchase.",
+    excerpt: "Learn proven strategies for finding genuine discounts, comparing prices across retailers, and using smart tools to maximize your savings on every purchase.",
     category: "Shopping Tips",
     icon: ShoppingCart,
     readTime: "5 min read",
     date: "January 15, 2025",
     content: [
       { heading: "Use Price Comparison Tools", text: "Before making any purchase, compare prices across multiple retailers. Tools like DealSphere aggregate deals from dozens of stores, making it easy to compare prices." },
-      { heading: "Look for AI-Verified Deals", text: "AI-powered deal platforms can detect fake discounts and inflated original prices. Only trust deals that have been verified by reliable systems." },
+      { heading: "Look for Verified Deals", text: "Trusted deal platforms can detect fake discounts and inflated original prices. Only trust deals that have been verified by reliable systems." },
       { heading: "Time Your Purchases", text: "Major retailers run predictable sales cycles. Electronics are often discounted during Black Friday, fashion during end-of-season sales, and home goods during holiday weekends." },
       { heading: "Stack Coupons and Cashback", text: "Combine store coupons with cashback programs for maximum savings. Many deals can be stacked with credit card rewards for additional discounts." },
       { heading: "Set Price Alerts", text: "For big-ticket items, set price alerts and wait for drops. Prices on electronics and appliances can fluctuate significantly over weeks." }
     ]
   },
   "ai-deal-verification": {
-    title: "How AI Verifies Deals: Behind the Technology",
-    excerpt: "Discover how artificial intelligence analyzes, scores, and validates online deals to ensure they offer genuine savings.",
+    title: "How We Verify Deals: Behind the Process",
+    excerpt: "Discover how deals are analyzed, scored, and validated to ensure they offer genuine savings.",
     category: "Technology",
     icon: ShieldCheck,
     readTime: "4 min read",
     date: "January 10, 2025",
     content: [
-      { heading: "Natural Language Processing", text: "AI systems analyze deal descriptions to verify claims about discounts, product features, and pricing accuracy." },
-      { heading: "Price History Analysis", text: "By comparing current prices against historical data, AI can detect artificially inflated 'original prices' designed to make discounts seem larger." },
+      { heading: "Description Analysis", text: "Our systems analyze deal descriptions to verify claims about discounts, product features, and pricing accuracy." },
+      { heading: "Price History Analysis", text: "By comparing current prices against historical data, we detect artificially inflated 'original prices' designed to make discounts seem larger." },
       { heading: "Quality Scoring", text: "Each deal receives a quality score based on factors like discount percentage, store reputation, product reviews, and deal freshness." },
-      { heading: "Fraud Detection", text: "Machine learning models identify patterns common in fraudulent or misleading deals, filtering them before they reach consumers." }
+      { heading: "Fraud Detection", text: "Our validation process identifies patterns common in fraudulent or misleading deals, filtering them before they reach consumers." }
     ]
   },
   "coupon-strategies": {

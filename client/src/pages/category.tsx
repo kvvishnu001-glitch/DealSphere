@@ -74,7 +74,7 @@ export default function CategoryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl sm:text-4xl font-bold mb-3">{displayName} Deals & Coupons</h1>
           <p className="text-red-100 text-lg mb-4">
-            Browse {categoryDeals.length} AI-verified {displayName.toLowerCase()} deals from top stores. Updated daily.
+            Browse {categoryDeals.length} verified {displayName.toLowerCase()} deals from top stores. Updated daily.
           </p>
           <div className="flex items-center gap-2 text-sm text-red-200">
             <Tag className="w-4 h-4" />

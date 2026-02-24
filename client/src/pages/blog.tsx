@@ -16,7 +16,7 @@ const guides = [
   {
     id: "how-to-find-best-deals",
     title: "How to Find the Best Online Deals in 2025",
-    excerpt: "Learn proven strategies for finding genuine discounts, comparing prices across retailers, and using AI-powered tools to maximize your savings on every purchase.",
+    excerpt: "Learn proven strategies for finding genuine discounts, comparing prices across retailers, and using smart tools to maximize your savings on every purchase.",
     category: "Shopping Tips",
     icon: ShoppingCart,
     readTime: "5 min read",
@@ -24,8 +24,8 @@ const guides = [
   },
   {
     id: "ai-deal-verification",
-    title: "How AI Verifies Deals: Behind the Technology",
-    excerpt: "Discover how artificial intelligence analyzes, scores, and validates online deals to ensure they offer genuine savings. Understanding the technology behind smart shopping.",
+    title: "How We Verify Deals: Behind the Process",
+    excerpt: "Discover how deals are analyzed, scored, and validated to ensure they offer genuine savings. Understanding the process behind smart shopping.",
     category: "Technology",
     icon: ShieldCheck,
     readTime: "4 min read",

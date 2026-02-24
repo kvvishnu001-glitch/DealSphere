@@ -3,7 +3,7 @@ import {
   ChevronRight,
   Shield,
   Zap,
-  Brain,
+  BadgeCheck,
   TrendingUp,
   Users,
   Target,
@@ -29,7 +29,7 @@ export default function About() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-3xl sm:text-5xl font-bold mb-4">About DealSphere</h1>
             <p className="text-lg sm:text-xl text-red-100 max-w-2xl mx-auto">
-              We use artificial intelligence to find, verify, and curate verified deals and coupons from top online stores, saving you time and money.
+              We find, verify, and curate the best deals and coupons from top online stores, saving you time and money.
             </p>
           </div>
         </section>
@@ -41,15 +41,15 @@ export default function About() {
               DealSphere was built with a simple goal: make online shopping smarter. Every day, thousands of deals appear across hundreds of stores, but finding genuine, high-value offers can be overwhelming. That's where we come in.
             </p>
             <p className="text-gray-700 leading-relaxed mb-8">
-              Our AI-powered platform scans, validates, and categorizes deals from top retailers like Amazon, Walmart, Target, Best Buy, and many more. Each deal is scored for quality and verified before it reaches you, so you can shop with confidence.
+              Our platform scans, validates, and categorizes deals from top retailers like Amazon, Walmart, Target, Best Buy, and many more. Each deal is scored for quality and verified before it reaches you, so you can shop with confidence.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 my-12">
               <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-                <Brain className="w-10 h-10 text-red-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">AI-Verified Deals</h3>
+                <BadgeCheck className="w-10 h-10 text-red-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Verified Deals</h3>
                 <p className="text-sm text-gray-600">
-                  Every deal is analyzed and scored by our AI system to ensure it's genuine, in stock, and offers real savings.
+                  Every deal is analyzed and scored to ensure it's genuine, in stock, and offers real savings.
                 </p>
               </div>
               <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -80,8 +80,8 @@ export default function About() {
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-sm">2</div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">AI Validation</h3>
-                  <p className="text-gray-600 text-sm">Each deal passes through our OpenAI-powered validation system, which checks for accuracy, relevance, and quality. Only deals scoring above our threshold are approved.</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">Deal Validation</h3>
+                  <p className="text-gray-600 text-sm">Each deal passes through our validation system, which checks for accuracy, relevance, and quality. Only deals scoring above our threshold are approved.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -112,7 +112,7 @@ export default function About() {
               </details>
               <details className="bg-white rounded-lg border border-gray-200 p-4">
                 <summary className="font-medium text-gray-900 cursor-pointer">What makes DealSphere different from other deal sites?</summary>
-                <p className="mt-3 text-sm text-gray-600">Unlike traditional deal sites that rely on manual curation, DealSphere uses AI to validate every deal. This means fewer expired or misleading offers, and a higher quality selection of genuine discounts.</p>
+                <p className="mt-3 text-sm text-gray-600">Unlike traditional deal sites that rely on manual curation, DealSphere uses automated validation to check every deal. This means fewer expired or misleading offers, and a higher quality selection of genuine discounts.</p>
               </details>
               <details className="bg-white rounded-lg border border-gray-200 p-4">
                 <summary className="font-medium text-gray-900 cursor-pointer">Which stores does DealSphere cover?</summary>

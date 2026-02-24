@@ -12,7 +12,7 @@ export function Footer() {
               <span className="text-base sm:text-lg font-bold">DealSphere</span>
             </div>
             <p className="text-gray-400 text-xs sm:text-sm leading-relaxed max-w-xs">
-              AI-verified deals and coupons updated daily. Save more on every purchase with smart deal discovery.
+              Verified deals and coupons updated daily. Save more on every purchase with smart deal discovery.
             </p>
           </div>
 

@@ -391,10 +391,10 @@ export default function Home() {
       <section className="bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white py-6 sm:py-12 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-2xl sm:text-4xl lg:text-6xl font-extrabold mb-2 sm:mb-4 lg:mb-6 tracking-tight">
-            AI-Powered Deals & Coupons
+            Today's Best Deals & Coupons
           </h1>
           <p className="text-sm sm:text-lg lg:text-xl mb-5 sm:mb-8 lg:mb-12 text-red-100 max-w-2xl mx-auto">
-            Verified deals curated by artificial intelligence. Save more on every purchase.
+            Hand-picked deals from top stores, updated daily. Save more on every purchase.
           </p>
           <div className="grid grid-cols-3 gap-3 sm:gap-6 lg:gap-10 max-w-sm sm:max-w-2xl lg:max-w-3xl mx-auto">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-5 lg:p-8 border border-white/20">
@@ -407,7 +407,7 @@ export default function Home() {
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-5 lg:p-8 border border-white/20">
               <div className="text-xl sm:text-3xl lg:text-5xl font-extrabold text-white">{heroStats ? `${heroStats.ai_verified_pct}%` : '...'}</div>
-              <div className="text-[10px] sm:text-sm lg:text-base text-red-100 mt-1 lg:mt-2 font-medium">AI Verified</div>
+              <div className="text-[10px] sm:text-sm lg:text-base text-red-100 mt-1 lg:mt-2 font-medium">Verified</div>
             </div>
           </div>
         </div>
@@ -559,7 +559,7 @@ export default function Home() {
               Top Deals
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-sm lg:text-base text-gray-500">AI-curated deals</span>
+              <span className="text-xs sm:text-sm lg:text-base text-gray-500">Curated deals</span>
               {!showAllTop && topDeals.length >= 3 && (
                 <Button 
                   variant="outline" 
