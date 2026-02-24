@@ -202,6 +202,49 @@ docker compose up -d --build
 
 ## Database Setup
 
+### Create an App-Specific Database User (Recommended)
+
+For production, do **not** use a PostgreSQL superuser. Create a restricted app-specific user instead:
+
+```bash
+# Connect as the superuser and run the setup script
+psql -U postgres -d dealsphere -f db_create_app_user.sql
+```
+
+Or run manually:
+
+```sql
+-- Create restricted app user (replace the password!)
+CREATE ROLE dealsphere_app WITH
+    LOGIN
+    PASSWORD 'your_strong_password_here'
+    NOSUPERUSER NOCREATEDB NOCREATEROLE
+    CONNECTION LIMIT 25;
+
+GRANT CONNECT ON DATABASE dealsphere TO dealsphere_app;
+GRANT USAGE, CREATE ON SCHEMA public TO dealsphere_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO dealsphere_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO dealsphere_app;
+
+-- Auto-grant permissions on future tables
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO dealsphere_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+    GRANT USAGE, SELECT ON SEQUENCES TO dealsphere_app;
+```
+
+Then update your `DATABASE_URL`:
+```
+postgresql://dealsphere_app:your_strong_password_here@hostname:5432/dealsphere
+```
+
+After the app has created its tables on first startup, you can optionally tighten permissions further:
+```sql
+REVOKE CREATE ON SCHEMA public FROM dealsphere_app;
+```
+
+The full setup script is available at `db_create_app_user.sql` in the project root.
+
 ### Automatic Table Creation
 
 Tables are created automatically on first startup. The backend runs `init_database()` during its lifespan startup, which creates all required tables using SQLAlchemy models.
